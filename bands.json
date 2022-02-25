@@ -17,7 +17,6 @@
             "maxAmount": 80.0
         }
     ],
-    "buyLimits": [],
     "sellBands": [
         {
             "minMargin": 0.005,
@@ -35,6 +34,5 @@
             "avgAmount": 6.0,
             "maxAmount": 8.0
         }
-    ],
-    "sellLimits": []
+    ]
 }
