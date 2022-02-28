@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import sys
 
 from py_clob_client.client import ClobClient, ApiCreds
@@ -35,49 +36,14 @@ class ClobMarketMakerKeeper:
         # TODO: for now will only allow MMing on a single market/tokenID
         parser.add_argument("--token-id", type=str, required=True, help="The tokenID of the market being made")
 
-        # parser.add_argument("--config", type=str, required=True, help="Bands configuration file")
-
-        # parser.add_argument("--refresh-frequency", type=int, default=3,
-        #                     help="Order book refresh frequency (in seconds, default: 3)")
-        # TODO: remove unused args
-        # parser.add_argument("--pair", type=str, required=True,
-        #                     help="Token pair (sell/buy) on which the keeper will operate")
-
-        # parser.add_argument("--buy-token-address", type=str, required=True,
-        #                     help="Ethereum address of the buy token")
-
-        # parser.add_argument("--sell-token-address", type=str, required=True,
-        #                     help="Ethereum address of the sell token")
-
-        # parser.add_argument("--price-feed", type=str, required=True,
-        #                     help="Source of price feed")
-
-        # parser.add_argument("--price-feed-expiry", type=int, default=120,
-        #                     help="Maximum age of the price feed (in seconds, default: 120)")
-
-        # parser.add_argument("--spread-feed", type=str,
-        #                     help="Source of spread feed")
-
-        # parser.add_argument("--spread-feed-expiry", type=int, default=3600,
-        #                     help="Maximum age of the spread feed (in seconds, default: 3600)")
-
-        # parser.add_argument("--control-feed", type=str,
-        #                     help="Source of control feed")
-
-        # parser.add_argument("--control-feed-expiry", type=int, default=86400,
-        #                     help="Maximum age of the control feed (in seconds, default: 86400)")
-
-        # parser.add_argument("--order-history", type=str,
-        #                     help="Endpoint to report active orders to")
-
-        # parser.add_argument("--order-history-every", type=int, default=30,
-        #                     help="Frequency of reporting active orders (in seconds, default: 30)")
-
-        # parser.add_argument("--order-expiry", type=int, required=True,
-        #                     help="Expiration time of created orders (in seconds)")
+        parser.add_argument("--refresh-frequency", type=int, default=3,
+                            help="Order book refresh frequency (in seconds, default: 3)")
 
         self.args = parser.parse_args(args)
         self.client = self._init_client(self.args)
+        self.bands_config = self.args.config
+        self.tokenId = self.args.tokenId
+        self.refresh_frequency = self.args.refresh_frequency
 
         # the order manager will be the main entry point 
 
@@ -93,8 +59,8 @@ class ClobMarketMakerKeeper:
                 return clob_client
         except:
             self.logger.error("Unable to connect to CLOB API, shutting down...")
-            return None
-
+            sys.exit(1)
+            
 
     def main(self):
         # with Lifecycle(self.web3) as lifecycle:
@@ -102,6 +68,9 @@ class ClobMarketMakerKeeper:
         #     lifecycle.on_startup(self.startup)
         #     lifecycle.every(1, self.synchronize_orders)
         #     lifecycle.on_shutdown(self.shutdown)
+        pass
+
+    def synchronize(self):
         pass
 
     def shutdown(self):

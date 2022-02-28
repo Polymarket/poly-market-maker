@@ -8,7 +8,7 @@ from poly_market_maker.order import Order
 
 class TestBand(TestCase):
 
-    @unittest.skip
+    
     def test_create_band(self):
 
         test_band = BuyBand({
@@ -27,9 +27,8 @@ class TestBand(TestCase):
         self.assertEqual(test_band.avg_amount, 30.0)
         self.assertEqual(test_band.max_amount, 40.0)
 
-    @unittest.skip
     def test_excessive_orders(self):
-        # Given the below buy band with a target_price of fifty cents
+        # Given the below buy band with a target_price of 0.5
         # meaning we should have orders at least minMargin away from the target_price
         # and at most maxMargin away from the target_price
         # Band is from {0.495 : 0.40 }
@@ -64,7 +63,6 @@ class TestBand(TestCase):
         self.assertEqual(len(scheduled_to_be_canceled), 1)
         self.assertEqual(scheduled_to_be_canceled.pop(), orders[2])
 
-    @unittest.skip
     def test_create_bands(self):
         with open("./bands.json") as fh:
             test_bands = Bands.read(json.load(fh))
@@ -73,7 +71,7 @@ class TestBand(TestCase):
         self.assertEqual(len(test_bands.buy_bands), 2)
         self.assertEqual(len(test_bands.sell_bands), 2)
 
-    @unittest.skip
+    
     def test_bands_cancellable_orders(self):
         with open("./tests/bands.json") as fh:
             test_bands = Bands.read(json.load(fh))
@@ -104,7 +102,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_buys = [Order(size=5, price=0.45, side=BUY)]
-        existing_sells = [Order(size=5, price=0.55, side=BUY)]
+        existing_sells = [Order(size=5, price=0.55, side=SELL)]
 
         # place new orders
         new_orders = test_bands.new_orders(existing_buys, existing_sells, keeper_usdc_balance, keeper_yes_balance, target_price)
@@ -133,7 +131,7 @@ class TestBand(TestCase):
 
         self.assertEqual(new_sells[1].size, 30.0)
         self.assertEqual(new_sells[1].price, 0.625)
-        
+
 
 
 

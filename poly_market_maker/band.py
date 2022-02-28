@@ -6,7 +6,9 @@ from .order import Order
 
 
 class Band:
-    logger = logging.getLogger()
+    logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s',
+                        level=(logging.DEBUG))
+    logger = logging.getLogger(__name__)
 
     def __init__(self,
                  min_margin: float,
@@ -154,7 +156,9 @@ class SellBand(Band):
         return price * (1 + margin)
 
 class Bands:
-    logger = logging.getLogger()
+    logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s',
+                        level=(logging.DEBUG))
+    logger = logging.getLogger(__name__)
 
     @staticmethod
     def read(config: dict):
@@ -303,13 +307,10 @@ class Bands:
 
         new_orders = []
         print("Running new buy orders...")
-        print("BUY bands")
         for band in self.buy_bands:
             print(band)
             orders = [order for order in our_buy_orders if band.includes(order, target_price)]
-            print(f"orders in band: {len(orders)}")
             total_amount = sum(order.size for order in orders) #TODO:
-            print(f"Total_amount:{total_amount}")
             #TODO: Important to know, price is ALWAYS in terms of the ERC20 asset
             # size is ALWAYS in terms of the ERC1155 asset
             if total_amount < band.min_amount:
