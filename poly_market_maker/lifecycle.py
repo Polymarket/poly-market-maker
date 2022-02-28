@@ -71,14 +71,12 @@ class Lifecycle:
             lifecycle.on_startup(self.some_startup_function)
             lifecycle.every(15, self.do_something_else)
             lifecycle.on_shutdown(self.some_shutdown_function)
-
     Note: this version will only listen to timers, instead of per block events for simplicity
     """
     logger = logging.getLogger()
 
-    def __init__(self):
-        self.do_wait_for_sync = True
-        self.delay = 0
+    def __init__(self, delay = 0):
+        self.delay = delay
         self.wait_for_functions = []
         self.startup_function = None
         self.shutdown_function = None
@@ -155,18 +153,9 @@ class Lifecycle:
         print("Keeper terminated")
         exit(10 if self.fatal_termination else 0)
 
-    def wait_for_sync(self, wait_for_sync: bool):
-        assert(isinstance(wait_for_sync, bool))
-
-        self.do_wait_for_sync = wait_for_sync
-
     def initial_delay(self, initial_delay: int):
-        """Make the keeper wait for specified amount of time before startup.
-
-        The primary use case is to allow background threads to have a chance to pull necessary
-        information like prices, gas prices etc. At the same time we may not want to wait indefinitely
-        for that information to become available as the price source may be down etc.
-
+        """
+        Set the initial delay
         Args:
             initial_delay: Initial delay on keeper startup (in seconds).
         """
@@ -175,7 +164,8 @@ class Lifecycle:
         self.delay = initial_delay
 
     def wait_for(self, initial_check, max_wait: int):
-        """Make the keeper wait for the function to turn true before startup.
+        """
+        Make the keeper wait for the function to turn true before startup.
 
         The primary use case is to allow background threads to have a chance to pull necessary
         information like prices, gas prices etc. At the same time we may not want to wait indefinitely
