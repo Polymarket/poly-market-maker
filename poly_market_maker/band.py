@@ -91,6 +91,9 @@ class Band:
     def __repr__(self):
         return f"Band[type={self.type()}, spread<{self.min_margin}, {self.max_margin}>, amount<{self.min_amount}, {self.max_amount}>]"
 
+    def __str__(self):
+        return self.__repr__()
+
 
 class BuyBand(Band):
     def __init__(self, dictionary: dict):
@@ -181,9 +184,7 @@ class Bands:
 
     def __init__(self, buy_bands: list, sell_bands: list):
         assert(isinstance(buy_bands, list))
-        # assert(isinstance(buy_limits, SideLimits))
         assert(isinstance(sell_bands, list))
-        # assert(isinstance(sell_limits, SideLimits))
 
         self.buy_bands = buy_bands
         self.sell_bands = sell_bands
@@ -199,7 +200,6 @@ class Bands:
         assert(isinstance(target_price, float))
 
         bands = self.sell_bands
-
         for band in bands:
             for order in band.excessive_orders(our_sell_orders, target_price, band == bands[0], band == bands[-1]):
                 yield order
