@@ -5,9 +5,6 @@ from .constants import BUY, SELL
 from .order import Order
 
 class Band:
-    logging.basicConfig(format='%(asctime)-15s %(levelname)-4s %(processName)s %(threadName)s %(message)s',
-                        level=(logging.DEBUG))
-    logger = logging.getLogger(__name__)
 
     def __init__(self,
                  min_margin: float,
@@ -16,6 +13,7 @@ class Band:
                  min_amount: float,
                  avg_amount: float,
                  max_amount: float):
+        self.logger = logging.getLogger(self.__class__.__name__)
         assert(isinstance(min_margin, float))
         assert(isinstance(avg_margin, float))
         assert(isinstance(max_margin, float))
@@ -108,8 +106,8 @@ class BuyBand(Band):
         #     target=0.5, max_margin=0.20 = 0.5 * (1- 0.2) = 0.4
         price_max = self._apply_margin(target_price, self.min_margin)
         price_min = self._apply_margin(target_price, self.max_margin)
-        self.logger.warn(f"Applying margin {self.max_margin} to target_price: {target_price}: Price min: {price_min}")
-        self.logger.warn(f"Applying margin: {self.min_margin} to target_price {target_price}: Price max: {price_max}")
+        # self.logger.debug(f"Applying margin {self.max_margin} to target_price: {target_price}: Price min: {price_min}")
+        # self.logger.debug(f"Applying margin: {self.min_margin} to target_price {target_price}: Price max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
         self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
@@ -140,8 +138,8 @@ class SellBand(Band):
     def includes(self, order, target_price: float) -> bool:
         price_min = self._apply_margin(target_price, self.min_margin)
         price_max = self._apply_margin(target_price, self.max_margin)
-        self.logger.warn(f"Applying margin: {self.min_margin} to target_price {target_price}: Price min: {price_min}")
-        self.logger.warn(f"Applying margin: {self.max_margin} to target_price {target_price}: Price max: {price_max}")
+        # self.logger.debug(f"Applying margin: {self.min_margin} to target_price {target_price}: Price min: {price_min}")
+        # self.logger.debug(f"Applying margin: {self.max_margin} to target_price {target_price}: Price max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
         self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
@@ -154,9 +152,6 @@ class SellBand(Band):
         return price * (1 + margin)
 
 class Bands:
-    logging.basicConfig(format='%(asctime)-15s %(levelname)-4s %(processName)s %(threadName)s %(message)s',
-                        level=logging.DEBUG)
-    logger = logging.getLogger(__name__)
 
     @staticmethod
     def read(config: dict):
@@ -175,6 +170,7 @@ class Bands:
         return Bands(buy_bands=buy_bands, sell_bands=sell_bands)
 
     def __init__(self, buy_bands: list, sell_bands: list):
+        self.logger = logging.getLogger(self.__class__.__name__)
         assert(isinstance(buy_bands, list))
         assert(isinstance(sell_bands, list))
 
@@ -299,11 +295,11 @@ class Bands:
         for band in self.buy_bands:
             self.logger.debug(band)
             orders = [order for order in our_buy_orders if band.includes(order, target_price)]
-            total_amount = sum(order.size for order in orders) #TODO:
+            total_amount = sum(order.size for order in orders)
             #TODO: Important to know, price is ALWAYS in terms of the ERC20 asset
             # size is ALWAYS in terms of the ERC1155 asset
             if total_amount < band.min_amount:
-                price = band.avg_price(target_price) # TODO: price with a spread attached
+                price = band.avg_price(target_price)
                 # if buy, the order we're creating must express size in terms of ERC1155
                 # but our buy_balance is in USDC. so we must ensure that the order being created won't be > keeper usdc balance
                 # say price = 0.50c on a target_price of 0.65

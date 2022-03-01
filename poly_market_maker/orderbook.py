@@ -37,9 +37,9 @@ class OrderBookManager:
             refresh takes place.
     """
 
-    logger = logging.getLogger()
-
     def __init__(self, refresh_frequency: int, max_workers: int = 5):
+        self.logger = logging.getLogger(self.__class__.__name__)
+
         assert(isinstance(refresh_frequency, int))
         assert(isinstance(max_workers, int))
 
@@ -129,29 +129,27 @@ class OrderBookManager:
 
         with self._lock:
             self.logger.debug(f"Getting the order book...")
-            self.logger.debug(f"Orders retrieved last time: {[order.id for order in self._state['orders']]}")
+            if self._state.get("orders") is not None:
+                self.logger.debug(f"Orders retrieved last time: {[order.id for order in self._state['orders']]}")
             self.logger.debug(f"Orders placed since then: {[order.id for order in self._orders_placed]}")
             self.logger.debug(f"Orders cancelled since then: {[order_id for order_id in self._order_ids_cancelled]}")
             self.logger.debug(f"Orders being cancelled: {[order_id for order_id in self._order_ids_cancelling]}")
             self.logger.debug(f"Orders being placed: {self._currently_placing_orders} order(s)")
 
-            # TODO: below we remove orders which are being or have been cancelled, and orders
-            # which have been placed, but we to not update the balances accordingly. it will
-            # work correctly as long as the market maker keeper has enough balance available.
-            # when it will get low on balance, order placement may fail or too tiny replacement
-            # orders may get created for a while.
+            orders = []
+            
+            # Add orders which have been placed if they exist
+            if self._state.get("orders") is not None:
+                orders = list(self._state['orders'])
+                for order in self._orders_placed:
+                    if order.id not in list(map(lambda order: order.id, orders)):
+                        orders.append(order)
 
-            # Add orders which have been placed.
-            orders = list(self._state['orders'])
-            for order in self._orders_placed:
-                if order.id not in list(map(lambda order: order.id, orders)):
-                    orders.append(order)
+                # Remove orders being cancelled and already cancelled.
+                orders = list(filter(lambda order: order.id not in self._order_ids_cancelling and
+                                                order.id not in self._order_ids_cancelled, orders))
 
-            # Remove orders being cancelled and already cancelled.
-            orders = list(filter(lambda order: order.id not in self._order_ids_cancelling and
-                                               order.id not in self._order_ids_cancelled, orders))
-
-            self.logger.debug(f"Returned orders: {[order.id for order in orders]}")
+                self.logger.info(f"Returned orders: {[order.id for order in orders]}")
 
         return OrderBook(orders=orders,
                          balances=self._state['balances'],
@@ -217,11 +215,15 @@ class OrderBookManager:
             if len(orders) == 0:
                 self.logger.info(f"No open orders on order book.")
                 break
+            order_ids = [o.id for o in orders]
+            with self._lock:
+                for order_id in order_ids:
+                    self._order_ids_cancelling.add(order_id)
 
-            self.logger.info(f"Cancelling {len(orders)} open orders...")
+            self.logger.info(f"Cancelling {len(order_ids)} open orders...")
 
             # Cancel all orders
-            self._executor.submit(self.cancel_all_orders_function)
+            self._executor.submit(self._thread_cancel_all(order_ids, self.cancel_all_orders_function))
             self.wait_for_stable_order_book()
 
         # Wait for the background thread to refresh the order book twice, so we are 99.9% sure
@@ -237,9 +239,10 @@ class OrderBookManager:
         orders = self.get_order_book().orders
         if len(orders) > 0:
             self.logger.info(f"There are still {len(orders)} open orders! Repeating the cancel_all_orders function!")
-            return self.cancel_all_orders()
+            # return self.cancel_all_orders()
+            return
 
-        self.logger.info("Still no open orders after order book refresh. This is what we expected.")
+        self.logger.info("All orders successfully cancelled!")
 
     def wait_for_order_cancellation(self):
         """Wait until no background order cancellation takes place."""
@@ -332,12 +335,37 @@ class OrderBookManager:
                     with self._lock:
                         self._order_ids_cancelled.add(order_id)
                         self._order_ids_cancelling.remove(order_id)
-            except BaseException as exception:
+            except BaseException as e:
                 self.logger.exception(f"Failed to cancel {order_id}")
+                self.logger.exception(f"Exception: {e}")
             finally:
                 with self._lock:
                     try:
                         self._order_ids_cancelling.remove(order_id)
+                    except KeyError:
+                        pass
+
+                self._report_order_book_updated()
+
+        return func
+
+    def _thread_cancel_all(self, order_ids, cancel_all_function):
+        assert(callable(cancel_all_function))
+
+        def func():
+            try:
+                if cancel_all_function():
+                    with self._lock:
+                        for order_id in order_ids:
+                            self._order_ids_cancelled.add(order_id)
+                            self._order_ids_cancelling.remove(order_id)
+            except BaseException as exception:
+                self.logger.exception(f"Failed to cancel all")
+            finally:
+                with self._lock:
+                    try:
+                        for order_id in order_ids:
+                            self._order_ids_cancelling.remove(order_id)
                     except KeyError:
                         pass
 

@@ -2,13 +2,15 @@ import logging
 import sys
 
 from .order import Order
+from .constants import OK
+
 from py_clob_client.client import ClobClient, ApiCreds, LimitOrderArgs
 
+DEFAULT_PRICE = 0.5
 
 class ClobApi:
-    logger = logging.getLogger(__name__)
-
     def __init__(self, token_id: str, args):
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.token_id = token_id
         self.client: ClobClient = self._init_client(
             args.eth_key, 
@@ -18,9 +20,9 @@ class ClobApi:
             args.clob_api_secret, 
             args.clob_api_passphrase
         )
+        
 
     def get_address(self):
-        # TODO: on client make sure to return checksummed address
         return self.client.get_address()
 
     def get_collateral_address(self):
@@ -41,10 +43,12 @@ class ClobApi:
         except Exception as e:
             self.logger.error(f"Error fetching current price from the CLOB API: {e}")
         
-        return None
+        self.logger.warn(f"Could not fetch price from CLOB API, returning default price: {DEFAULT_PRICE}")
+        return DEFAULT_PRICE
 
     def get_orders(self):
         """
+        Get open keeper orders on the orderbook
         """
         self.logger.info("Fetching orders from the API...")
         try:
@@ -74,25 +78,25 @@ class ClobApi:
         self.logger.info(f"Cancelling order {order_id}...")
         try:
             resp = self.client.cancel(order_id)
-            return self._validate_cancel_response(resp)
+            return resp == OK
         except Exception as e:
-            #TODO: replace with logger
             self.logger.error(f"Error cancelling order: {order_id}: {e}")
-        return None
+        return False
 
     def cancel_all_orders(self):
+        self.logger.info("Cancelling all open keeper orders..")
         try:
             resp = self.client.cancel_all()
-            return self._validate_cancel_response(resp)
+            return resp == OK
         except Exception as e:
             self.logger.error(f"Error cancelling all orders: {e}")
-        return None
+        return False
 
     def _init_client(self, private_key, chain_id, clob_url, clob_api_key, clob_api_secret, clob_api_passphrase):
         creds = ApiCreds(clob_api_key, clob_api_secret, clob_api_passphrase)
         clob_client = ClobClient(clob_url, chain_id, private_key, creds)
         try:
-            if clob_client.get_ok() == "OK":
+            if clob_client.get_ok() == OK:
                 self.logger.info("Connected to CLOB API!")
                 self.logger.info("CLOB Keeper address: {}".format(clob_client.get_address()))
                 return clob_client
@@ -105,11 +109,10 @@ class ClobApi:
         side = order_dict.get("side")
         price = order_dict.get("price")
         order_id = order_dict.get("orderID")
-        #TODO: validation on received size/price?
         return Order(size=float(size), price=float(price), side=side, id=order_id)
         
 
     def _validate_cancel_response(self, resp):
-        return resp == "OK"
+        return 
 
 

@@ -1,6 +1,6 @@
 ## poly-market-maker
 
-Market maker keeper for Polymarket's CLOB
+Market maker keeper for the Polymarket CLOB
 
 Requires:
 - Python 3.9.10
@@ -9,11 +9,11 @@ Requires:
 
 ### Usage
 
-- Install requirements: `make init`
+- Install dependencies: `make init`
 
 - Create a `.env` file. See `.env.example`
 
-- Create a `bands.json` configuration file. See `bands.json`
+- Create a `bands.json` configuration file. See the existing `bands.json`
 
 - Start the keeper with `./run-keeper.sh`
 

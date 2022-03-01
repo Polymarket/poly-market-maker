@@ -73,9 +73,9 @@ class Lifecycle:
             lifecycle.on_shutdown(self.some_shutdown_function)
     Note: this version will only listen to timers, instead of per block events for simplicity
     """
-    logger = logging.getLogger()
-
     def __init__(self, delay = 0):
+        self.logger = logging.getLogger(self.__class__.__name__)
+
         self.delay = delay
         self.wait_for_functions = []
         self.startup_function = None

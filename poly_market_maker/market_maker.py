@@ -5,6 +5,8 @@ import sys
 
 from web3 import Web3
 
+from .utils import setup_logging
+
 from .band import Bands
 from .order import Order
 from .clob_api import ClobApi
@@ -17,8 +19,6 @@ from .token_utils import token_balance_of
 class ClobMarketMakerKeeper:
     """Market maker keeper on Polymarket CLOB"""
 
-    logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s',
-                        level=(logging.DEBUG))
     logger = logging.getLogger(__name__)
 
     def __init__(self, args: list, **kwargs):
@@ -55,10 +55,13 @@ class ClobMarketMakerKeeper:
         self.order_book_manager.get_orders_with(lambda: self.clob_api.get_orders())
         self.order_book_manager.get_balances_with(lambda: self.get_balances())
         self.order_book_manager.cancel_orders_with(lambda order: self.clob_api.cancel_order(order.id))
-        self.order_book_manager.cancel_all_orders_with(lambda _: self.clob_api.cancel_all_orders())
+        self.order_book_manager.cancel_all_orders_with(lambda: self.clob_api.cancel_all_orders())
         self.order_book_manager.start()
 
     def get_balances(self):
+        """
+        Fetch the onchain balances of collateral and conditional tokens for the keeper
+        """
         keeper_address = self.clob_api.get_address()
         self.logger.info(f"Getting balances for address: {keeper_address}")
         collateral_balance = token_balance_of(self.web3, self.clob_api.get_collateral_address(), keeper_address)
@@ -73,10 +76,13 @@ class ClobMarketMakerKeeper:
             lifecycle.on_shutdown(self.shutdown)
 
     def startup(self):
-        self.logger.info("Running startup callback...")
+        # self.logger.info("Running startup callback...")
         pass
 
     def synchronize(self):
+        """
+        Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
+        """
         self.logger.info("Synchronizing orderbook...")
         with open(self.bands_config) as fh:
             bands = Bands.read(json.load(fh))
@@ -130,11 +136,10 @@ class ClobMarketMakerKeeper:
 
     def place_orders(self, new_orders):
         """
+        Place new orders
+        :param new_orders: list[Orders] 
         """
-        self.logger.info("Running place_orders callback...")
         def place_order_function(new_order_to_be_placed):
-            # TODO: get min tick from clob_api
-            # hardcoding 2 decimal places
             price = round(new_order_to_be_placed.price, 2) 
             size = round(new_order_to_be_placed.size, 2)
             side= new_order_to_be_placed.side
@@ -147,9 +152,10 @@ class ClobMarketMakerKeeper:
     def shutdown(self):
         """
         """
-        self.logger.info("Running shutdown callback...")
-        # self.order_book_manager.cancel_all_orders()
+        self.order_book_manager.cancel_all_orders()
+        pass
 
 
 if __name__ == '__main__':
+    setup_logging()
     ClobMarketMakerKeeper(sys.argv[1:]).main()
