@@ -48,6 +48,7 @@ class OrderBookManager:
         self.get_balances_function = None
         self.place_order_function = None
         self.cancel_order_function = None
+        self.cancel_all_orders_function = None
         self.on_update_function = None
 
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
@@ -98,6 +99,16 @@ class OrderBookManager:
         assert(callable(cancel_order_function))
 
         self.cancel_order_function = cancel_order_function
+
+    def cancel_all_orders_with(self, cancel_all_orders_function):
+        """
+        Configures the function used to cancel all keeper orders.
+        Args:
+            cancel_all_orders_function: The function which will be called in order to cancel orders.
+        """
+        assert(callable(cancel_all_orders_function))
+
+        self.cancel_all_orders_function = cancel_all_orders_function
 
     def on_update(self, on_update_function):
         assert(callable(on_update_function))
@@ -197,19 +208,19 @@ class OrderBookManager:
         for order in orders:
             self._executor.submit(self._thread_cancel_order(order.id, partial(self.cancel_order_function, order)))
 
-    def cancel_all_orders(self, final_wait_time: int = None):
-        # Cancel all orders straight away, repeat until the internal order book state confirms
-        # that there are no open orders left.
+    def cancel_all_orders(self):
+        """
+        """
         while True:
             orders = self.get_order_book().orders
-
             if len(orders) == 0:
                 self.logger.info(f"No open orders on order book.")
                 break
 
             self.logger.info(f"Cancelling {len(orders)} open orders...")
 
-            self.cancel_orders(self.get_order_book().orders)
+            # Cancel all orders
+            self._executor.submit(self.cancel_all_orders_function)
             self.wait_for_stable_order_book()
 
         # Wait for the background thread to refresh the order book twice, so we are 99.9% sure
@@ -224,26 +235,10 @@ class OrderBookManager:
 
         orders = self.get_order_book().orders
         if len(orders) > 0:
-            self.logger.warning(f"There are still {len(orders)} open orders! Repeating the process.")
-            return self.cancel_all_orders(final_wait_time=final_wait_time)
+            self.logger.info(f"There are still {len(orders)} open orders! Repeating the cancel_all_orders function!")
+            return self.cancel_all_orders()
 
         self.logger.info("Still no open orders after order book refresh. This is what we expected.")
-
-        # If asked to do so (i.e. in case of on-chain exchanges for which the chain may reorg)
-        # wait certain time and confirm once again that there are no open orders left.
-        if final_wait_time: #TODO: remove this, unnecessary
-            self.logger.info(f"Waiting {final_wait_time} seconds in order to perform the final check...")
-            time.sleep(final_wait_time)
-
-            self.logger.info("Waiting for the order book to refresh...")
-            self.wait_for_order_book_refresh()
-
-            orders = self.get_order_book().orders
-            if len(orders) > 0:
-                self.logger.warning(f"There are still {len(orders)} open orders! Repeating the process.")
-                return self.cancel_all_orders(final_wait_time=final_wait_time)
-
-            self.logger.info("Still no open orders after the final check.")
 
     def wait_for_order_cancellation(self):
         """Wait until no background order cancellation takes place."""
@@ -273,13 +268,14 @@ class OrderBookManager:
             time.sleep(0.1)
 
     def _report_order_book_updated(self):
+        self.logger.info("Orderbook updated!")
         if self.on_update_function is not None:
             self.on_update_function()
 
     def _thread_refresh_order_book(self):
-        print("Starting bg thread to refresh ob...")
+        self.logger.debug("_thread_refresh_order_book function call...")
         while True:
-            print("in while loop...")
+            self.logger.debug("in while loop...")
             try:
                 with self._lock:
                     orders_already_cancelled_before = set(self._order_ids_cancelled)
