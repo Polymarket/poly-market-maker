@@ -6,11 +6,10 @@ from py_clob_client.client import ClobClient, ApiCreds, LimitOrderArgs
 
 
 class ClobApi:
-
     logger = logging.getLogger(__name__)
 
-    def __init__(self, tokenId: str, args):
-        self.tokenId = tokenId
+    def __init__(self, token_id: str, args):
+        self.token_id = token_id
         self.client: ClobClient = self._init_client(
             args.eth_key, 
             args.chain_id, 
@@ -34,12 +33,12 @@ class ClobApi:
         """
         Get the current price on the orderbook
         """
+        self.logger.info("Fetching price from the API...")
         try:
-            resp = self.client.get_midpoint(self.tokenId)
+            resp = self.client.get_midpoint(self.token_id)
             if resp.get("mid") is not None:
                 return float(resp.get("mid"))
         except Exception as e:
-            print(f"Error fetching current price from the CLOB API: {e}")
             self.logger.error(f"Error fetching current price from the CLOB API: {e}")
         
         return None
@@ -47,13 +46,12 @@ class ClobApi:
     def get_orders(self):
         """
         """
+        self.logger.info("Fetching orders from the API...")
         try:
-            resp = self.client.get_open_orders(self.tokenId)
+            resp = self.client.get_open_orders(self.token_id)
             if resp.get("orders") is not None:
                 return [self._get_order(o) for o in resp.get("orders")]
         except Exception as e:
-            #TODO: replace with logger
-            print(f"Error fetching keeper open orders from the CLOB API: {e}")
             self.logger.error(f"Error fetching keeper open orders from the CLOB API: {e}")
         return None
 
@@ -61,25 +59,25 @@ class ClobApi:
         """
         Places a new order
         """
+        self.logger.info("Placing a new order...")
         try:
             resp = self.client.create_and_post_limit_order(
-                LimitOrderArgs(price=price, size=size, side=side, token_id=self.tokenId)
+                LimitOrderArgs(price=price, size=size, side=side, token_id=self.token_id)
             )
             if resp and resp.get("Success"):
                 return resp.get("orderID")
         except Exception as e:
-            print(f"Error placing new order on the CLOB API: {e}")
             self.logger.error(f"Error placing new order on the CLOB API: {e}")
         return None
 
     def cancel_order(self, order_id):
+        self.logger.info(f"Cancelling order {order_id}...")
         try:
             resp = self.client.cancel(order_id)
             return self._validate_cancel_response(resp)
         except Exception as e:
             #TODO: replace with logger
             self.logger.error(f"Error cancelling order: {order_id}: {e}")
-            print(f"Error cancelling order: {order_id}: {e}")
         return None
 
     def cancel_all_orders(self):
@@ -88,15 +86,13 @@ class ClobApi:
             return self._validate_cancel_response(resp)
         except Exception as e:
             self.logger.error(f"Error cancelling all orders: {e}")
-            print(f"Error cancelling all orders: {e}")
         return None
 
     def _init_client(self, private_key, chain_id, clob_url, clob_api_key, clob_api_secret, clob_api_passphrase):
         creds = ApiCreds(clob_api_key, clob_api_secret, clob_api_passphrase)
         clob_client = ClobClient(clob_url, chain_id, private_key, creds)
         try:
-            ok = clob_client.get_ok()
-            if ok == "OK":
+            if clob_client.get_ok() == "OK":
                 self.logger.info("Connected to CLOB API!")
                 self.logger.info("CLOB Keeper address: {}".format(clob_client.get_address()))
                 return clob_client
@@ -110,7 +106,7 @@ class ClobApi:
         price = order_dict.get("price")
         order_id = order_dict.get("orderID")
         #TODO: validation on received size/price?
-        return Order(size=float(size), price=float(price), side=side, order_id=order_id)
+        return Order(size=float(size), price=float(price), side=side, id=order_id)
         
 
     def _validate_cancel_response(self, resp):

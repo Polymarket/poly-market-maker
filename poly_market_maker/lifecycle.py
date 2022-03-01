@@ -92,13 +92,11 @@ class Lifecycle:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Initialization phase
-        self.logger.info(f"Keeper initializing")
-        print(f"Initializing keeper lifecycle...")
+        self.logger.info(f"Initializing keeper lifecycle")
 
         # Initial delay
         if self.delay > 0:
             self.logger.info(f"Waiting for {self.delay} seconds of initial delay...")
-            print(f"Waiting for {self.delay} seconds of initial delay...")
             time.sleep(self.delay)
 
         # Initial checks
@@ -145,12 +143,9 @@ class Lifecycle:
         # Shutdown phase
         if self.shutdown_function:
             self.logger.info("Executing keeper shutdown logic...")
-            print("Executing keeper shutdown logic...")
             self.shutdown_function()
             self.logger.info("Shutdown logic finished")
-            print("Shutdown logic finished")
         self.logger.info("Keeper terminated")
-        print("Keeper terminated")
         exit(10 if self.fatal_termination else 0)
 
     def initial_delay(self, initial_delay: int):
@@ -254,16 +249,14 @@ class Lifecycle:
                 if not self.terminated_internally and not self.terminated_externally and not self.fatal_termination:
                     def on_start():
                         self.logger.debug(f"Processing the timer #{idx}")
-                        print(f"Processing the timer #{idx}")
-
+                        
                     def on_finish():
                         self.logger.debug(f"Finished processing the timer #{idx}")
-                        print(f"Finished processing the timer #{idx}")
-
+                        
                     if not callback.trigger(on_start, on_finish):
                         self.logger.debug(f"Ignoring timer #{idx} as previous one is already running")
                 else:
-                    print(f"Ignoring timer #{idx} as keeper is already terminating")
+                    self.logger.debug(f"Ignoring timer #{idx} as keeper is already terminating")
             except:
                 setup_timer(frequency_in_seconds)
                 raise
@@ -283,13 +276,11 @@ class Lifecycle:
             # if the keeper logic asked us to terminate, we do so
             if self.terminated_internally:
                 self.logger.warning("Keeper logic asked for termination, the keeper will terminate")
-                print("Keeper logic asked for termination, the keeper will terminate")
                 break
 
             # if SIGINT/SIGTERM asked us to terminate, we do so
             if self.terminated_externally:
                 self.logger.warning("The keeper is terminating due do SIGINT/SIGTERM signal received")
-                print("The keeper is terminating due do SIGINT/SIGTERM signal received")
                 break
 
 

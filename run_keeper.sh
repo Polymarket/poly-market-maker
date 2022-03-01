@@ -14,3 +14,6 @@ exec python3 -m poly_market_maker.market_maker \
 --clob-api-key $CLOB_API_KEY \
 --clob-api-secret $CLOB_SECRET \
 --clob-api-passphrase $CLOB_PASS_PHRASE \
+--config $BANDS_CONFIG_FILE \
+--token-id $TOKEN_ID \
+

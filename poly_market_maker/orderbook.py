@@ -196,6 +196,7 @@ class OrderBookManager:
         Args:
             orders: List of orders to cancel.
         """
+        self.logger.info("Cancelling orders...")
         assert(isinstance(orders, list))
         assert(callable(self.cancel_order_function))
 
@@ -268,14 +269,11 @@ class OrderBookManager:
             time.sleep(0.1)
 
     def _report_order_book_updated(self):
-        self.logger.info("Orderbook updated!")
         if self.on_update_function is not None:
             self.on_update_function()
 
     def _thread_refresh_order_book(self):
-        self.logger.debug("_thread_refresh_order_book function call...")
         while True:
-            self.logger.debug("in while loop...")
             try:
                 with self._lock:
                     orders_already_cancelled_before = set(self._order_ids_cancelled)
@@ -300,12 +298,8 @@ class OrderBookManager:
 
                 self.logger.debug(f"Fetched the order book"
                                   f" (orders: {[order.id for order in orders]})")
-
-                print(f"Fetched the order book"
-                                  f" (orders: {[order.id for order in orders]})")
             except Exception as e:
-                self.logger.info(f"Failed to fetch the order book ({e})!")
-                print(f"Failed to fetch the order book ({e})!")
+                self.logger.error(f"Failed to fetch the order book ({e})!")
 
             time.sleep(self.refresh_frequency)
 

@@ -4,9 +4,8 @@ import logging
 from .constants import BUY, SELL
 from .order import Order
 
-
 class Band:
-    logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s',
+    logging.basicConfig(format='%(asctime)-15s %(levelname)-4s %(processName)s %(threadName)s %(message)s',
                         level=(logging.DEBUG))
     logger = logging.getLogger(__name__)
 
@@ -49,14 +48,10 @@ class Band:
 
     def excessive_orders(self, orders: list, target_price: float, is_first_band: bool, is_last_band: bool):
         """Return orders which need to be cancelled to bring the total order amount in the band below maximum."""
-        print(f"Running excessive orders for {self.type()}")
+        self.logger.debug(f"Running excessive orders for {self.type()}")
         # Get all orders which are currently present in the band.
         orders_in_band = [order for order in orders if self.includes(order, target_price)]
-        print("orders_in_band: ")
-        for o in orders_in_band:
-            print(o)
         orders_total = sum(order.size for order in orders_in_band)
-        print(f"orders_total: {orders_total}")
 
         # The sorting in which we remove orders depends on which band we are in.
         # * In the first band we start cancelling with orders closest to the target price.
@@ -113,10 +108,10 @@ class BuyBand(Band):
         #     target=0.5, max_margin=0.20 = 0.5 * (1- 0.2) = 0.4
         price_max = self._apply_margin(target_price, self.min_margin)
         price_min = self._apply_margin(target_price, self.max_margin)
-        print(f"Applying margin: {self.max_margin} to {target_price}: Price min: {price_min}")
-        print(f"Applying margin: {self.min_margin} to {target_price}: Price max: {price_max}")
+        self.logger.warn(f"Applying margin {self.max_margin} to target_price: {target_price}: Price min: {price_min}")
+        self.logger.warn(f"Applying margin: {self.min_margin} to target_price {target_price}: Price max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
-        print(f"{order} is included in band?: {included}")
+        self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
 
     def type(self) -> str:
@@ -144,11 +139,11 @@ class SellBand(Band):
 
     def includes(self, order, target_price: float) -> bool:
         price_min = self._apply_margin(target_price, self.min_margin)
-        print(f"Applying margin: {self.min_margin} to {target_price}: Price min: {price_min}")
         price_max = self._apply_margin(target_price, self.max_margin)
-        print(f"Applying margin: {self.max_margin} to {target_price}: Price max: {price_max}")
+        self.logger.warn(f"Applying margin: {self.min_margin} to target_price {target_price}: Price min: {price_min}")
+        self.logger.warn(f"Applying margin: {self.max_margin} to target_price {target_price}: Price max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
-        print(f"{order} is included in band?: {included}")
+        self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
 
     def avg_price(self, target_price: float) -> float:
@@ -159,8 +154,8 @@ class SellBand(Band):
         return price * (1 + margin)
 
 class Bands:
-    logging.basicConfig(format='%(asctime)-15s %(levelname)-8s %(message)s',
-                        level=(logging.DEBUG))
+    logging.basicConfig(format='%(asctime)-15s %(levelname)-4s %(processName)s %(threadName)s %(message)s',
+                        level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
     @staticmethod
@@ -168,11 +163,8 @@ class Bands:
         assert(isinstance(config, dict))
 
         try:
-            # TODO: not using Limits concept for now
             buy_bands = list(map(BuyBand, config['buyBands']))
-            # buy_limits = SideLimits(config['buyLimits'] if 'buyLimits' in config else [], history.buy_history)
             sell_bands = list(map(SellBand, config['sellBands']))
-            # sell_limits = SideLimits(config['sellLimits'] if 'sellLimits' in config else [], history.sell_history)
             
         except Exception as e:
             logging.getLogger().exception(f"Config file is invalid ({e}). Treating the config file as it has no bands.")
@@ -190,7 +182,7 @@ class Bands:
         self.sell_bands = sell_bands
 
         if self._bands_overlap(self.buy_bands) or self._bands_overlap(self.sell_bands):
-            self.logger.warning("Bands in the config file overlap. Treating the config file as it has no bands.")
+            self.logger.debug("Bands in the config file overlap. Treating the config file as it has no bands.")
             self.buy_bands = []
             self.sell_bands = []
 
@@ -233,7 +225,7 @@ class Bands:
         assert(isinstance(target_price, float))
 
         if target_price is None:
-            self.logger.warning("Cancelling all buy orders as no buy price is available.")
+            self.logger.debug("Cancelling all buy orders as no buy price is available.")
             buy_orders_to_cancel = our_buy_orders
 
         else:
@@ -241,7 +233,7 @@ class Bands:
                                                         self._outside_any_band_orders(our_buy_orders, self.buy_bands, target_price)))
 
         if target_price is None:
-            self.logger.warning("Cancelling all sell orders as no sell price is available.")
+            self.logger.debug("Cancelling all sell orders as no sell price is available.")
             sell_orders_to_cancel = our_sell_orders
 
         else:
@@ -286,10 +278,7 @@ class Bands:
                 price = band.avg_price(target_price)
                 size = min(band.avg_amount - total_amount, our_sell_balance)
                 if (price > float(0)) and (size > float(0)):
-                    self.logger.info(f"{band} has existing amount {total_amount},"
-                                     f" creating new buy order with price {price} and size: {size}")
-
-                    print(f"{band} has existing amount {total_amount},"
+                    self.logger.debug(f"{band} has existing amount {total_amount},"
                                      f" creating new buy order with price {price} and size: {size}")
 
                     our_sell_balance = our_sell_balance - size
@@ -306,17 +295,15 @@ class Bands:
         assert(isinstance(target_price, float))
 
         new_orders = []
-        print("Running new buy orders...")
+        self.logger.debug("Running new buy orders...")
         for band in self.buy_bands:
-            print(band)
+            self.logger.debug(band)
             orders = [order for order in our_buy_orders if band.includes(order, target_price)]
             total_amount = sum(order.size for order in orders) #TODO:
             #TODO: Important to know, price is ALWAYS in terms of the ERC20 asset
             # size is ALWAYS in terms of the ERC1155 asset
             if total_amount < band.min_amount:
-                print("total_amount < min_amount == True")
                 price = band.avg_price(target_price) # TODO: price with a spread attached
-                print(f"spread price: {price}")
                 # if buy, the order we're creating must express size in terms of ERC1155
                 # but our buy_balance is in USDC. so we must ensure that the order being created won't be > keeper usdc balance
                 # say price = 0.50c on a target_price of 0.65
@@ -330,16 +317,13 @@ class Bands:
                 size = min(band.avg_amount - total_amount, min_size_from_buy_balance)
 
                 if (price > float(0)) and (size > float(0)):
-                    self.logger.info(f"{band} has existing amount {total_amount},"
-                                     f" creating new buy order with price {price} and size: {size}")
-
-                    print(f"{band} has existing amount {total_amount},"
+                    self.logger.debug(f"{band} has existing amount {total_amount},"
                                      f" creating new buy order with price {price} and size: {size}")
                     
                     
                     # express size in terms of the USDC needed to place this order
                     size_buy_token = size * price
-                    print(f"size_buy_token: {size_buy_token}")
+                    self.logger.debug(f"size_buy_token: {size_buy_token}")
                     our_buy_balance = our_buy_balance - size_buy_token
                     new_orders.append(Order(size=size, price=price, side=BUY))
 
@@ -353,5 +337,4 @@ class Bands:
         for band1 in bands:
             if len(list(filter(lambda band2: two_bands_overlap(band1, band2), bands))) > 1:
                 return True
-
         return False
