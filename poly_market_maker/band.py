@@ -279,7 +279,7 @@ class Bands:
                 size = min(band.avg_amount - total_amount, our_sell_balance)
                 if (price > float(0)) and (size > float(0)):
                     self.logger.debug(f"{band} has existing amount {total_amount},"
-                                     f" creating new buy order with price {price} and size: {size}")
+                                     f" creating new sell order with price {price} and size: {size}")
 
                     our_sell_balance = our_sell_balance - size
                     new_orders.append(Order(price=price,

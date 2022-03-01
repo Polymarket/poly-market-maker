@@ -64,7 +64,7 @@ class ClobApi:
             resp = self.client.create_and_post_limit_order(
                 LimitOrderArgs(price=price, size=size, side=side, token_id=self.token_id)
             )
-            if resp and resp.get("Success"):
+            if resp and resp.get("success"):
                 return resp.get("orderID")
         except Exception as e:
             self.logger.error(f"Error placing new order on the CLOB API: {e}")
