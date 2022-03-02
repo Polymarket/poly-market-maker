@@ -70,9 +70,9 @@ class ClobMarketMakerKeeper:
 
     def main(self):
         with Lifecycle() as lifecycle:
-            lifecycle.initial_delay(5)
+            lifecycle.initial_delay(5) # 5 second initial delay so that bg threads fetch the orderbook
             lifecycle.on_startup(self.startup)
-            lifecycle.every(3, self.synchronize)
+            lifecycle.every(3, self.synchronize) # Sync every 3s
             lifecycle.on_shutdown(self.shutdown)
 
     def startup(self):
@@ -105,7 +105,7 @@ class ClobMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if orderbook.orders_being_placed or orderbook.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug("Order book sync is in progress, not placing new orders")
             return
 
         if orderbook.balances.get("collateral") is None or orderbook.balances.get("conditional") is None:
@@ -123,14 +123,16 @@ class ClobMarketMakerKeeper:
         self.logger.debug(f"Free buy balance: {free_buy_balance}")
         self.logger.debug(f"Free sell balance: {free_sell_balance}")
 
-        # Place new orders
+        # Create new orders if needed
         new_orders = bands.new_orders(our_buy_orders=buys,
                                            our_sell_orders=sells,
                                            our_buy_balance=free_buy_balance,
                                            our_sell_balance=free_sell_balance,
                                            target_price=target_price)
-        self.logger.info(f"New orders ready to be placed: {len(new_orders)}")
-        self.place_orders(new_orders)
+        
+        if len(new_orders) > 0:
+            self.logger.info(f"About to place {len(new_orders)} new orders!")
+            self.place_orders(new_orders)
         
         self.logger.info("Synchronized orderbook!")
 

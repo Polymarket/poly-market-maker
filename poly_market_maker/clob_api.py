@@ -57,7 +57,7 @@ class ClobApi:
                 return [self._get_order(o) for o in resp.get("orders")]
         except Exception as e:
             self.logger.error(f"Error fetching keeper open orders from the CLOB API: {e}")
-        return None
+        return []
 
     def place_order(self, price, size, side):
         """
@@ -68,7 +68,7 @@ class ClobApi:
             resp = self.client.create_and_post_limit_order(
                 LimitOrderArgs(price=price, size=size, side=side, token_id=self.token_id)
             )
-            if resp and resp.get("success"):
+            if resp and resp.get("success") and resp.get("orderID"):
                 return resp.get("orderID")
         except Exception as e:
             self.logger.error(f"Error placing new order on the CLOB API: {e}")
