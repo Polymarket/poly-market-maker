@@ -6,6 +6,7 @@ import time
 class AsyncCallback:
     """
     Invokes callback logic in a separate thread
+    Forked and modified from pymaker's AsyncCallback: https://github.com/makerdao/pymaker/blob/master/pymaker/util.py#L100 
     Attributes:
         callback: The callback function to be invoked in a separate thread.
     """
@@ -54,12 +55,6 @@ class AsyncCallback:
         If the callback isn't running or hasn't even been invoked once, returns instantly."""
         if self.thread is not None:
             self.thread.join()
-
-
-def trigger_event(event: threading.Event):
-    assert(isinstance(event, threading.Event))
-
-    event.set()
 
 
 class Lifecycle:
