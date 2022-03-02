@@ -106,8 +106,6 @@ class BuyBand(Band):
         #     target=0.5, max_margin=0.20 = 0.5 * (1- 0.2) = 0.4
         price_max = self._apply_margin(target_price, self.min_margin)
         price_min = self._apply_margin(target_price, self.max_margin)
-        # self.logger.debug(f"Applying margin {self.max_margin} to target_price: {target_price}: Price min: {price_min}")
-        # self.logger.debug(f"Applying margin: {self.min_margin} to target_price {target_price}: Price max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
         self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
@@ -138,8 +136,6 @@ class SellBand(Band):
     def includes(self, order, target_price: float) -> bool:
         price_min = self._apply_margin(target_price, self.min_margin)
         price_max = self._apply_margin(target_price, self.max_margin)
-        # self.logger.debug(f"Applying margin: {self.min_margin} to target_price {target_price}: Price min: {price_min}")
-        # self.logger.debug(f"Applying margin: {self.max_margin} to target_price {target_price}: Price max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
         self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
@@ -319,7 +315,6 @@ class Bands:
                     
                     # express size in terms of the USDC needed to place this order
                     size_buy_token = size * price
-                    self.logger.debug(f"size_buy_token: {size_buy_token}")
                     our_buy_balance = our_buy_balance - size_buy_token
                     new_orders.append(Order(size=size, price=price, side=BUY))
 

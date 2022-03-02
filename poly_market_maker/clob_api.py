@@ -101,7 +101,7 @@ class ClobApi:
                 self.logger.info("CLOB Keeper address: {}".format(clob_client.get_address()))
                 return clob_client
         except:
-            self.logger.error("Unable to connect to CLOB API, shutting down...")
+            self.logger.error("Unable to connect to CLOB API, shutting down!")
             sys.exit(1)
 
     def _get_order(self, order_dict: dict):
@@ -110,9 +110,4 @@ class ClobApi:
         price = order_dict.get("price")
         order_id = order_dict.get("orderID")
         return Order(size=float(size), price=float(price), side=side, id=order_id)
-        
-
-    def _validate_cancel_response(self, resp):
-        return 
-
 

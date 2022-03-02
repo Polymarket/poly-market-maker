@@ -189,7 +189,8 @@ class OrderBookManager:
             self._executor.submit(self._thread_place_order(partial(self.place_order_function, new_order)))
 
     def cancel_orders(self, orders: list):
-        """Cancels existing orders. Order cancellation will happen in a background thread.
+        """
+        Cancels existing orders. Order cancellation will happen in a background thread.
 
         Args:
             orders: List of orders to cancel.
@@ -209,6 +210,7 @@ class OrderBookManager:
 
     def cancel_all_orders(self):
         """
+        Cancels all existing orders
         """
         while True:
             orders = self.get_order_book().orders
@@ -238,8 +240,10 @@ class OrderBookManager:
 
         orders = self.get_order_book().orders
         if len(orders) > 0:
-            self.logger.info(f"There are still {len(orders)} open orders! Repeating the cancel_all_orders function!")
+            # TODO: not repeating the cancel_all since it could lead to an infinite recursion
+            # self.logger.info(f"There are still {len(orders)} open orders! Repeating the cancel_all_orders function!")
             # return self.cancel_all_orders()
+            self.logger.info(f"There are still {len(orders)} open keeper orders!")
             return
 
         self.logger.info("All orders successfully cancelled!")
