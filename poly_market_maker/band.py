@@ -174,9 +174,8 @@ class Bands:
         self.sell_bands = sell_bands
 
         if self._bands_overlap(self.buy_bands) or self._bands_overlap(self.sell_bands):
-            self.logger.debug("Bands in the config file overlap. Treating the config file as it has no bands.")
-            self.buy_bands = []
-            self.sell_bands = []
+            self.logger.error("Bands in the config file overlap!")
+            raise Exception("Bands in the config file overlap!")
 
     def _excessive_sell_orders(self, our_sell_orders: list, target_price: float):
         """Return sell orders which need to be cancelled to bring total amounts within all sell bands below maximums."""
