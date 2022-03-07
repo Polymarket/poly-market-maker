@@ -31,6 +31,12 @@ class ClobApi:
     def get_conditional_address(self):
         return self.client.get_conditional_address()
 
+    def get_exchange(self):
+        return self.client.get_exchange_address()
+
+    def get_executor(self):
+        return self.client.get_executor_address()
+
     def get_price(self):
         """
         Get the current price on the orderbook

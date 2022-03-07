@@ -4,6 +4,7 @@ import logging
 import sys
 
 from web3 import Web3
+from web3.middleware import geth_poa_middleware, construct_sign_and_send_raw_middleware
 
 from .utils import setup_logging
 
@@ -13,7 +14,8 @@ from .clob_api import ClobApi
 from .constants import BUY, SELL
 from .lifecycle import Lifecycle
 from .orderbook import OrderBookManager
-from .token_utils import token_balance_of
+
+from .token_utils import max_approve_erc1155, max_approve_erc20, token_balance_of
 
 
 class ClobMarketMakerKeeper:
@@ -47,6 +49,10 @@ class ClobMarketMakerKeeper:
 
         self.args = parser.parse_args(args)
         self.web3 = Web3(Web3.HTTPProvider(self.args.rpc_url))
+        self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        self.web3.middleware_onion.add(construct_sign_and_send_raw_middleware(self.args.eth_key))
+        self.web3.eth.default_account = self.web3.eth.account.from_key(self.args.eth_key).address
+
         self.bands_config = self.args.config
         self.token_id = self.args.token_id
         self.clob_api = ClobApi(self.token_id, self.args)
@@ -68,6 +74,23 @@ class ClobMarketMakerKeeper:
         conditional_balance = token_balance_of(self.web3, self.clob_api.get_conditional_address(), keeper_address, self.token_id)
         return {"collateral": collateral_balance, "conditional": conditional_balance}
 
+    def approve(self):
+        """
+        Approve the keeper on the collateral and conditional tokens
+        """
+        keeper = self.clob_api.get_address()
+        collateral = self.clob_api.get_collateral_address()
+        conditional = self.clob_api.get_conditional_address()
+        exchange = self.clob_api.get_exchange()
+        executor = self.clob_api.get_executor()
+        
+        max_approve_erc20(self.web3, collateral, keeper, exchange)
+        max_approve_erc20(self.web3, collateral, keeper, executor)
+
+        max_approve_erc1155(self.web3, conditional, keeper, exchange)
+        max_approve_erc1155(self.web3, conditional, keeper, executor)
+
+
     def main(self):
         with Lifecycle() as lifecycle:
             lifecycle.initial_delay(5) # 5 second initial delay so that bg threads fetch the orderbook
@@ -76,8 +99,9 @@ class ClobMarketMakerKeeper:
             lifecycle.on_shutdown(self.shutdown)
 
     def startup(self):
-        # self.logger.info("Running startup callback...")
-        pass
+        self.logger.info("Running startup callback...")
+        self.approve()
+        self.logger.info("Startup complete!")
 
     def synchronize(self):
         """
@@ -153,9 +177,11 @@ class ClobMarketMakerKeeper:
 
     def shutdown(self):
         """
+        Shut down the keeper
         """
+        self.logger.info("Keeper shutting down...")
         self.order_book_manager.cancel_all_orders()
-        pass
+        self.logger.info("Keeper shut down!")
 
 
 if __name__ == '__main__':

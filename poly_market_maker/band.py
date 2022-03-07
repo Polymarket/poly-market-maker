@@ -255,7 +255,9 @@ class Bands:
             return []
 
     def _new_sell_orders(self, our_sell_orders: list, our_sell_balance: float, target_price: float):
-        """Return sell orders which need to be placed to bring total amounts within all sell bands above minimums."""
+        """
+        Return sell orders which need to be placed to bring total amounts within all sell bands above minimums
+        """
         assert(isinstance(our_sell_orders, list))
         assert(isinstance(our_sell_balance, float))
         assert(isinstance(target_price, float))
