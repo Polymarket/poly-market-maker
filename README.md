@@ -15,5 +15,5 @@ Requires:
 
 - Create a `bands.json` configuration file. See the existing `bands.json`
 
-- Start the keeper with `./run-keeper.sh`
+- Start the keeper with `./run_keeper.sh`
 
