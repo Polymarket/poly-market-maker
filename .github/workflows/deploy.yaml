@@ -1,0 +1,48 @@
+name: Deploy Market Maker Keeper
+
+on:
+
+  pull_request:
+    branches: "*"
+
+jobs:
+
+  build-staging:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.A1_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: eu-west-2
+      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.A1_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Configure git
+        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push ui image
+        working-directory: ./packages/clob-ui
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: polymarket
+          IMAGE_TAG: market_maker_keeper_${{ github.sha }}
+
+        run: |
+          docker build --build-arg GH_ACCESS_TOKEN=$GH_ACCESS_TOKEN -f Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
