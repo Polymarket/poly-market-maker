@@ -6,8 +6,6 @@ WORKDIR /opt/polymarket
 
 RUN cd /opt/polymarket
 
-ARG CHAIN_ID
-
 COPY poly_market_maker poly_market_maker
 COPY Makefile .
 COPY requirements.txt .
