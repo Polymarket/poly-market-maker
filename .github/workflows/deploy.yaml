@@ -1,7 +1,6 @@
 name: Deploy Market Maker Keeper
 
 on:
-
   pull_request:
     branches: "*"
 
@@ -36,7 +35,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and push ui image
+      - name: Build and push keeper image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: polymarket
