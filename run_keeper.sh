@@ -2,9 +2,13 @@
 
 echo "Running poly-market-maker-keeper..."
 
-source .venv/bin/activate || exit
-
-source .env
+if [ -f .env ]
+then
+    echo "Sourcing env variables from dot env file..."
+    source .env
+else
+    echo "Fetching env variables.."
+fi
 
 exec python3 -m poly_market_maker.market_maker \
 --chain-id $CHAIN_ID \
