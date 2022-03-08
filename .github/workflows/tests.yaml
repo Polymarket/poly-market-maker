@@ -1,0 +1,29 @@
+name: Tests
+
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: "*"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9.10
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          make init
+
+      - name: Run Tests
+        run: make test
