@@ -24,7 +24,7 @@ spec:
                   name: mmk-staging-secrets
                   key: pk
             - name: CHAIN_ID
-              value: 80001
+              value: "80001"
             - name: RPC_URL
               valueFrom:
                 secretKeyRef:
@@ -50,6 +50,6 @@ spec:
             - name: BANDS_CONFIG_FILE
               value: "bands.json"
             - name: TOKEN_ID
-              value: 16678291189211314787145083999015737376658799626183230671758641503291735614088
+              value: "16678291189211314787145083999015737376658799626183230671758641503291735614088"
             - name: LOGGING_CONFIG_FILE
               value: "logging.yaml"
