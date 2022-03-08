@@ -42,5 +42,5 @@ jobs:
           IMAGE_TAG: market_maker_keeper_${{ github.sha }}
 
         run: |
-          docker build --build-arg GH_ACCESS_TOKEN=$GH_ACCESS_TOKEN -f Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -f Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
