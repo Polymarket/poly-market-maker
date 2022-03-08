@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmk
+spec:
+  selector:
+    matchLabels:
+      app: mmk
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mmk
+    spec:
+      containers:
+        - name: mmk
+          image: 244513468026.dkr.ecr.eu-west-2.amazonaws.com/polymarket:market_maker_keeper_2a83e2bbca49a3e828fed7f966b69f12b03bbb84
+          command: ["/opt/polymarket/run_keeper.sh"]
+          imagePullPolicy: Always
+          env:
+            - name: PK
+              value: "Hello"
+            - name: CHAIN_ID
+              value: 80001
+            - name: RPC_URL
+              value: ""
+            - name: CLOB_API_URL
+              value: ""
+            - name: CLOB_API_KEY
+              value: ""
+            - name: CLOB_SECRET
+              value: ""
+            - name: CLOB_PASS_PHRASE
+              value: ""
+            - name: BANDS_CONFIG_FILE
+              value: "bands.json"
+            - name: TOKEN_ID
+              value: 16678291189211314787145083999015737376658799626183230671758641503291735614088
+            - name: LOGGING_CONFIG_FILE
+              value: "logging.yaml"

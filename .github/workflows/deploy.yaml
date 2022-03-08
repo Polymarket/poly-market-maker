@@ -1,4 +1,4 @@
-name: Deploy Market Maker Keeper
+name: Deploy MMK
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  build-keeper-staging:
+  build-mmk-staging:
     runs-on: ubuntu-latest
 
     env:
