@@ -64,7 +64,7 @@ class TestBand(TestCase):
         self.assertEqual(scheduled_to_be_canceled.pop(), orders[2])
 
     def test_create_bands(self):
-        with open("./bands.json") as fh:
+        with open("./tests/bands.json") as fh:
             test_bands = Bands.read(json.load(fh))
 
         self.assertIsNotNone(test_bands)

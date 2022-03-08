@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mmk
+  namespace: default
+  labels:
+    app: mmk
+spec:
+  selector:
+    app: mmk
+  clusterIP: None
