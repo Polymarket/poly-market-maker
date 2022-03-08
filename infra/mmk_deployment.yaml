@@ -19,19 +19,34 @@ spec:
           imagePullPolicy: Always
           env:
             - name: PK
-              value: "Hello"
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: pk
             - name: CHAIN_ID
               value: 80001
             - name: RPC_URL
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: rpc_url
             - name: CLOB_API_URL
-              value: ""
+              value: https://clob-staging.polymarket.com
             - name: CLOB_API_KEY
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_key
             - name: CLOB_SECRET
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_secret
             - name: CLOB_PASS_PHRASE
-              value: ""
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_passphrase
             - name: BANDS_CONFIG_FILE
               value: "bands.json"
             - name: TOKEN_ID

@@ -10,6 +10,8 @@ else
     echo "Fetching env variables.."
 fi
 
+source .venv/bin/activate
+
 exec python3 -m poly_market_maker.market_maker \
 --chain-id $CHAIN_ID \
 --eth-key $PK \
