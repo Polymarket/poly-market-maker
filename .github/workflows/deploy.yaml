@@ -1,8 +1,8 @@
 name: Deploy MMK
 
 on:
-  pull_request:
-    branches: "*"
+  push:
+    branches: main
 
 jobs:
 
