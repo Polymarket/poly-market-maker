@@ -39,8 +39,18 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: polymarket
-          IMAGE_TAG: market_maker_keeper_${{ github.sha }}
+          IMAGE_TAG: mmk_${{ github.sha }}
 
         run: |
           docker build -f Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Deploy mmk
+        uses: kodermax/kubectl-aws-eks@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.STAGING_KUBE_CONFIG_DATA }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: polymarket
+          IMAGE_TAG: mmk_${{ github.sha }}
+        with:
+          args: set image deployment mmk mmk=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
