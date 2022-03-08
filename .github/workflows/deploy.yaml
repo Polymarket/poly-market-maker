@@ -37,7 +37,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build and push ui image
-        working-directory: ./packages/clob-ui
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: polymarket
