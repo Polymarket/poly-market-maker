@@ -6,6 +6,8 @@ WORKDIR /opt/polymarket
 
 RUN cd /opt/polymarket
 
+ARG CHAIN_ID
+
 COPY poly_market_maker poly_market_maker
 COPY Makefile .
 COPY requirements.txt .
@@ -16,4 +18,4 @@ COPY install.sh .
 
 RUN ./install.sh
 
-# CMD ["./run_keeper.sh"]
+CMD ["./run_keeper.sh"]
