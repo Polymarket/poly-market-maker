@@ -53,3 +53,7 @@ spec:
               value: "16678291189211314787145083999015737376658799626183230671758641503291735614088"
             - name: LOGGING_CONFIG_FILE
               value: "logging.yaml"
+            - name: GAS_STRATEGY
+              value: "station"
+            - name: GAS_STATION_URL
+              value: "https://gasstation-mumbai.matic.today/"

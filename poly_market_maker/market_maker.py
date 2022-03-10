@@ -3,10 +3,9 @@ import json
 import logging
 import sys
 
-from web3 import Web3
-from web3.middleware import geth_poa_middleware, construct_sign_and_send_raw_middleware
 
-from .utils import setup_logging
+from .gas import GasStation, GasStrategy
+from .utils import setup_logging, setup_web3
 
 from .band import Bands
 from .order import Order
@@ -15,7 +14,7 @@ from .constants import BUY, SELL
 from .lifecycle import Lifecycle
 from .orderbook import OrderBookManager
 
-from .token_utils import max_approve_erc1155, max_approve_erc20, token_balance_of
+from .contracts import Contracts
 
 
 class ClobMarketMakerKeeper:
@@ -47,15 +46,28 @@ class ClobMarketMakerKeeper:
         parser.add_argument("--refresh-frequency", type=int, default=3,
                             help="Order book refresh frequency (in seconds, default: 3)")
 
+        parser.add_argument("--gas-strategy", type=str, default="fixed",
+                            help="Gas strategy to be used['fixed', 'station', 'web3']")
+
+        parser.add_argument("--gas-station-url", type=str, help="Gas station url")
+
+        parser.add_argument("--fixed-gas-price", type=int, help="Fixed gas price(gwei) to be used")
+
         self.args = parser.parse_args(args)
-        self.web3 = Web3(Web3.HTTPProvider(self.args.rpc_url))
-        self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        self.web3.middleware_onion.add(construct_sign_and_send_raw_middleware(self.args.eth_key))
-        self.web3.eth.default_account = self.web3.eth.account.from_key(self.args.eth_key).address
+        self.web3 = setup_web3(self.args)
+        self.address = self.web3.eth.account.from_key(self.args.eth_key).address
 
         self.bands_config = self.args.config
         self.token_id = self.args.token_id
         self.clob_api = ClobApi(self.token_id, self.args)
+
+        self.gas_station = GasStation(
+            strat=GasStrategy(self.args.gas_strategy), 
+            w3=self.web3, 
+            url=self.args.gas_station_url, 
+            fixed=self.args.fixed_gas_price
+        )
+        self.contracts = Contracts(self.web3, self.gas_station) 
 
         self.order_book_manager = OrderBookManager(self.args.refresh_frequency, max_workers=1)
         self.order_book_manager.get_orders_with(lambda: self.clob_api.get_orders())
@@ -68,27 +80,28 @@ class ClobMarketMakerKeeper:
         """
         Fetch the onchain balances of collateral and conditional tokens for the keeper
         """
-        keeper_address = self.clob_api.get_address()
-        self.logger.info(f"Getting balances for address: {keeper_address}")
-        collateral_balance = token_balance_of(self.web3, self.clob_api.get_collateral_address(), keeper_address)
-        conditional_balance = token_balance_of(self.web3, self.clob_api.get_conditional_address(), keeper_address, self.token_id)
+        self.logger.info(f"Getting balances for address: {self.address}")
+        collateral_balance = self.contracts.token_balance_of(self.clob_api.get_collateral_address(), self.address)
+        conditional_balance = self.contracts.token_balance_of(self.clob_api.get_conditional_address(), self.address, self.token_id)
         return {"collateral": collateral_balance, "conditional": conditional_balance}
 
     def approve(self):
         """
         Approve the keeper on the collateral and conditional tokens
         """
-        keeper = self.clob_api.get_address()
         collateral = self.clob_api.get_collateral_address()
         conditional = self.clob_api.get_conditional_address()
         exchange = self.clob_api.get_exchange()
         executor = self.clob_api.get_executor()
-        
-        max_approve_erc20(self.web3, collateral, keeper, exchange)
-        max_approve_erc20(self.web3, collateral, keeper, executor)
+        self.logger.info("Approving collateral and conditional tokens...")
+                
+        self.contracts.max_approve_erc20(collateral, self.address, exchange)
+        self.contracts.max_approve_erc20(collateral, self.address, executor)
 
-        max_approve_erc1155(self.web3, conditional, keeper, exchange)
-        max_approve_erc1155(self.web3, conditional, keeper, executor)
+        self.contracts.max_approve_erc1155(conditional, self.address, exchange)
+        self.contracts.max_approve_erc1155(conditional, self.address, executor)
+
+        self.logger.info("Token approval complete!")
 
 
     def main(self):
@@ -181,7 +194,7 @@ class ClobMarketMakerKeeper:
         """
         self.logger.info("Keeper shutting down...")
         self.order_book_manager.cancel_all_orders()
-        self.logger.info("Keeper shut down!")
+        self.logger.info("Keeper is shut down!")
 
 
 if __name__ == '__main__':

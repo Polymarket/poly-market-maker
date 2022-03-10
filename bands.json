@@ -4,7 +4,7 @@
             "minMargin": 0.01,
             "avgMargin": 0.10,
             "maxMargin": 0.20,
-            "minAmount": 10.0,
+            "minAmount": 500.0,
             "avgAmount": 500.0,
             "maxAmount": 1000.0
         }
@@ -14,7 +14,7 @@
             "minMargin": 0.01,
             "avgMargin": 0.10,
             "maxMargin": 0.20,
-            "minAmount": 10.0,
+            "minAmount": 500.0,
             "avgAmount": 500.0,
             "maxAmount": 1000.0
         }
