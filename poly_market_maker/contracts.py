@@ -34,15 +34,13 @@ class Contracts:
     def is_approved_erc20(self, token:str, owner: str, spender: str):
         erc20 = self.w3.eth.contract(token, abi=erc20_allowance)
         allowance = erc20.functions.allowance(owner, spender).call()
-        # return allowance > 0
-        return False
-
+        return allowance > 0
+        
     def is_approved_erc1155(self, token:str, owner: str, spender: str):
         erc1155 = self.w3.eth.contract(token, abi=erc1155_is_approved_for_all)
         approved = erc1155.functions.isApprovedForAll(owner, spender).call()
-        # return approved
-        return False
-
+        return approved
+        
     def max_approve_erc20(self, token:str, owner: str, spender: str):
         if not self.is_approved_erc20(token, owner, spender):
             erc20 = self.w3.eth.contract(token, abi=erc20_approve)
