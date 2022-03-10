@@ -69,8 +69,7 @@ class GasStation:
         try:
             resp = requests.get(self.url)
             resp_json = resp.json()
-            self.logger.info(resp_json)
-            
+
             # Always fast
             gas = resp_json.get("fast")
             return math.ceil(gas) * (10 ** 9)
