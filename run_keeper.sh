@@ -22,4 +22,6 @@ exec python3 -m poly_market_maker.market_maker \
 --clob-api-passphrase $CLOB_PASS_PHRASE \
 --config $BANDS_CONFIG_FILE \
 --token-id $TOKEN_ID \
+--gas-strategy $GAS_STRATEGY \
+--gas-station-url $GAS_STATION_URL \
 
