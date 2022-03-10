@@ -67,7 +67,6 @@ class GasStation:
 
     def _get_gas_station_gas(self):
         try:
-            self.logger.info(f"Fetching gas from the gas station url: {self.url}")
             resp = requests.get(self.url)
             resp_json = resp.json()
             self.logger.info(resp_json)
