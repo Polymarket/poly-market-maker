@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import yaml
 from logging import config
 from web3 import Web3
@@ -44,3 +45,11 @@ def setup_web3(args):
     w3.middleware_onion.add(simple_cache_middleware)
 
     return w3
+
+def add_randomness(price: float, lower: float, upper: float)->float:
+    return round(price + random.uniform(lower, upper), 2)
+
+
+def randomize_default_price(price: float)->float:
+    return add_randomness(price, -0.1, 0.1)
+

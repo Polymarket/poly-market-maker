@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from .utils import randomize_default_price
+
 from .order import Order
 from .constants import OK
 
@@ -49,8 +51,9 @@ class ClobApi:
         except Exception as e:
             self.logger.error(f"Error fetching current price from the CLOB API: {e}")
         
-        self.logger.warn(f"Could not fetch price from CLOB API, returning default price: {DEFAULT_PRICE}")
-        return DEFAULT_PRICE
+        price = randomize_default_price(DEFAULT_PRICE)
+        self.logger.warn(f"Could not fetch price from CLOB API, returning price: {price}")
+        return price
 
     def get_orders(self):
         """
