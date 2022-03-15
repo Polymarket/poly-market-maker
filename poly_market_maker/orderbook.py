@@ -149,7 +149,7 @@ class OrderBookManager:
                 orders = list(filter(lambda order: order.id not in self._order_ids_cancelling and
                                                 order.id not in self._order_ids_cancelled, orders))
 
-                self.logger.info(f"Returned orders: {[order.id for order in orders]}")
+                self.logger.info(f"Open keeper orders: {[str(order) for order in orders]}")
 
         return OrderBook(orders=orders,
                          balances=self._state['balances'],
