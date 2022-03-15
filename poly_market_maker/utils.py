@@ -27,6 +27,9 @@ def setup_logging(default_path='logging.yaml', default_level=logging.INFO, env_k
         logging.basicConfig(format='%(asctime)-15s %(levelname)-4s %(threadName)s %(message)s',
                         level=(default_level))
         logging.getLogger(__name__).info("Logging configured with default attributes!")
+    # Suppress requests and web3 verbose logs
+    logging.getLogger("requests").setLevel(logging.INFO)
+    logging.getLogger("web3").setLevel(logging.INFO)
 
 def setup_web3(args):
     w3 = Web3(Web3.HTTPProvider(args.rpc_url))

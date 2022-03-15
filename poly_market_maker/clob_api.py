@@ -72,7 +72,7 @@ class ClobApi:
         """
         Places a new order
         """
-        self.logger.info("Placing a new order...")
+        self.logger.info(f"Placing a new order: Order[price={price},size={size},side={side}]")
         try:
             resp = self.client.create_and_post_limit_order(
                 LimitOrderArgs(price=price, size=size, side=side, token_id=self.token_id)
