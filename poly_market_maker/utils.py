@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 import random
 import yaml
@@ -49,8 +50,11 @@ def setup_web3(args):
 
     return w3
 
+def math_round_down(f: float, sig_digits: int)->float:
+    return math.floor((f * (10 ** sig_digits)))/ (10 ** sig_digits)
+
 def add_randomness(price: float, lower: float, upper: float)->float:
-    return round(price + random.uniform(lower, upper), 2)
+    return math_round_down(price + random.uniform(lower, upper), 2)
 
 
 def randomize_default_price(price: float)->float:

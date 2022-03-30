@@ -1,6 +1,8 @@
 import itertools
 import logging
 
+from poly_market_maker.utils import math_round_down
+
 from .constants import BUY, SELL
 from .order import Order
 
@@ -268,7 +270,7 @@ class Bands:
             orders = [order for order in our_sell_orders if band.includes(order, target_price)]
             total_amount = sum(order.size for order in orders)
             if total_amount < band.min_amount:
-                price = band.avg_price(target_price)
+                price = math_round_down(band.avg_price(target_price), 2)
                 size = min(band.avg_amount - total_amount, our_sell_balance)
                 if (price > float(0)) and (size > float(0)):
                     self.logger.debug(f"{band} has existing amount {total_amount},"
@@ -282,7 +284,9 @@ class Bands:
         return new_orders
 
     def _new_buy_orders(self, our_buy_orders: list, our_buy_balance: float, target_price: float):
-        """Return buy orders which need to be placed to bring total amounts within all buy bands above minimums."""
+        """
+        Return buy orders which need to be placed to bring total amounts within all buy bands above minimums
+        """
         assert(isinstance(our_buy_orders, list))
         assert(isinstance(our_buy_balance, float))
         assert(isinstance(target_price, float))
@@ -293,19 +297,8 @@ class Bands:
             self.logger.debug(band)
             orders = [order for order in our_buy_orders if band.includes(order, target_price)]
             total_amount = sum(order.size for order in orders)
-            #TODO: Important to know, price is ALWAYS in terms of the ERC20 asset
-            # size is ALWAYS in terms of the ERC1155 asset
             if total_amount < band.min_amount:
-                price = band.avg_price(target_price)
-                # if buy, the order we're creating must express size in terms of ERC1155
-                # but our buy_balance is in USDC. so we must ensure that the order being created won't be > keeper usdc balance
-                # say price = 0.50c on a target_price of 0.65
-                # avgAmount = 20 YES
-                # and we have 5 USDC on keeper
-                # buy_amount needed to fulfill the order: 20 * 0.50 = 10
-                # so we need to update size such that,
-                # size * 0.5 = 5
-                # size = min(min_size_according_to_buy_bal, avgAmount)
+                price = math_round_down(band.avg_price(target_price), 2)
                 min_size_from_buy_balance = our_buy_balance / price
                 size = min(band.avg_amount - total_amount, min_size_from_buy_balance)
 
@@ -330,3 +323,4 @@ class Bands:
             if len(list(filter(lambda band2: two_bands_overlap(band1, band2), bands))) > 1:
                 return True
         return False
+

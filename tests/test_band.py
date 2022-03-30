@@ -121,16 +121,16 @@ class TestBand(TestCase):
         # we have no buys in that band, failing the minAmount 20 requirement
         # new buy: 
         # size = avgAmount - existingAmount = 30 - 0
-        # price = target_price - (1 - avgMargin) = 0.5 * (1 - 0.25) = 0.375
+        # price = target_price - (1 - avgMargin) = 0.5 * (1 - 0.25) = rounded down(0.375, 2) == 0.37
         self.assertEqual(new_buys[1].size, 30.0)
-        self.assertEqual(new_buys[1].price, 0.375)
+        self.assertEqual(new_buys[1].price, 0.37)
 
         # Similarly for sells
         self.assertEqual(new_sells[0].size, 15.0)
         self.assertEqual(new_sells[0].price, 0.55)
 
         self.assertEqual(new_sells[1].size, 30.0)
-        self.assertEqual(new_sells[1].price, 0.625)
+        self.assertEqual(new_sells[1].price, 0.62)
 
 
 
