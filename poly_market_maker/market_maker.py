@@ -80,7 +80,7 @@ class ClobMarketMakerKeeper:
         """
         Fetch the onchain balances of collateral and conditional tokens for the keeper
         """
-        self.logger.info(f"Getting balances for address: {self.address}")
+        self.logger.debug(f"Getting balances for address: {self.address}")
         collateral_balance = self.contracts.token_balance_of(self.clob_api.get_collateral_address(), self.address)
         conditional_balance = self.contracts.token_balance_of(self.clob_api.get_conditional_address(), self.address, self.token_id)
         return {"collateral": collateral_balance, "conditional": conditional_balance}
@@ -93,15 +93,12 @@ class ClobMarketMakerKeeper:
         conditional = self.clob_api.get_conditional_address()
         exchange = self.clob_api.get_exchange()
         executor = self.clob_api.get_executor()
-        self.logger.info("Approving collateral and conditional tokens...")
                 
         self.contracts.max_approve_erc20(collateral, self.address, exchange)
         self.contracts.max_approve_erc20(collateral, self.address, executor)
 
         self.contracts.max_approve_erc1155(conditional, self.address, exchange)
         self.contracts.max_approve_erc1155(conditional, self.address, executor)
-
-        self.logger.info("Token approval complete!")
 
 
     def main(self):
@@ -120,7 +117,7 @@ class ClobMarketMakerKeeper:
         """
         Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
         """
-        self.logger.info("Synchronizing orderbook...")
+        self.logger.debug("Synchronizing orderbook...")
         with open(self.bands_config) as fh:
             bands = Bands.read(json.load(fh))
         
@@ -171,7 +168,7 @@ class ClobMarketMakerKeeper:
             self.logger.info(f"About to place {len(new_orders)} new orders!")
             self.place_orders(new_orders)
         
-        self.logger.info("Synchronized orderbook!")
+        self.logger.debug("Synchronized orderbook!")
 
     def place_orders(self, new_orders):
         """

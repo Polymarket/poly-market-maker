@@ -43,7 +43,7 @@ class ClobApi:
         """
         Get the current price on the orderbook
         """
-        self.logger.info("Fetching price from the API...")
+        self.logger.debug("Fetching price from the API...")
         try:
             resp = self.client.get_midpoint(self.token_id)
             if resp.get("mid") is not None:
@@ -59,7 +59,7 @@ class ClobApi:
         """
         Get open keeper orders on the orderbook
         """
-        self.logger.info("Fetching orders from the API...")
+        self.logger.debug("Fetching orders from the API...")
         try:
             resp = self.client.get_open_orders(self.token_id)
             if resp.get("orders") is not None:
