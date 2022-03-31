@@ -5,7 +5,7 @@ import sys
 
 
 from .gas import GasStation, GasStrategy
-from .utils import setup_logging, setup_web3
+from .utils import math_round_down, setup_logging, setup_web3
 
 from .band import Bands
 from .order import Order
@@ -176,8 +176,8 @@ class ClobMarketMakerKeeper:
         :param new_orders: list[Orders] 
         """
         def place_order_function(new_order_to_be_placed):
-            price = round(new_order_to_be_placed.price, 2) 
-            size = round(new_order_to_be_placed.size, 2)
+            price = new_order_to_be_placed.price
+            size = math_round_down(new_order_to_be_placed.size, 2)
             side= new_order_to_be_placed.side
             order_id = self.clob_api.place_order(price=price, size=size, side=side)
             return Order(price=price, size=size, side=side, id=order_id)
