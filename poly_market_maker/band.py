@@ -1,7 +1,7 @@
 import itertools
 import logging
 
-from poly_market_maker.utils import math_round_down
+from .utils import math_round_down
 
 from .constants import BUY, SELL
 from .order import Order
