@@ -51,7 +51,18 @@ def setup_web3(args):
     return w3
 
 def math_round_down(f: float, sig_digits: int)->float:
+    str_f = str(f).split(".")
+    if len(str_f) > 0 and len(str_f[1]) == sig_digits:
+        # don't round values which are already the number of sig_digits
+        return f
     return math.floor((f * (10 ** sig_digits)))/ (10 ** sig_digits)
+
+def math_round_up(f: float, sig_digits: int)->float:
+    str_f = str(f).split(".")
+    if len(str_f) > 0 and len(str_f[1]) == sig_digits:
+        # don't round values which are already the number of sig_digits
+        return f
+    return math.ceil((f * (10 ** sig_digits)))/ (10 ** sig_digits)
 
 def add_randomness(price: float, lower: float, upper: float)->float:
     return math_round_down(price + random.uniform(lower, upper), 2)

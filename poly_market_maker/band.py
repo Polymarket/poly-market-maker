@@ -1,7 +1,7 @@
 import itertools
 import logging
 
-from .utils import math_round_down
+from .utils import math_round_down, math_round_up
 
 from .constants import BUY, SELL
 from .order import Order
@@ -270,7 +270,7 @@ class Bands:
             orders = [order for order in our_sell_orders if band.includes(order, target_price)]
             total_amount = sum(order.size for order in orders)
             if total_amount < band.min_amount:
-                price = math_round_down(band.avg_price(target_price), 2)
+                price = math_round_up(band.avg_price(target_price), 2)
                 size = min(band.avg_amount - total_amount, our_sell_balance)
                 if (price > float(0)) and (size > float(0)):
                     self.logger.debug(f"{band} has existing amount {total_amount},"
