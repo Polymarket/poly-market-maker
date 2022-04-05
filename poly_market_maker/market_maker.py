@@ -176,7 +176,7 @@ class ClobMarketMakerKeeper:
         :param new_orders: list[Orders] 
         """
         def place_order_function(new_order_to_be_placed):
-            price = new_order_to_be_placed.price
+            price = math_round_down(new_order_to_be_placed.price, 2)
             size = math_round_down(new_order_to_be_placed.size, 2)
             side= new_order_to_be_placed.side
             order_id = self.clob_api.place_order(price=price, size=size, side=side)
