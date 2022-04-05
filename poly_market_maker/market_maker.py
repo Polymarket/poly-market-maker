@@ -177,7 +177,7 @@ class ClobMarketMakerKeeper:
         """
         def place_order_function(new_order_to_be_placed):
             price = math_round_down(new_order_to_be_placed.price, 2)
-            size = math_round_down(new_order_to_be_placed.size, 2)
+            size = new_order_to_be_placed.size
             side= new_order_to_be_placed.side
             order_id = self.clob_api.place_order(price=price, size=size, side=side)
             return Order(price=price, size=size, side=side, id=order_id)
