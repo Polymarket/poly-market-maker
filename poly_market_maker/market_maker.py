@@ -43,8 +43,8 @@ class ClobMarketMakerKeeper:
 
         parser.add_argument("--token-id", type=int, required=True, help="The token_id of the market being made")
 
-        parser.add_argument("--refresh-frequency", type=int, default=3,
-                            help="Order book refresh frequency (in seconds, default: 3)")
+        parser.add_argument("--refresh-frequency", type=int, default=5,
+                            help="Order book refresh frequency (in seconds, default: 5)")
 
         parser.add_argument("--gas-strategy", type=str, default="fixed",
                             help="Gas strategy to be used['fixed', 'station', 'web3']")
@@ -105,7 +105,7 @@ class ClobMarketMakerKeeper:
         with Lifecycle() as lifecycle:
             lifecycle.initial_delay(5) # 5 second initial delay so that bg threads fetch the orderbook
             lifecycle.on_startup(self.startup)
-            lifecycle.every(3, self.synchronize) # Sync every 3s
+            lifecycle.every(5, self.synchronize) # Sync every 5s
             lifecycle.on_shutdown(self.shutdown)
 
     def startup(self):
