@@ -6,7 +6,7 @@ from .utils import randomize_default_price
 from .order import Order
 from .constants import OK
 
-from py_clob_client.client import ClobClient, ApiCreds, LimitOrderArgs
+from py_clob_client.client import ClobClient, ApiCreds, LimitOrderArgs, FilterParams
 
 DEFAULT_PRICE = 0.5
 
@@ -59,9 +59,9 @@ class ClobApi:
         """
         Get open keeper orders on the orderbook
         """
-        self.logger.debug("Fetching orders from the API...")
+        self.logger.debug("Fetching open keeper orders from the API...")
         try:
-            resp = self.client.get_open_orders(self.token_id)
+            resp = self.client.get_open_orders(FilterParams(market=self.token_id))
             if resp.get("orders") is not None:
                 return [self._get_order(o) for o in resp.get("orders")]
         except Exception as e:
