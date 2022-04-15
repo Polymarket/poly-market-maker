@@ -279,6 +279,22 @@ class OrderBookManager:
         if self.on_update_function is not None:
             self.on_update_function()
 
+    def _run_get_orders(self):
+        try:
+            orders = self.get_orders_function()
+            return orders
+        except Exception as e:
+            self.logger.error(f"Exception fetching orderbook! Error: {e}")
+            return None
+
+    def _run_get_balances(self):
+        try:
+            balances = self.get_balances_function() if self.get_balances_function is not None else None
+            return balances
+        except Exception as e:
+            self.logger.error(f"Exception fetching onchain balances! Error: {e}")
+            return None
+
     def _thread_refresh_order_book(self):
         while True:
             try:
@@ -286,9 +302,10 @@ class OrderBookManager:
                     orders_already_cancelled_before = set(self._order_ids_cancelled)
                     orders_already_placed_before = set(self._orders_placed)
 
-                # get orders, get balances
-                orders = self.get_orders_function()
-                balances = self.get_balances_function() if self.get_balances_function is not None else None
+                # get orders
+                orders = self._run_get_orders()
+                # get balances
+                balances = self._run_get_balances()
 
                 with self._lock:
                     self._order_ids_cancelled = self._order_ids_cancelled - orders_already_cancelled_before
@@ -298,7 +315,18 @@ class OrderBookManager:
                     if self._state is None:
                         self.logger.info("Order book became available")
 
-                    self._state = {'orders': orders, 'balances': balances}
+                    # Issue: RPC endpoints are sometimes unreliable and fetching the onchain balances for the keeper sometimes
+                    # fails. This kills the whole refresh orderbook process which is clearly undesirable.
+                    # Fix should be to ensure the process doesn't fail if any specific internal function fails
+                    if self._state is None:
+                        self._state = {}
+
+                    if orders is not None:
+                        # If either the orderbook or balance check fails, the state stays as it was before the refresh
+                        self._state["orders"] = orders 
+                    if balances is not None:
+                        self._state["balances"] = balances
+                    # self._state = {'orders': orders, 'balances': balances}
                     self._refresh_count += 1
 
                 self._report_order_book_updated()
@@ -306,7 +334,7 @@ class OrderBookManager:
                 self.logger.debug(f"Fetched the order book"
                                   f" (orders: {[order.id for order in orders]})")
             except Exception as e:
-                self.logger.error(f"Failed to fetch the order book ({e})!")
+                self.logger.error(f"Failed to fetch the order book or balances ({e})!")
 
             time.sleep(self.refresh_frequency)
 

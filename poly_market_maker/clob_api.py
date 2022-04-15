@@ -77,14 +77,23 @@ class ClobApi:
             resp = self.client.create_and_post_limit_order(
                 LimitOrderArgs(price=price, size=size, side=side, token_id=self.token_id)
             )
+            order_id = None
             if resp and resp.get("success") and resp.get("orderID"):
-                return resp.get("orderID")
+                order_id = resp.get("orderID")
+                self.logger.info(f"Succesfully placed new order: Order[price={price},size={size},side={side}]!")
+                return order_id
+
+            err_msg = resp.get("errorMsg")
+            self.logger.info(f"Could not place new order! CLOB returned error: {err_msg}")
         except Exception as e:
-            self.logger.error(f"Error placing new order on the CLOB API: {e}")
+            self.logger.error(f"Request exception: failed placing new order: {e}")
         return None
 
     def cancel_order(self, order_id):
         self.logger.info(f"Cancelling order {order_id}...")
+        if order_id is None:
+            self.logger.debug("Invalid order_id")
+            return True
         try:
             resp = self.client.cancel(order_id)
             return resp == OK
