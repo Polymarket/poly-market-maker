@@ -3,9 +3,17 @@ kind: Service
 metadata:
   name: mmk
   namespace: default
+  annotations:
+    prometheus.io/port: "9008"
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/"
   labels:
     app: mmk
 spec:
   selector:
     app: mmk
-  clusterIP: None
+  ports:
+    - port: 9008
+      name: mmk-metr
+      protocol: TCP
+      targetPort: 9008
