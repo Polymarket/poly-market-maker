@@ -3,6 +3,7 @@ import json
 import logging
 import sys
 
+from prometheus_client import start_http_server
 
 from .gas import GasStation, GasStrategy
 from .utils import math_round_down, setup_logging, setup_web3
@@ -13,8 +14,8 @@ from .clob_api import ClobApi
 from .constants import BUY, SELL
 from .lifecycle import Lifecycle
 from .orderbook import OrderBookManager
-
 from .contracts import Contracts
+from .metrics import keeper_balance_amount
 
 
 class ClobMarketMakerKeeper:
@@ -53,7 +54,19 @@ class ClobMarketMakerKeeper:
 
         parser.add_argument("--fixed-gas-price", type=int, help="Fixed gas price(gwei) to be used")
 
+        parser.add_argument(
+            "--metrics-server-port",
+            type=int,
+            default=9008,
+            help="The port where the process must start the metrics server",
+        )
+
         self.args = parser.parse_args(args)
+
+        # server to expose the metrics.
+        self.metrics_server_port = self.args.metrics_server_port
+        start_http_server(self.metrics_server_port)
+
         self.web3 = setup_web3(self.args)
         self.address = self.web3.eth.account.from_key(self.args.eth_key).address
 
@@ -81,8 +94,27 @@ class ClobMarketMakerKeeper:
         Fetch the onchain balances of collateral and conditional tokens for the keeper
         """
         self.logger.debug(f"Getting balances for address: {self.address}")
+
         collateral_balance = self.contracts.token_balance_of(self.clob_api.get_collateral_address(), self.address)
         conditional_balance = self.contracts.token_balance_of(self.clob_api.get_conditional_address(), self.address, self.token_id)
+        gas_balance = self.contracts.gas_balance(self.address)
+
+        keeper_balance_amount.labels(
+            accountaddress=self.address,
+            assetaddress=self.clob_api.get_collateral_address(),
+            tokenid="-1",
+        ).set(collateral_balance)
+        keeper_balance_amount.labels(
+            accountaddress=self.address,
+            assetaddress=self.clob_api.get_conditional_address(),
+            tokenid=self.token_id,
+        ).set(conditional_balance)
+        keeper_balance_amount.labels(
+            accountaddress=self.address,
+            assetaddress="0x0",
+            tokenid="-1",
+        ).set(gas_balance)
+
         return {"collateral": collateral_balance, "conditional": conditional_balance}
 
     def approve(self):
