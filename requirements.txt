@@ -32,7 +32,7 @@ pluggy==1.0.0
 protobuf==3.19.4
 py==1.11.0
 py-clob-client==0.0.15
-py-order-utils==0.0.15
+py-order-utils==0.0.14
 pycryptodome==3.14.1
 pyparsing==3.0.7
 pyrsistent==0.18.1
