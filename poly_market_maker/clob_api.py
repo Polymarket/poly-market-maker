@@ -99,11 +99,11 @@ class ClobApi:
             order_id = None
             if resp and resp.get("success") and resp.get("orderID"):
                 order_id = resp.get("orderID")
-                self.logger.info(f"Succesfully placed new order: Order[price={price},size={size},side={side}]!")
+                self.logger.info(f"Succesfully placed new order: Order[id={order_id},price={price},size={size},side={side}]!")
                 return order_id
 
             err_msg = resp.get("errorMsg")
-            self.logger.info(f"Could not place new order! CLOB returned error: {err_msg}")
+            self.logger.error(f"Could not place new order! CLOB returned error: {err_msg}")
         except Exception as e:
             self.logger.error(f"Request exception: failed placing new order: {e}")
             clob_requests_latency.labels(method="create_and_post_limit_order", status="error").observe(
