@@ -110,6 +110,12 @@ midPrice = fromMoneyLine(-265)
 
 Both market makers bots do the usual calculations to create/cancel orders using these mid prices.
 
+### API quota
+
+We have some limits around the `odds` requests that we can do. That's depend on which plan we pick.
+
+There is a metric that the bot collects that shows the remaining amount of requests that we have for the current month. This metric will be shown on Grafana, also, an alarm will be created to alert us in the case of low level of requests remaining.
+
 ## Next steps
 
 Make the execution and automation easier.
