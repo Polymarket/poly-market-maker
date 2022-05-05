@@ -19,7 +19,7 @@
   ]
 }
 ```
-*to be honest this json shows the price for the winning of each team, we will convert that to possibilities later.*
+*This json shows the price for the winning of each team, we will convert that to possibilities later.*
 
 ## There are two instances of market makers bots running
 
