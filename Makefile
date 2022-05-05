@@ -3,3 +3,6 @@ init:
 
 test:
 	pytest -s
+
+fmt:
+	black ./.

@@ -3,13 +3,15 @@ import signal
 import threading
 import time
 
+
 class AsyncCallback:
     """
     Invokes callback logic in a separate thread
-    Forked and modified from pymaker's AsyncCallback: https://github.com/makerdao/pymaker/blob/master/pymaker/util.py#L100 
+    Forked and modified from pymaker's AsyncCallback: https://github.com/makerdao/pymaker/blob/master/pymaker/util.py#L100
     Attributes:
         callback: The callback function to be invoked in a separate thread.
     """
+
     def __init__(self, callback):
         self.callback = callback
         self.thread = None
@@ -30,6 +32,7 @@ class AsyncCallback:
             `False` if the previous callback invocation still hasn't finished.
         """
         if self.thread is None or not self.thread.is_alive():
+
             def thread_target():
                 if on_start is not None:
                     on_start()
@@ -68,7 +71,8 @@ class Lifecycle:
             lifecycle.on_shutdown(self.some_shutdown_function)
     Note: this version will only listen to timers, instead of per block events for simplicity
     """
-    def __init__(self, delay = 0):
+
+    def __init__(self, delay=0):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.delay = delay
@@ -76,7 +80,7 @@ class Lifecycle:
         self.startup_function = None
         self.shutdown_function = None
         self.every_timers = []
-        
+
         self.terminated_internally = False
         self.terminated_externally = False
         self.fatal_termination = False
@@ -98,20 +102,26 @@ class Lifecycle:
         if len(self.wait_for_functions) > 0:
             self.logger.info("Waiting for initial checks to pass...")
 
-            for index, (wait_for_function, max_wait) in enumerate(self.wait_for_functions, start=1):
+            for index, (wait_for_function, max_wait) in enumerate(
+                self.wait_for_functions, start=1
+            ):
                 start_time = time.time()
                 while True:
                     try:
                         result = wait_for_function()
                     except Exception as e:
-                        self.logger.exception(f"Initial check #{index} failed with an exception: '{e}'")
+                        self.logger.exception(
+                            f"Initial check #{index} failed with an exception: '{e}'"
+                        )
                         result = False
 
                     if result:
                         break
 
                     if time.time() - start_time >= max_wait:
-                        self.logger.warning(f"Initial check #{index} took more than {max_wait} seconds to pass, skipping")
+                        self.logger.warning(
+                            f"Initial check #{index} took more than {max_wait} seconds to pass, skipping"
+                        )
                         break
 
                     time.sleep(0.1)
@@ -149,7 +159,7 @@ class Lifecycle:
         Args:
             initial_delay: Initial delay on keeper startup (in seconds).
         """
-        assert(isinstance(initial_delay, int))
+        assert isinstance(initial_delay, int)
 
         self.delay = initial_delay
 
@@ -165,8 +175,8 @@ class Lifecycle:
             initial_check: Function which will be evaluated and its result compared to True.
             max_wait: Maximum waiting time (in seconds).
         """
-        assert(callable(initial_check))
-        assert(isinstance(max_wait, int))
+        assert callable(initial_check)
+        assert isinstance(max_wait, int)
 
         self.wait_for_functions.append((initial_check, max_wait))
 
@@ -176,9 +186,9 @@ class Lifecycle:
         Args:
             callback: Function to be called on keeper startup.
         """
-        assert(callable(callback))
+        assert callable(callback)
 
-        assert(self.startup_function is None)
+        assert self.startup_function is None
         self.startup_function = callback
 
     def on_shutdown(self, callback):
@@ -187,9 +197,9 @@ class Lifecycle:
         Args:
             callback: Function to be called on keeper shutdown.
         """
-        assert(callable(callback))
+        assert callable(callback)
 
-        assert(self.shutdown_function is None)
+        assert self.shutdown_function is None
         self.shutdown_function = callback
 
     def terminate(self, message=None):
@@ -209,9 +219,13 @@ class Lifecycle:
 
     def _sigint_sigterm_handler(self, sig, frame):
         if self.terminated_externally:
-            self.logger.warning("Graceful keeper termination due to SIGINT/SIGTERM already in progress")
+            self.logger.warning(
+                "Graceful keeper termination due to SIGINT/SIGTERM already in progress"
+            )
         else:
-            self.logger.warning("Keeper received SIGINT/SIGTERM signal, will terminate gracefully")
+            self.logger.warning(
+                "Keeper received SIGINT/SIGTERM signal, will terminate gracefully"
+            )
             self.terminated_externally = True
 
     def _start_thread_safely(self, t: threading.Thread):
@@ -222,7 +236,9 @@ class Lifecycle:
                 t.start()
                 break
             except Exception as e:
-                self.logger.critical(f"Failed to start a thread ({e}), trying again in {delay} seconds")
+                self.logger.critical(
+                    f"Failed to start a thread ({e}), trying again in {delay} seconds"
+                )
                 time.sleep(delay)
 
     def _start_every_timers(self):
@@ -241,17 +257,26 @@ class Lifecycle:
 
         def func():
             try:
-                if not self.terminated_internally and not self.terminated_externally and not self.fatal_termination:
+                if (
+                    not self.terminated_internally
+                    and not self.terminated_externally
+                    and not self.fatal_termination
+                ):
+
                     def on_start():
                         self.logger.debug(f"Processing the timer #{idx}")
-                        
+
                     def on_finish():
                         self.logger.debug(f"Finished processing the timer #{idx}")
-                        
+
                     if not callback.trigger(on_start, on_finish):
-                        self.logger.debug(f"Ignoring timer #{idx} as previous one is already running")
+                        self.logger.debug(
+                            f"Ignoring timer #{idx} as previous one is already running"
+                        )
                 else:
-                    self.logger.debug(f"Ignoring timer #{idx} as keeper is already terminating")
+                    self.logger.debug(
+                        f"Ignoring timer #{idx} as keeper is already terminating"
+                    )
             except:
                 setup_timer(frequency_in_seconds)
                 raise
@@ -270,12 +295,14 @@ class Lifecycle:
 
             # if the keeper logic asked us to terminate, we do so
             if self.terminated_internally:
-                self.logger.warning("Keeper logic asked for termination, the keeper will terminate")
+                self.logger.warning(
+                    "Keeper logic asked for termination, the keeper will terminate"
+                )
                 break
 
             # if SIGINT/SIGTERM asked us to terminate, we do so
             if self.terminated_externally:
-                self.logger.warning("The keeper is terminating due do SIGINT/SIGTERM signal received")
+                self.logger.warning(
+                    "The keeper is terminating due do SIGINT/SIGTERM signal received"
+                )
                 break
-
-

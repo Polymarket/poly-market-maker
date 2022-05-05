@@ -7,18 +7,17 @@ from poly_market_maker.lifecycle import Lifecycle
 
 
 class TestLifecycle(TestCase):
-
     def setUp(self):
         self.counter = 0
 
     def test_init_lifecycle(self):
         l = Lifecycle()
-        
+
         def side_effect():
             self.counter += 1
-            if self.counter >=2:
+            if self.counter >= 2:
                 lifecycle.terminate()
-        
+
         startup = MagicMock()
         callback = MagicMock(side_effect=side_effect)
         shutdown = MagicMock()
