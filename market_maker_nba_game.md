@@ -35,7 +35,7 @@ We are working with the `NO` token and fetching its prices from the `odds` API.
 
 ```json
 {
-  "question": "Will Dallas Mavericks will beat Phoenix Suns?",
+  "question": "Will Dallas Mavericks beat Phoenix Suns?",
   "outcomes": [
     {
       "name": "Dallas Mavericks",
