@@ -71,11 +71,9 @@ class OddsAPI:
                                 prices.append(float(outcome["price"]))
 
         if len(prices) > 0:
-            price_avg = sum(prices) / len(prices)
+            return sum(fromMoneyLine(price) for price in prices) / len(prices)
         else:
             return 0
-
-        return fromMoneyLine(price_avg)
 
     def get_odds(self) -> list:
         start_time = time.time()
