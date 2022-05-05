@@ -24,4 +24,11 @@ exec python3 -m poly_market_maker.market_maker \
 --token-id $TOKEN_ID \
 --gas-strategy $GAS_STRATEGY \
 --gas-station-url $GAS_STATION_URL \
-
+--price-feed-source $PRICE_FEED_SOURCE \
+--odds-api-url $ODDS_API_URL \
+--odds-api-key $ODDS_API_KEY \
+--odds-api-sport $ODDS_API_SPORT \
+--odds-api-region  $ODDS_API_REGION \
+--odds-api-market $ODDS_API_MARKET \
+--odds-api-match-id $ODDS_API_MATCH_ID \
+--odds-api-team-name "$ODDS_API_TEAM_NAME" \
