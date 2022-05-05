@@ -27,6 +27,26 @@ class OddsAPI:
         """
         self.logger = logging.getLogger(self.__class__.__name__)
 
+        if not api_key or not len(api_key):
+            self.logger.fatal('api_key parameter is mandatory and can not be empty')
+            raise Exception('api_key parameter is mandatory and can not be empty')
+
+        if not sport or not len(sport):
+            self.logger.fatal('sport parameter is mandatory and can not be empty')
+            raise Exception('sport parameter is mandatory and can not be empty')
+
+        if not region or not len(region):
+            self.logger.fatal('region parameter is mandatory and can not be empty')
+            raise Exception('region parameter is mandatory and can not be empty')
+
+        if not market or not len(market):
+            self.logger.fatal('market parameter is mandatory and can not be empty')
+            raise Exception('market parameter is mandatory and can not be empty')
+
+        if not api_url or not len(api_url):
+            self.logger.fatal('api_url parameter is mandatory and can not be empty')
+            raise Exception('api_url parameter is mandatory and can not be empty')
+
         self.api_key = api_key
         self.sport = sport
         self.region = region
@@ -51,9 +71,9 @@ class OddsAPI:
                                 prices.append(float(outcome["price"]))
 
         if len(prices) > 0:
-          price_avg = sum(prices) / len(prices)
+            price_avg = sum(prices) / len(prices)
         else:
-          return 0
+            return 0
 
         return fromMoneyLine(price_avg)
 
