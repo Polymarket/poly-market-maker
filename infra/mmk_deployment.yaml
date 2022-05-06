@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: mmk
-          image: 244513468026.dkr.ecr.eu-west-2.amazonaws.com/polymarket:market_maker_keeper_2a83e2bbca49a3e828fed7f966b69f12b03bbb84
+          image: 244513468026.dkr.ecr.eu-west-2.amazonaws.com/polymarket:mmk_a06dbbd8a2870df245f25e49e62da3a85bb76101
           command: ["/opt/polymarket/run_keeper.sh"]
           imagePullPolicy: Always
           env:
@@ -59,21 +59,21 @@ spec:
               value: "https://gasstation-mumbai.matic.today/"
             # odds
             - name: ODDS_API_URL
-              value: ""
+              value: "-"
             - name: PRICE_FEED_SOURCE
               value: "clob"
             - name: ODDS_API_SPORT
-              value: ""
+              value: "-"
             - name: ODDS_API_REGION
-              value: ""
+              value: "-"
             - name: ODDS_API_MARKET
-              value: ""
+              value: "-"
             - name: ODDS_API_MATCH_ID
-              value: ""
+              value: "-"
             - name: ODDS_API_TEAM_NAME
-              value: ""
+              value: "-"
             - name: ODDS_API_KEY
-              value: ""
+              value: "-"
           ports:
             - containerPort: 9008
               name: mmk-metr
