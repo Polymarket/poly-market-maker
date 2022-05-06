@@ -103,8 +103,8 @@ jobs:
         env:
           FILE_NAME: mmk-nba-game-${{ github.event.inputs.game_id }}.yaml
         
-        run: |
-          kubectl apply -f $FILE_NAME
+        with:
+          args: apply -f $FILE_NAME
 
       - name: Bot deployed
         run: |
