@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: some_game
+spec:
+  selector:
+    matchLabels:
+      app: some_game
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: some_game
+    spec:
+      containers:
+        - name: some_game
+          image: 244513468026.dkr.ecr.eu-west-2.amazonaws.com/polymarket:market_maker_keeper_2a83e2bbca49a3e828fed7f966b69f12b03bbb84
+          command: ["/opt/polymarket/run_keeper.sh"]
+          imagePullPolicy: Always
+          env:
+            - name: PK
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: pk
+            - name: CHAIN_ID
+              value: "80001"
+            - name: RPC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: rpc_url
+            - name: CLOB_API_URL
+              value: https://clob-staging.polymarket.com
+            - name: CLOB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_key
+            - name: CLOB_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_secret
+            - name: CLOB_PASS_PHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_passphrase
+            - name: BANDS_CONFIG_FILE
+              value: "bands.json"
+            - name: TOKEN_ID
+              value: "16678291189211314787145083999015737376658799626183230671758641503291735614088"
+            - name: LOGGING_CONFIG_FILE
+              value: "logging.yaml"
+            - name: GAS_STRATEGY
+              value: "station"
+            - name: GAS_STATION_URL
+              value: "https://gasstation-mumbai.matic.today/"
+            # odds
+            - name: ODDS_API_SPORT
+              value: "basketball_nba"
+            - name: ODDS_API_REGION
+              value: "us"
+            - name: ODDS_API_MARKET
+              value: "h2h"
+            - name: ODDS_API_MATCH_ID
+              value: "1b6e97176f54f1a03f71a8832330a67b"
+            - name: ODDS_API_TEAM_NAME
+              value: "Dallas Mavericks"
+            - name: ODDS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: odds_api_key
+          ports:
+            - containerPort: 9008
+              name: mmk-1-metr
+              protocol: TCP

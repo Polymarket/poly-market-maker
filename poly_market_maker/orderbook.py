@@ -15,13 +15,12 @@ class OrderBook:
         -orders_being_placed: `True` if at least one order is currently being placed. `False` otherwise.
         -orders_being_cancelled: `True` if at least one orders is currently being cancelled. `False` otherwise.
     """
-    def __init__(self,
-                 orders,
-                 balances,
-                 orders_being_placed: bool,
-                 orders_being_cancelled: bool):
-        assert(isinstance(orders_being_placed, bool))
-        assert(isinstance(orders_being_cancelled, bool))
+
+    def __init__(
+        self, orders, balances, orders_being_placed: bool, orders_being_cancelled: bool
+    ):
+        assert isinstance(orders_being_placed, bool)
+        assert isinstance(orders_being_cancelled, bool)
 
         self.orders = orders
         self.balances = balances
@@ -40,8 +39,8 @@ class OrderBookManager:
     def __init__(self, refresh_frequency: int, max_workers: int = 5):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        assert(isinstance(refresh_frequency, int))
-        assert(isinstance(max_workers, int))
+        assert isinstance(refresh_frequency, int)
+        assert isinstance(max_workers, int)
 
         self.refresh_frequency = refresh_frequency
         self.get_orders_function = None
@@ -64,7 +63,7 @@ class OrderBookManager:
         """
         Configures the function used to fetch active keeper orders.
         """
-        assert(callable(get_orders_function))
+        assert callable(get_orders_function)
 
         self.get_orders_function = get_orders_function
 
@@ -76,7 +75,7 @@ class OrderBookManager:
                 in order to get current keeper balances. This is optional, is not configured balances
                 will not be fetched.
         """
-        assert(callable(get_balances_function))
+        assert callable(get_balances_function)
 
         self.get_balances_function = get_balances_function
 
@@ -86,7 +85,7 @@ class OrderBookManager:
         Args:
             place_order_function: The function which will be called in order to place new orders.
         """
-        assert(callable(place_order_function))
+        assert callable(place_order_function)
 
         self.place_order_function = place_order_function
 
@@ -96,7 +95,7 @@ class OrderBookManager:
         Args:
             cancel_order_function: The function which will be called in order to cancel orders.
         """
-        assert(callable(cancel_order_function))
+        assert callable(cancel_order_function)
 
         self.cancel_order_function = cancel_order_function
 
@@ -106,12 +105,12 @@ class OrderBookManager:
         Args:
             cancel_all_orders_function: The function which will be called in order to cancel orders.
         """
-        assert(callable(cancel_all_orders_function))
+        assert callable(cancel_all_orders_function)
 
         self.cancel_all_orders_function = cancel_all_orders_function
 
     def on_update(self, on_update_function):
-        assert(callable(on_update_function))
+        assert callable(on_update_function)
 
         self.on_update_function = on_update_function
 
@@ -130,31 +129,50 @@ class OrderBookManager:
         with self._lock:
             self.logger.debug(f"Getting the order book...")
             if self._state.get("orders") is not None:
-                self.logger.debug(f"Orders retrieved last time: {[order.id for order in self._state['orders']]}")
-            self.logger.debug(f"Orders placed since then: {[order.id for order in self._orders_placed]}")
-            self.logger.debug(f"Orders cancelled since then: {[order_id for order_id in self._order_ids_cancelled]}")
-            self.logger.debug(f"Orders being cancelled: {[order_id for order_id in self._order_ids_cancelling]}")
-            self.logger.debug(f"Orders being placed: {self._currently_placing_orders} order(s)")
+                self.logger.debug(
+                    f"Orders retrieved last time: {[order.id for order in self._state['orders']]}"
+                )
+            self.logger.debug(
+                f"Orders placed since then: {[order.id for order in self._orders_placed]}"
+            )
+            self.logger.debug(
+                f"Orders cancelled since then: {[order_id for order_id in self._order_ids_cancelled]}"
+            )
+            self.logger.debug(
+                f"Orders being cancelled: {[order_id for order_id in self._order_ids_cancelling]}"
+            )
+            self.logger.debug(
+                f"Orders being placed: {self._currently_placing_orders} order(s)"
+            )
 
             orders = []
-            
+
             # Add orders which have been placed if they exist
             if self._state.get("orders") is not None:
-                orders = list(self._state['orders'])
+                orders = list(self._state["orders"])
                 for order in self._orders_placed:
                     if order.id not in list(map(lambda order: order.id, orders)):
                         orders.append(order)
 
                 # Remove orders being cancelled and already cancelled.
-                orders = list(filter(lambda order: order.id not in self._order_ids_cancelling and
-                                                order.id not in self._order_ids_cancelled, orders))
+                orders = list(
+                    filter(
+                        lambda order: order.id not in self._order_ids_cancelling
+                        and order.id not in self._order_ids_cancelled,
+                        orders,
+                    )
+                )
 
-                self.logger.debug(f"Open keeper orders: {[str(order) for order in orders]}")
+                self.logger.debug(
+                    f"Open keeper orders: {[str(order) for order in orders]}"
+                )
 
-        return OrderBook(orders=orders,
-                         balances=self._state['balances'],
-                         orders_being_placed=self._currently_placing_orders > 0,
-                         orders_being_cancelled=len(self._order_ids_cancelling) > 0)
+        return OrderBook(
+            orders=orders,
+            balances=self._state["balances"],
+            orders_being_placed=self._currently_placing_orders > 0,
+            orders_being_cancelled=len(self._order_ids_cancelling) > 0,
+        )
 
     def place_order(self, place_order_function):
         """Places new order. Order placement will happen in a background thread.
@@ -162,7 +180,7 @@ class OrderBookManager:
         Args:
             place_order_function: Function used to place the order.
         """
-        assert(callable(place_order_function))
+        assert callable(place_order_function)
 
         with self._lock:
             self._currently_placing_orders += 1
@@ -177,8 +195,8 @@ class OrderBookManager:
         Args:
             new_orders: List of new orders to place.
         """
-        assert(isinstance(new_orders, list))
-        assert(callable(self.place_order_function))
+        assert isinstance(new_orders, list)
+        assert callable(self.place_order_function)
 
         with self._lock:
             self._currently_placing_orders += len(new_orders)
@@ -186,7 +204,9 @@ class OrderBookManager:
         self._report_order_book_updated()
 
         for new_order in new_orders:
-            self._executor.submit(self._thread_place_order(partial(self.place_order_function, new_order)))
+            self._executor.submit(
+                self._thread_place_order(partial(self.place_order_function, new_order))
+            )
 
     def cancel_orders(self, orders: list):
         """
@@ -196,8 +216,8 @@ class OrderBookManager:
             orders: List of orders to cancel.
         """
         self.logger.info("Cancelling orders...")
-        assert(isinstance(orders, list))
-        assert(callable(self.cancel_order_function))
+        assert isinstance(orders, list)
+        assert callable(self.cancel_order_function)
 
         with self._lock:
             for order in orders:
@@ -206,7 +226,11 @@ class OrderBookManager:
         self._report_order_book_updated()
 
         for order in orders:
-            self._executor.submit(self._thread_cancel_order(order.id, partial(self.cancel_order_function, order)))
+            self._executor.submit(
+                self._thread_cancel_order(
+                    order.id, partial(self.cancel_order_function, order)
+                )
+            )
 
     def cancel_all_orders(self):
         """
@@ -225,7 +249,9 @@ class OrderBookManager:
             self.logger.info(f"Cancelling {len(order_ids)} open orders...")
 
             # Cancel all orders
-            self._executor.submit(self._thread_cancel_all(order_ids, self.cancel_all_orders_function))
+            self._executor.submit(
+                self._thread_cancel_all(order_ids, self.cancel_all_orders_function)
+            )
             self.wait_for_stable_order_book()
 
         # Wait for the background thread to refresh the order book twice, so we are 99.9% sure
@@ -234,7 +260,9 @@ class OrderBookManager:
         # The reason we wait twice for the order book refresh is that the first refresh might have
         # started still while the orders were still being cancelled. By waiting twice we are sure that the
         # second refresh has started after the whole order cancellation process was already finished.
-        self.logger.info("No open orders. Waiting for the order book to refresh twice just to be sure...")
+        self.logger.info(
+            "No open orders. Waiting for the order book to refresh twice just to be sure..."
+        )
         self.wait_for_order_book_refresh()
         self.wait_for_order_book_refresh()
 
@@ -271,7 +299,10 @@ class OrderBookManager:
         """Wait until no background order placement nor cancellation takes place."""
         while True:
             order_book = self.get_order_book()
-            if not order_book.orders_being_cancelled and not order_book.orders_being_placed:
+            if (
+                not order_book.orders_being_cancelled
+                and not order_book.orders_being_placed
+            ):
                 break
             time.sleep(0.1)
 
@@ -289,7 +320,11 @@ class OrderBookManager:
 
     def _run_get_balances(self):
         try:
-            balances = self.get_balances_function() if self.get_balances_function is not None else None
+            balances = (
+                self.get_balances_function()
+                if self.get_balances_function is not None
+                else None
+            )
             return balances
         except Exception as e:
             self.logger.error(f"Exception fetching onchain balances! Error: {e}")
@@ -308,7 +343,9 @@ class OrderBookManager:
                 balances = self._run_get_balances()
 
                 with self._lock:
-                    self._order_ids_cancelled = self._order_ids_cancelled - orders_already_cancelled_before
+                    self._order_ids_cancelled = (
+                        self._order_ids_cancelled - orders_already_cancelled_before
+                    )
                     for order in orders_already_placed_before:
                         self._orders_placed.remove(order)
 
@@ -323,7 +360,7 @@ class OrderBookManager:
 
                     if orders is not None:
                         # If either the orderbook or balance check fails, the state stays as it was before the refresh
-                        self._state["orders"] = orders 
+                        self._state["orders"] = orders
                     if balances is not None:
                         self._state["balances"] = balances
                     # self._state = {'orders': orders, 'balances': balances}
@@ -331,15 +368,17 @@ class OrderBookManager:
 
                 self._report_order_book_updated()
 
-                self.logger.debug(f"Fetched the order book"
-                                  f" (orders: {[order.id for order in orders]})")
+                self.logger.debug(
+                    f"Fetched the order book"
+                    f" (orders: {[order.id for order in orders]})"
+                )
             except Exception as e:
                 self.logger.error(f"Failed to fetch the order book or balances ({e})!")
 
             time.sleep(self.refresh_frequency)
 
     def _thread_place_order(self, place_order_function):
-        assert(callable(place_order_function))
+        assert callable(place_order_function)
 
         def func():
             try:
@@ -359,7 +398,7 @@ class OrderBookManager:
         return func
 
     def _thread_cancel_order(self, order_id, cancel_order_function):
-        assert(callable(cancel_order_function))
+        assert callable(cancel_order_function)
 
         def func():
             try:
@@ -382,7 +421,7 @@ class OrderBookManager:
         return func
 
     def _thread_cancel_all(self, order_ids, cancel_all_function):
-        assert(callable(cancel_all_function))
+        assert callable(cancel_all_function)
 
         def func():
             try:
