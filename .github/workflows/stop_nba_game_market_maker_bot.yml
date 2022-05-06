@@ -1,6 +1,6 @@
 # This is a basic workflow that is manually triggered
 
-name: Stop an NBA game market maker bot
+name: Stop an NBA game market maker bots
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
@@ -15,7 +15,7 @@ on:
 
 
 jobs:
-  bot_creation:
+  bots_deletion:
     runs-on: ubuntu-latest
 
     env:
@@ -52,7 +52,7 @@ jobs:
         with:
           args: delete deployment $DEPLOYMENT_NAME
 
-      - name: Bot removed
+      - name: Bots removed
         run: |
           echo "Game ${{ github.event.inputs.game_id }} bot removed"
           echo "Team A instance: mmk-game-${{ github.event.inputs.game_id }}-team-a removed"

@@ -1,6 +1,6 @@
 # This is a basic workflow that is manually triggered
 
-name: Start an NBA game market maker bot
+name: Start an NBA game market maker bots
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
@@ -66,7 +66,7 @@ on:
 
 
 jobs:
-  bot_creation:
+  bots_creation:
     runs-on: ubuntu-latest
 
     env:
@@ -106,7 +106,7 @@ jobs:
           docker build -f Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Create kubernetes file
+      - name: Create kubernetes files
         env:
           GAME_ID: ${{ github.event.inputs.game_id }}
           TOKEN_ID_TEAM_A: ${{ github.event.inputs.token_id_team_a }}
@@ -137,7 +137,7 @@ jobs:
         with:
           args: apply -f $FILE_NAME
 
-      - name: Bot deployed
+      - name: Bots deployed
         run: |
           echo "Game ${{ github.event.inputs.game_id }} bot deployed, ${{ github.event.inputs.team_a }} VS ${{ github.event.inputs.team_b }}."
           echo "Team A instance: mmk-game-${{ github.event.inputs.game_id }}-team-a"
