@@ -19,7 +19,7 @@ on:
         required: true
       
       token_id_team_b:
-        description: 'Token Id team b: Id of the conditional token for the winning of the Team B'
+        description: 'Token Id team B: Id of the conditional token for the winning of the Team B'
         type: string
         required: true
       
