@@ -39,10 +39,10 @@ jobs:
       - name: Remove market maker bot
         uses: ckuroki/kubectl-aws-eks@v1
         env:
-          FILE_NAME: mmk-nba-game-${{ github.event.inputs.game_id }}
+          DEPLOYMENT_NAME: mmk-nba-game-${{ github.event.inputs.game_id }}
         
         with:
-          args: delete deployment $FILE_NAME
+          args: delete deployment $DEPLOYMENT_NAME
 
       - name: Bot removed
         run: |
