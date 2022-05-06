@@ -57,6 +57,23 @@ spec:
               value: "station"
             - name: GAS_STATION_URL
               value: "https://gasstation-mumbai.matic.today/"
+            # odds
+            - name: ODDS_API_URL
+              value: ""
+            - name: PRICE_FEED_SOURCE
+              value: "clob"
+            - name: ODDS_API_SPORT
+              value: ""
+            - name: ODDS_API_REGION
+              value: ""
+            - name: ODDS_API_MARKET
+              value: ""
+            - name: ODDS_API_MATCH_ID
+              value: ""
+            - name: ODDS_API_TEAM_NAME
+              value: ""
+            - name: ODDS_API_KEY
+              value: ""
           ports:
             - containerPort: 9008
               name: mmk-metr

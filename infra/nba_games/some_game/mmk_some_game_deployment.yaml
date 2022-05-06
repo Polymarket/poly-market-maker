@@ -58,6 +58,10 @@ spec:
             - name: GAS_STATION_URL
               value: "https://gasstation-mumbai.matic.today/"
             # odds
+            - name: ODDS_API_URL
+              value: "https://api.the-odds-api.com/v4/sports"
+            - name: PRICE_FEED_SOURCE
+              value: "odds_api"
             - name: ODDS_API_SPORT
               value: "basketball_nba"
             - name: ODDS_API_REGION
