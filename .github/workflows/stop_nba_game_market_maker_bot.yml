@@ -1,0 +1,49 @@
+# This is a basic workflow that is manually triggered
+
+name: Stop an NBA game market maker bot
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      game_id:
+        description: 'Id of the game from odds API'
+        type: string
+        required: true
+
+
+jobs:
+  bot_creation:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.A1_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: eu-west-2
+      KUBE_CONFIG_DATA: ${{ secrets.STAGING_KUBE_CONFIG_DATA }}
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Remove market maker bot
+        uses: ckuroki/kubectl-aws-eks@v1
+        env:
+          DEPLOYMENT_NAME: mmk-nba-game-${{ github.event.inputs.game_id }}
+        
+        with:
+          args: delete deployment $DEPLOYMENT_NAME
+
+      - name: Bot removed
+        run: |
+          echo "Game ${{ github.event.inputs.game_id }} bot removed"
