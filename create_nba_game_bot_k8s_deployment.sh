@@ -3,51 +3,57 @@
 ## Parameters
 
 BANDS_CONFIG_FILE=$1
-TOKEN_ID=$2
-ODDS_API_SPORT=$3
-ODDS_API_REGION=$4
-ODDS_API_MARKET=$5
-ODDS_API_MATCH_ID=$6
-ODDS_API_TEAM_NAME=$7
-IMAGE_ID=$8
+TOKEN_ID_TEAM_A=$2
+TOKEN_ID_TEAM_B=$3
+ODDS_API_SPORT=$4
+ODDS_API_REGION=$5
+ODDS_API_MARKET=$6
+ODDS_API_MATCH_ID=$7
+ODDS_API_TEAM_A_NAME=$8
+ODDS_API_TEAM_B_NAME=$9
+IMAGE_ID="${10}"
 
 echo "Bands file: $BANDS_CONFIG_FILE" # bands file
-echo "Token id: $TOKEN_ID" # token id
+echo "Token id team A: $TOKEN_ID_TEAM_A" # token id
+echo "Token id team B: $TOKEN_ID_TEAM_B" # token id
 echo "Sport: $ODDS_API_SPORT" # odds api sport
 echo "Region: $ODDS_API_REGION" # odds api region
 echo "Market: $ODDS_API_MARKET" # odds api market
 echo "Game id: $ODDS_API_MATCH_ID" # match id
-echo "Team: $ODDS_API_TEAM_NAME" # team name
+echo "Team A: $ODDS_API_TEAM_A_NAME" # team name
+echo "Team B: $ODDS_API_TEAM_B_NAME" # team name
 echo "Image id: $IMAGE_ID" # ecr image id
 
 ## Variable for the file
 
-NAME="mmk-nba-game-$ODDS_API_MATCH_ID"
-PORT_NAME="mmk-${NAME:0:10}"
+NAME_TEAM_A="mmk-game-$ODDS_API_MATCH_ID-team-a"
+PORT_NAME_A="${ODDS_API_MATCH_ID:0:11}${ODDS_API_MARKET:0:3}a"
+
+NAME_TEAM_B="mmk-game-$ODDS_API_MATCH_ID-team-b"
+PORT_NAME_B="${ODDS_API_MATCH_ID:0:11}${ODDS_API_MARKET:0:3}b"
 
 
 ## File creation
 
-K8S_FILE="$NAME.yaml"
-
-cat > $K8S_FILE <<- EOM
+K8S_FILE_A="$NAME_TEAM_A.yaml"
+cat > $K8S_FILE_A <<- EOM
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $NAME
+  name: $NAME_TEAM_A
 spec:
   selector:
     matchLabels:
-      app: $NAME
+      app: $NAME_TEAM_A
   replicas: 1
   template:
     metadata:
       labels:
-        app: $NAME
+        app: $NAME_TEAM_A
     spec:
       containers:
-        - name: $NAME
+        - name: $NAME_TEAM_A
           image: 244513468026.dkr.ecr.eu-west-2.amazonaws.com/polymarket:$IMAGE_ID
           command: ["/opt/polymarket/run_keeper.sh"]
           imagePullPolicy: Always
@@ -84,7 +90,7 @@ spec:
             - name: BANDS_CONFIG_FILE
               value: $BANDS_CONFIG_FILE
             - name: TOKEN_ID
-              value: "$TOKEN_ID"
+              value: "$TOKEN_ID_TEAM_A"
             - name: LOGGING_CONFIG_FILE
               value: "logging.yaml"
             - name: GAS_STRATEGY
@@ -105,7 +111,7 @@ spec:
             - name: ODDS_API_MATCH_ID
               value: $ODDS_API_MATCH_ID
             - name: ODDS_API_TEAM_NAME
-              value: $ODDS_API_TEAM_NAME
+              value: "$ODDS_API_TEAM_A_NAME"
             - name: ODDS_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -113,30 +119,140 @@ spec:
                   key: odds_api_key
           ports:
             - containerPort: 9008
-              name: $PORT_NAME
+              name: $PORT_NAME_A
               protocol: TCP
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: $NAME
+  name: $NAME_TEAM_A
   namespace: default
   annotations:
     prometheus.io/port: "9008"
     prometheus.io/scrape: "true"
     prometheus.io/path: "/"
   labels:
-    app: $NAME
+    app: $NAME_TEAM_A
 spec:
   selector:
-    app: $NAME
+    app: $NAME_TEAM_A
   ports:
     - port: 9008
-      name: $PORT_NAME
+      name: $PORT_NAME_A
+      protocol: TCP
+      targetPort: 9008
+EOM
+
+
+K8S_FILE_B="$NAME_TEAM_B.yaml"
+cat > $K8S_FILE_B <<- EOM
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $NAME_TEAM_B
+spec:
+  selector:
+    matchLabels:
+      app: $NAME_TEAM_B
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: $NAME_TEAM_B
+    spec:
+      containers:
+        - name: $NAME_TEAM_B
+          image: 244513468026.dkr.ecr.eu-west-2.amazonaws.com/polymarket:$IMAGE_ID
+          command: ["/opt/polymarket/run_keeper.sh"]
+          imagePullPolicy: Always
+          env:
+            - name: PK
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: pk
+            - name: CHAIN_ID
+              value: "80001"
+            - name: RPC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: rpc_url
+            - name: CLOB_API_URL
+              value: https://clob-staging.polymarket.com
+            - name: CLOB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_key
+            - name: CLOB_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_secret
+            - name: CLOB_PASS_PHRASE
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: clob_api_passphrase
+            - name: BANDS_CONFIG_FILE
+              value: $BANDS_CONFIG_FILE
+            - name: TOKEN_ID
+              value: "$TOKEN_ID_TEAM_B"
+            - name: LOGGING_CONFIG_FILE
+              value: "logging.yaml"
+            - name: GAS_STRATEGY
+              value: "station"
+            - name: GAS_STATION_URL
+              value: "https://gasstation-mumbai.matic.today/"
+            # odds
+            - name: ODDS_API_URL
+              value: "https://api.the-odds-api.com/v4/sports"
+            - name: PRICE_FEED_SOURCE
+              value: "odds_api"
+            - name: ODDS_API_SPORT
+              value: $ODDS_API_SPORT
+            - name: ODDS_API_REGION
+              value: $ODDS_API_REGION
+            - name: ODDS_API_MARKET
+              value: $ODDS_API_MARKET
+            - name: ODDS_API_MATCH_ID
+              value: $ODDS_API_MATCH_ID
+            - name: ODDS_API_TEAM_NAME
+              value: "$ODDS_API_TEAM_B_NAME"
+            - name: ODDS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mmk-staging-secrets
+                  key: odds_api_key
+          ports:
+            - containerPort: 9008
+              name: $PORT_NAME_B
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $NAME_TEAM_B
+  namespace: default
+  annotations:
+    prometheus.io/port: "9008"
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/"
+  labels:
+    app: $NAME_TEAM_B
+spec:
+  selector:
+    app: $NAME_TEAM_B
+  ports:
+    - port: 9008
+      name: $PORT_NAME_B
       protocol: TCP
       targetPort: 9008
 EOM
 
 
 
-echo $K8S_FILE
+echo $K8S_FILE_A
+echo $K8S_FILE_B

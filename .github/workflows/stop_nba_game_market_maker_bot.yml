@@ -1,6 +1,6 @@
 # This is a basic workflow that is manually triggered
 
-name: Stop an NBA game market maker bot
+name: Stop an NBA game market maker bots
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
@@ -15,7 +15,7 @@ on:
 
 
 jobs:
-  bot_creation:
+  bots_deletion:
     runs-on: ubuntu-latest
 
     env:
@@ -36,14 +36,24 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Remove market maker bot
+      - name: Remove market maker bot for team A
         uses: ckuroki/kubectl-aws-eks@v1
         env:
-          DEPLOYMENT_NAME: mmk-nba-game-${{ github.event.inputs.game_id }}
+          DEPLOYMENT_NAME: mmk-game-${{ github.event.inputs.game_id }}-team-a
         
         with:
           args: delete deployment $DEPLOYMENT_NAME
 
-      - name: Bot removed
+      - name: Remove market maker bot for team B
+        uses: ckuroki/kubectl-aws-eks@v1
+        env:
+          DEPLOYMENT_NAME: mmk-game-${{ github.event.inputs.game_id }}-team-b
+        
+        with:
+          args: delete deployment $DEPLOYMENT_NAME
+
+      - name: Bots removed
         run: |
           echo "Game ${{ github.event.inputs.game_id }} bot removed"
+          echo "Team A instance: mmk-game-${{ github.event.inputs.game_id }}-team-a removed"
+          echo "Team B instance: mmk-game-${{ github.event.inputs.game_id }}-team-b removed"
