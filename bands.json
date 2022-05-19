@@ -4,9 +4,9 @@
             "minMargin": 0.01,
             "avgMargin": 0.10,
             "maxMargin": 0.20,
-            "minAmount": 100.0,
-            "avgAmount": 100.0,
-            "maxAmount": 500.0
+            "minAmount": 200.0,
+            "avgAmount": 200.0,
+            "maxAmount": 1000.0
         }
     ],
     "sellBands": [
@@ -14,9 +14,9 @@
             "minMargin": 0.01,
             "avgMargin": 0.10,
             "maxMargin": 0.20,
-            "minAmount": 100.0,
-            "avgAmount": 100.0,
-            "maxAmount": 500.0
+            "minAmount": 200.0,
+            "avgAmount": 200.0,
+            "maxAmount": 1000.0
         }
     ]
 }
