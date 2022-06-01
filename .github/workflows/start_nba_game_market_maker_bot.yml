@@ -8,6 +8,15 @@ on:
   workflow_dispatch:
     # Inputs the workflow accepts.
     inputs:
+      environment:
+        description: 'Environment where deploy'
+        type: choice
+        default: "prod"
+        options:
+          - "prod"
+          - "staging"
+        required: true
+
       game_id:
         description: 'Game Id: Id of the game from odds API'
         type: string
@@ -69,16 +78,29 @@ jobs:
   bots_creation:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.A1_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: eu-west-2
-      GH_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-      KUBE_CONFIG_DATA: ${{ secrets.STAGING_KUBE_CONFIG_DATA }}
-      ECR_REPOSITORY: polymarket
-      IMAGE_TAG: mmk_nba_game_${{ github.event.inputs.game_id }}_${{ github.sha }}
-
     steps:
+      - name: Sets env vars for prod env
+        run: |
+          echo "AWS_ACCESS_KEY_ID= ${{ secrets.A1_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY= ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_REGION= eu-west-2" >> $GITHUB_ENV
+          echo "KUBE_CONFIG_DATA= ${{ secrets.STAGING_KUBE_CONFIG_DATA }}" >> $GITHUB_ENV
+          echo "GH_ACCESS_TOKEN= ${{ secrets.GH_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY= polymarket" >> $GITHUB_ENV
+          echo "IMAGE_TAG= mmk_nba_game_${{ github.event.inputs.game_id }}_${{ github.sha }}_main" >> $GITHUB_ENV
+        if: ${{ github.event.inputs.environment == "prod" }}
+
+      - name: Sets env vars for staging env
+        run: |
+          echo "AWS_ACCESS_KEY_ID= ${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY= ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_REGION= eu-west-2" >> $GITHUB_ENV
+          echo "KUBE_CONFIG_DATA= ${{ secrets.PROD_KUBE_CONFIG_DATA }}" >> $GITHUB_ENV
+          echo "GH_ACCESS_TOKEN= ${{ secrets.GH_ACCESS_TOKEN }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY= polymarket" >> $GITHUB_ENV
+          echo "IMAGE_TAG= mmk_nba_game_${{ github.event.inputs.game_id }}_${{ github.sha }}" >> $GITHUB_ENV
+        if: ${{ github.event.inputs.environment != "prod" }}
+
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
@@ -117,9 +139,10 @@ jobs:
           REGION: ${{ github.event.inputs.region }}
           MARKET: ${{ github.event.inputs.market }}
           BANDS_FILE: "bands.json"
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
 
         run: |
-          ./create_nba_game_bot_k8s_deployment.sh $BANDS_FILE $TOKEN_ID_TEAM_A $TOKEN_ID_TEAM_B $SPORT $REGION $MARKET $GAME_ID "$TEAM_A" "$TEAM_B" $IMAGE_TAG
+          ./create_nba_game_bot_k8s_deployment.sh $BANDS_FILE $TOKEN_ID_TEAM_A $TOKEN_ID_TEAM_B $SPORT $REGION $MARKET $GAME_ID "$TEAM_A" "$TEAM_B" $IMAGE_TAG $ENVIRONMENT
 
       - name: Deploy market maker bot for team A
         uses: ckuroki/kubectl-aws-eks@v1
