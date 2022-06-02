@@ -12,6 +12,7 @@ ODDS_API_MATCH_ID=$7
 ODDS_API_TEAM_A_NAME=$8
 ODDS_API_TEAM_B_NAME=$9
 IMAGE_ID="${10}"
+ENVIRONMENT="${11}"
 
 echo "Bands file: $BANDS_CONFIG_FILE" # bands file
 echo "Token id team A: $TOKEN_ID_TEAM_A" # token id
@@ -23,6 +24,7 @@ echo "Game id: $ODDS_API_MATCH_ID" # match id
 echo "Team A: $ODDS_API_TEAM_A_NAME" # team name
 echo "Team B: $ODDS_API_TEAM_B_NAME" # team name
 echo "Image id: $IMAGE_ID" # ecr image id
+echo "Environment: $ENVIRONMENT" # ecr image id
 
 ## Variable for the file
 
@@ -32,6 +34,27 @@ PORT_NAME_A="${ODDS_API_MATCH_ID:0:11}${ODDS_API_MARKET:0:3}a"
 NAME_TEAM_B="mmk-game-$ODDS_API_MATCH_ID-team-b"
 PORT_NAME_B="${ODDS_API_MATCH_ID:0:11}${ODDS_API_MARKET:0:3}b"
 
+SECRETS_NAME=""
+CHAIN_ID=""
+CLOB_API_URL=""
+GAS_STATION_URL=""
+if [ $ENVIRONMENT = "prod" ]
+then
+  SECRETS_NAME="mmk-prod-secrets"
+  CHAIN_ID="137"
+  CLOB_API_URL="https://clob.polymarket.com"
+  GAS_STATION_URL="https://gasstation-mainnet.matic.network/v2"
+else
+  SECRETS_NAME="mmk-staging-secrets"
+  CHAIN_ID="80001"
+  CLOB_API_URL="https://clob-staging.polymarket.com"
+  GAS_STATION_URL="https://gasstation-mumbai.matic.today/"
+fi
+
+echo "Secrets name: $SECRETS_NAME" # name of the secret
+echo "Chain: $CHAIN_ID" # chain id
+echo "Clob url: $CLOB_API_URL" # clob tracker api url
+echo "Gas station url: $GAS_STATION_URL" # gas station url
 
 ## File creation
 
@@ -61,31 +84,31 @@ spec:
             - name: PK
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: pk
             - name: CHAIN_ID
-              value: "80001"
+              value: "$CHAIN_ID"
             - name: RPC_URL
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: rpc_url
             - name: CLOB_API_URL
-              value: https://clob-staging.polymarket.com
+              value: $CLOB_API_URL
             - name: CLOB_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: clob_api_key
             - name: CLOB_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: clob_api_secret
             - name: CLOB_PASS_PHRASE
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: clob_api_passphrase
             - name: BANDS_CONFIG_FILE
               value: $BANDS_CONFIG_FILE
@@ -96,7 +119,7 @@ spec:
             - name: GAS_STRATEGY
               value: "station"
             - name: GAS_STATION_URL
-              value: "https://gasstation-mumbai.matic.today/"
+              value: $GAS_STATION_URL
             # odds
             - name: ODDS_API_URL
               value: "https://api.the-odds-api.com/v4/sports"
@@ -115,7 +138,7 @@ spec:
             - name: ODDS_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: odds_api_key
           ports:
             - containerPort: 9008
@@ -170,31 +193,31 @@ spec:
             - name: PK
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: pk
             - name: CHAIN_ID
-              value: "80001"
+              value: "$CHAIN_ID"
             - name: RPC_URL
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: rpc_url
             - name: CLOB_API_URL
-              value: https://clob-staging.polymarket.com
+              value: $CLOB_API_URL
             - name: CLOB_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: clob_api_key
             - name: CLOB_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: clob_api_secret
             - name: CLOB_PASS_PHRASE
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: clob_api_passphrase
             - name: BANDS_CONFIG_FILE
               value: $BANDS_CONFIG_FILE
@@ -205,7 +228,7 @@ spec:
             - name: GAS_STRATEGY
               value: "station"
             - name: GAS_STATION_URL
-              value: "https://gasstation-mumbai.matic.today/"
+              value: $GAS_STATION_URL
             # odds
             - name: ODDS_API_URL
               value: "https://api.the-odds-api.com/v4/sports"
@@ -224,7 +247,7 @@ spec:
             - name: ODDS_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: mmk-staging-secrets
+                  name: $SECRETS_NAME
                   key: odds_api_key
           ports:
             - containerPort: 9008
