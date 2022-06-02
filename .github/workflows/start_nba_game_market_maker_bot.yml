@@ -114,7 +114,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Configure git
-        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+        run: git config --global url.https://${{ env.GH_ACCESS_TOKEN }}@github.com/.insteadOf https://github.com/
 
       - name: Login to Amazon ECR
         id: login-ecr
