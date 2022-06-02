@@ -88,7 +88,7 @@ jobs:
           echo "GH_ACCESS_TOKEN= ${{ secrets.GH_ACCESS_TOKEN }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY= polymarket" >> $GITHUB_ENV
           echo "IMAGE_TAG= mmk_nba_game_${{ github.event.inputs.game_id }}_${{ github.sha }}_main" >> $GITHUB_ENV
-        if: ${{ github.event.inputs.environment == "prod" }}
+        if: github.event.inputs.environment == 'prod'
 
       - name: Sets env vars for staging env
         run: |
@@ -99,7 +99,7 @@ jobs:
           echo "GH_ACCESS_TOKEN= ${{ secrets.GH_ACCESS_TOKEN }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY= polymarket" >> $GITHUB_ENV
           echo "IMAGE_TAG= mmk_nba_game_${{ github.event.inputs.game_id }}_${{ github.sha }}" >> $GITHUB_ENV
-        if: ${{ github.event.inputs.environment != "prod" }}
+        if: github.event.inputs.environment != 'prod'
 
       - name: Checkout Code
         uses: actions/checkout@v2

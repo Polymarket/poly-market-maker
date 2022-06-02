@@ -34,7 +34,7 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY= ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
           echo "AWS_REGION= eu-west-2" >> $GITHUB_ENV
           echo "KUBE_CONFIG_DATA= ${{ secrets.STAGING_KUBE_CONFIG_DATA }}" >> $GITHUB_ENV
-        if: ${{ github.event.inputs.environment == "prod" }}
+        if: github.event.inputs.environment == 'prod'
 
       - name: Sets env vars for staging env
         run: |
@@ -42,7 +42,7 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY= ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
           echo "AWS_REGION= eu-west-2" >> $GITHUB_ENV
           echo "KUBE_CONFIG_DATA= ${{ secrets.PROD_KUBE_CONFIG_DATA }}" >> $GITHUB_ENV
-        if: ${{ github.event.inputs.environment != "prod" }}
+        if: github.event.inputs.environment != 'prod'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
