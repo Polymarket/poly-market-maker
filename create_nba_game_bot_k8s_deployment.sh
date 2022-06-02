@@ -43,7 +43,7 @@ then
   SECRETS_NAME="mmk-prod-secrets"
   CHAIN_ID="137"
   CLOB_API_URL="https://clob.polymarket.com"
-  GAS_STATION_URL="https://gasstation-mainnet.matic.network/v2"
+  GAS_STATION_URL="https://gasstation-mainnet.matic.network/v1/"
 else
   SECRETS_NAME="mmk-staging-secrets"
   CHAIN_ID="80001"

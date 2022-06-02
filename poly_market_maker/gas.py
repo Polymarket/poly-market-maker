@@ -8,7 +8,7 @@ import time
 from .metrics import gas_station_latency
 
 
-DEFAULT_FIXED_GAS_PRICE = 10000000000
+DEFAULT_FIXED_GAS_PRICE = 100000000000
 
 
 class GasStrategy(enum.Enum):
