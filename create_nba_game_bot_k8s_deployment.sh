@@ -85,7 +85,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: $SECRETS_NAME
-                  key: pk
+                  key: team_a_pk
             - name: CHAIN_ID
               value: "$CHAIN_ID"
             - name: RPC_URL
@@ -194,7 +194,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: $SECRETS_NAME
-                  key: pk
+                  key: team_b_pk
             - name: CHAIN_ID
               value: "$CHAIN_ID"
             - name: RPC_URL
