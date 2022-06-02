@@ -13,21 +13,8 @@
             "avgMargin": 0.03,
             "maxMargin": 0.04,
             "minAmount": 100.0,
-<<<<<<< Updated upstream
-            "avgAmount": 1000.0,
-            "maxAmount": 1500.0
-        },
-        {
-            "minMargin": 0.055,
-            "avgMargin": 0.06,
-            "maxMargin": 0.1,
-            "minAmount": 500.0,
-            "avgAmount": 2500.0,
-            "maxAmount": 10000.0
-=======
             "avgAmount": 2000.0,
             "maxAmount": 2500.0
->>>>>>> Stashed changes
         }
     ],
     "sellBands": [
@@ -44,19 +31,7 @@
             "avgMargin": 0.03,
             "maxMargin": 0.04,
             "minAmount": 100.0,
-<<<<<<< Updated upstream
-            "avgAmount": 1000.0,
-            "maxAmount": 1500.0
-        },
-        {
-            "minMargin": 0.055,
-            "avgMargin": 0.06,
-            "maxMargin": 0.1,
-            "minAmount": 500.0,
-            "avgAmount": 2500.0,
-=======
             "avgAmount": 2000.0,
->>>>>>> Stashed changes
             "maxAmount": 10000.0
         }
     ]
