@@ -2,8 +2,8 @@
     "buyBands": [
         {
             "minMargin": 0.001,
-            "avgMargin": 0.01,
-            "maxMargin": 0.02,
+            "avgMargin": 0.015,
+            "maxMargin": 0.1,
             "minAmount": 100.0,
             "avgAmount": 2000.0,
             "maxAmount": 3000.0
@@ -12,8 +12,8 @@
     "sellBands": [
         {
             "minMargin": 0.001,
-            "avgMargin": 0.01,
-            "maxMargin": 0.02,
+            "avgMargin": 0.015,
+            "maxMargin": 0.1,
             "minAmount": 100.0,
             "avgAmount": 2000.0,
             "maxAmount": 3000.0
