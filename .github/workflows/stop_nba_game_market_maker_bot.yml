@@ -24,26 +24,61 @@ on:
 
 
 jobs:
-  bots_deletion:
+  bots_deletion_prod:
+    if: github.event.inputs.environment == 'prod'
     runs-on: ubuntu-latest
 
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.A1_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: eu-west-2
+      KUBE_CONFIG_DATA: ${{ secrets.PROD_KUBE_CONFIG_DATA }}
+
     steps:
-      - name: Sets env vars for prod env
-        run: |
-          echo "AWS_ACCESS_KEY_ID= ${{ secrets.A1_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY= ${{ secrets.A1_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
-          echo "AWS_REGION= eu-west-2" >> $GITHUB_ENV
-          echo "KUBE_CONFIG_DATA= ${{ secrets.STAGING_KUBE_CONFIG_DATA }}" >> $GITHUB_ENV
-        if: github.event.inputs.environment == 'prod'
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Sets env vars for staging env
-        run: |
-          echo "AWS_ACCESS_KEY_ID= ${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY= ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
-          echo "AWS_REGION= eu-west-2" >> $GITHUB_ENV
-          echo "KUBE_CONFIG_DATA= ${{ secrets.PROD_KUBE_CONFIG_DATA }}" >> $GITHUB_ENV
-        if: github.event.inputs.environment != 'prod'
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Remove market maker bot for team A
+        uses: ckuroki/kubectl-aws-eks@v1
+        env:
+          DEPLOYMENT_NAME: mmk-game-${{ github.event.inputs.game_id }}-team-a
+        
+        with:
+          args: delete deployment $DEPLOYMENT_NAME
+
+      - name: Remove market maker bot for team B
+        uses: ckuroki/kubectl-aws-eks@v1
+        env:
+          DEPLOYMENT_NAME: mmk-game-${{ github.event.inputs.game_id }}-team-b
+        
+        with:
+          args: delete deployment $DEPLOYMENT_NAME
+
+      - name: Bots removed
+        run: |
+          echo "Game ${{ github.event.inputs.game_id }} bot removed"
+          echo "Team A instance: mmk-game-${{ github.event.inputs.game_id }}-team-a removed"
+          echo "Team B instance: mmk-game-${{ github.event.inputs.game_id }}-team-b removed"
+
+  bots_deletion_staging:
+    if: github.event.inputs.environment != 'prod'
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: eu-west-2
+      KUBE_CONFIG_DATA: ${{ secrets.STAG_KUBE_CONFIG_DATA }}
+
+    steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
