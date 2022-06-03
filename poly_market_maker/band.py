@@ -116,16 +116,16 @@ class BuyBand(Band):
         # For Buys, the min_margin will produce the price_max
         # E.g target=0.5, min_margin=0.01 = 0.5 * (1- 0.01) = 0.495
         #     target=0.5, max_margin=0.20 = 0.5 * (1- 0.2) = 0.4
-        self.logger.info(f"Included in band check...")
-        self.logger.info(f"target_price: {target_price}")
-        self.logger.info(f"min_margin: {self.min_margin}")
-        self.logger.info(f"max_margin: {self.max_margin}")
+        # self.logger.info(f"Included in band check...")
+        # self.logger.info(f"target_price: {target_price}")
+        # self.logger.info(f"min_margin: {self.min_margin}")
+        # self.logger.info(f"max_margin: {self.max_margin}")
         price_max = self._apply_margin(target_price, self.min_margin)
         price_min = self._apply_margin(target_price, self.max_margin)
-        self.logger.info(f"price_min: {price_min}")
-        self.logger.info(f"price_max: {price_max}")
+        # self.logger.info(f"price_min: {price_min}")
+        # self.logger.info(f"price_max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
-        self.logger.info(f"{order} is included in band: {self}?: {included}")
+        # self.logger.info(f"{order} is included in band: {self}?: {included}")
         return included
 
     def type(self) -> str:
