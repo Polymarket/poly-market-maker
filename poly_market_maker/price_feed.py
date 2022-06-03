@@ -34,9 +34,9 @@ class PriceFeedClob(PriceFeed):
         self.clob_api = clob_api
 
     def get_price(self) -> float:
-        self.logger.info("Fetching target price using the clob midpoint price...")
+        self.logger.debug("Fetching target price using the clob midpoint price...")
         target_price =  self.clob_api.get_price()
-        self.logger.info(f"target_price: {target_price}")
+        self.logger.debug(f"target_price: {target_price}")
         return target_price
 
 
@@ -65,7 +65,7 @@ class PriceFeedOddsAPI(PriceFeed):
         self.team_name = team_name
 
     def get_price(self) -> float:
-        self.logger.info("Fetching target price from the odds api...")
+        self.logger.debug("Fetching target price from the odds api...")
         target_price = self.odds_api.get_price(self.match_id, self.team_name)
-        self.logger.info(f"target_price: {target_price}")
+        self.logger.debug(f"target_price: {target_price}")
         return target_price
