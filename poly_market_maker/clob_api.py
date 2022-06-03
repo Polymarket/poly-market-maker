@@ -44,7 +44,7 @@ class ClobApi:
         """
         Get the current price on the orderbook
         """
-        self.logger.debug("Fetching price from the API...")
+        self.logger.debug("Fetching midpoint price from the API...")
         start_time = time.time()
         try:
             resp = self.client.get_midpoint(self.token_id)
@@ -59,9 +59,12 @@ class ClobApi:
                 (time.time() - start_time)
             )
 
+        return self._rand_price()
+
+    def _rand_price(self) -> float:
         price = randomize_default_price(DEFAULT_PRICE)
-        self.logger.warn(
-            f"Could not fetch price from CLOB API, returning price: {price}"
+        self.logger.info(
+            f"Could not fetch price from CLOB API, returning random price: {price}"
         )
         return price
 
