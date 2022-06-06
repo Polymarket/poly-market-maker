@@ -5,7 +5,7 @@
             "avgMargin": 0.015,
             "maxMargin": 0.1,
             "minAmount": 100.0,
-            "avgAmount": 2000.0,
+            "avgAmount": 500.0,
             "maxAmount": 3000.0
         },
         {
@@ -14,6 +14,14 @@
             "maxMargin": 0.3,
             "minAmount": 100.0,
             "avgAmount": 500.0,
+            "maxAmount": 3000.0
+        },
+        {
+            "minMargin": 0.3,
+            "avgMargin": 0.4,
+            "maxMargin": 0.5,
+            "minAmount": 100.0,
+            "avgAmount": 2000.0,
             "maxAmount": 3000.0
         }
     ],
@@ -23,7 +31,7 @@
             "avgMargin": 0.015,
             "maxMargin": 0.1,
             "minAmount": 100.0,
-            "avgAmount": 2000.0,
+            "avgAmount": 500.0,
             "maxAmount": 3000.0
         },
         {
@@ -32,6 +40,14 @@
             "maxMargin": 0.3,
             "minAmount": 100.0,
             "avgAmount": 500.0,
+            "maxAmount": 3000.0
+        },
+        {
+            "minMargin": 0.3,
+            "avgMargin": 0.4,
+            "maxMargin": 0.5,
+            "minAmount": 100.0,
+            "avgAmount": 2000.0,
             "maxAmount": 3000.0
         }
     ]
