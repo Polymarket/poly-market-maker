@@ -200,6 +200,7 @@ class Bands:
             raise Exception("Bands in the config file overlap!")
     
     def _derive_buy_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> BuyBand:
+        # looks like I have this switched. THis should be for sell
         (min_price - price / price)
 
         return BuyBand(
@@ -213,13 +214,50 @@ class Bands:
             }
         )
 
+    def _derive_sell_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> SellBand:
+        (min_price - price / price)
+
+        return SellBand(
+            {
+                "minMargin": ((price - max_price) / price) - 1,
+                "avgMargin": ((price - avg_price) / price) - 1,
+                "maxMargin": ((price - min_price) / price) - 1,
+                "minAmount": min_amount,
+                "avgAmount": avg_amount,
+                "maxAmount": max_amount,
+            }
+        )
+
     def _calculate_virtual_buy_bands(self, price: float) -> list:
+        # looks like I have this switched. THis should be for sell
+        min_price = 1.0
+        avg_price = 1.0
+        max_price = 1.0
+        virtual_buy_bands = []
+        for band in self.buy_bands:
+            band_min_price = math_round_down(band._apply_margin(price, band.max_margin), 2)
+            band_avg_price = math_round_down(band._apply_margin(price, band.avg_margin), 2)
+            band_max_price = math_round_down(band._apply_margin(price, band.min_margin), 2)
+            while band_max_price > max_price:
+                band_min_price -= MIN_TICK
+                band_avg_price -= MIN_TICK
+                band_max_price -= MIN_TICK
+            if band_avg_price == band_min_price:
+                band_min_price -= MIN_TICK
+            min_price = band_min_price
+            avg_price = band_avg_price
+            max_price = band_max_price
+            virtual_buy_bands.append(self._derive_buy_band(band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
+        return virtual_buy_bands
+
+
+    def _calculate_virtual_sell_bands(self, price: float) -> list:
+        # this should be for buy bands
         min_price = 0
         avg_price = 0
         max_price = 0
-        virtual_buy_bands = []
-        for band in self.buy_bands:
-            band = self.buy_bands[i]
+        virtual_sell_bands = []
+        for band in self.sell_bands:
             band_min_price = math_round_up(band._apply_margin(price, band.min_margin), 2)
             band_avg_price = math_round_up(band._apply_margin(price, band.avg_margin), 2)
             band_max_price = math_round_up(band._apply_margin(price, band.max_margin), 2)
@@ -234,10 +272,8 @@ class Bands:
             min_price = band_min_price
             avg_price = band_avg_price
             max_price = band_max_price
-            virtual_buy_bands.append(self._derive_buy_band(band_min_price, band_avg_price, band_max_price))
-        return virtual_buy_bands
-
-
+            virtual_sell_bands.append(self._derive_sell_band(band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
+            return virtual_sell_bands
 
     def _excessive_sell_orders(self, our_sell_orders: list, target_price: float):
         """Return sell orders which need to be cancelled to bring total amounts within all sell bands below maximums."""
@@ -310,7 +346,7 @@ class Bands:
                 itertools.chain(
                     self._excessive_sell_orders(our_sell_orders, target_price),
                     self._outside_any_band_orders(
-                        our_sell_orders, self.sell_bands, target_price #here
+                        our_sell_orders, self._calculate_virtual_sell_bands(target_price), target_price #here
                     ),
                 )
             )
@@ -361,7 +397,7 @@ class Bands:
 
         new_orders = []
 
-        for band in self.sell_bands: #here
+        for band in self._calculate_virtual_sell_bands(target_price): #here
             orders = [
                 order for order in our_sell_orders if band.includes(order, target_price)
             ]
