@@ -199,29 +199,29 @@ class Bands:
             self.logger.error("Bands in the config file overlap!")
             raise Exception("Bands in the config file overlap!")
     
+    @staticmethod
     def _derive_buy_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> BuyBand:
         # looks like I have this switched. THis should be for sell
-        (min_price - price / price)
 
         return BuyBand(
             {
-                "minMargin": ((min_price - price) / price) - 1,
-                "avgMargin": ((avg_price - price) / price) - 1,
-                "maxMargin": ((max_price - price) / price) - 1,
+                "minMargin": round(((price - max_price) / price), 4),
+                "avgMargin": round(((price - avg_price) / price), 4),
+                "maxMargin": round(((price - min_price) / price), 4),
                 "minAmount": min_amount,
                 "avgAmount": avg_amount,
                 "maxAmount": max_amount,
             }
         )
 
+    @staticmethod
     def _derive_sell_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> SellBand:
-        (min_price - price / price)
 
         return SellBand(
             {
-                "minMargin": ((price - max_price) / price) - 1,
-                "avgMargin": ((price - avg_price) / price) - 1,
-                "maxMargin": ((price - min_price) / price) - 1,
+                "minMargin":  round(((min_price - price) / price), 4),
+                "avgMargin":  round(((avg_price - price) / price), 4),
+                "maxMargin":  round(((max_price - price) / price), 4),
                 "minAmount": min_amount,
                 "avgAmount": avg_amount,
                 "maxAmount": max_amount,
@@ -234,11 +234,12 @@ class Bands:
         avg_price = 1.0
         max_price = 1.0
         virtual_buy_bands = []
+        print("LENGTH: {}".format(len(self.buy_bands)))
         for band in self.buy_bands:
             band_min_price = math_round_down(band._apply_margin(price, band.max_margin), 2)
             band_avg_price = math_round_down(band._apply_margin(price, band.avg_margin), 2)
             band_max_price = math_round_down(band._apply_margin(price, band.min_margin), 2)
-            while band_max_price > max_price:
+            while band_min_price > min_price:
                 band_min_price -= MIN_TICK
                 band_avg_price -= MIN_TICK
                 band_max_price -= MIN_TICK
@@ -247,7 +248,10 @@ class Bands:
             min_price = band_min_price
             avg_price = band_avg_price
             max_price = band_max_price
-            virtual_buy_bands.append(self._derive_buy_band(band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
+            print(min_price)
+            print(avg_price)
+            print(max_price)
+            virtual_buy_bands.append(self._derive_buy_band(price, band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
         return virtual_buy_bands
 
 
@@ -261,7 +265,7 @@ class Bands:
             band_min_price = math_round_up(band._apply_margin(price, band.min_margin), 2)
             band_avg_price = math_round_up(band._apply_margin(price, band.avg_margin), 2)
             band_max_price = math_round_up(band._apply_margin(price, band.max_margin), 2)
-            while band_min_price < min_price:
+            while band_min_price < max_price:
                 band_min_price += MIN_TICK
                 band_avg_price += MIN_TICK
                 band_max_price += MIN_TICK
@@ -272,8 +276,8 @@ class Bands:
             min_price = band_min_price
             avg_price = band_avg_price
             max_price = band_max_price
-            virtual_sell_bands.append(self._derive_sell_band(band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
-            return virtual_sell_bands
+            virtual_sell_bands.append(self._derive_sell_band(price, band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
+        return virtual_sell_bands
 
     def _excessive_sell_orders(self, our_sell_orders: list, target_price: float):
         """Return sell orders which need to be cancelled to bring total amounts within all sell bands below maximums."""
@@ -317,6 +321,7 @@ class Bands:
     def cancellable_orders( #here
         self, our_buy_orders: list, our_sell_orders: list, target_price: float
     ) -> list:
+        print("Target Price: {}".format(target_price))
         assert isinstance(our_buy_orders, list)
         assert isinstance(our_sell_orders, list)
         assert isinstance(target_price, float)

@@ -154,3 +154,41 @@ class TestBand(TestCase):
 
         self.assertEqual(new_sells[1].size, 30.0)
         self.assertEqual(new_sells[1].price, 0.63)  # asks are rounded up
+
+    def test_virtual_bands_orders(self):
+        with open("./tests/tight_bands.json") as fh:
+            test_bands = Bands.read(json.load(fh))
+        
+
+        target_price = .50
+
+        virtual_sell_bands = test_bands._calculate_virtual_sell_bands(target_price)
+        
+        self.assertEqual(virtual_sell_bands[0].min_margin, .02)
+        self.assertEqual(virtual_sell_bands[0].avg_margin, .04)
+        self.assertEqual(virtual_sell_bands[0].max_margin, .04)
+
+        self.assertEqual(virtual_sell_bands[1].min_margin, .04)
+        self.assertEqual(virtual_sell_bands[1].avg_margin, .06)
+        self.assertEqual(virtual_sell_bands[1].max_margin, .06)
+
+        self.assertEqual(virtual_sell_bands[2].min_margin, .06)
+        self.assertEqual(virtual_sell_bands[2].avg_margin, .08)
+        self.assertEqual(virtual_sell_bands[2].max_margin, .08)
+
+        virtual_buy_bands = test_bands._calculate_virtual_buy_bands(target_price)
+
+
+        self.assertEqual(virtual_buy_bands[0].min_margin, .02)
+        self.assertEqual(virtual_buy_bands[0].avg_margin, .02)
+        self.assertEqual(virtual_buy_bands[0].max_margin, .04)
+
+        self.assertEqual(virtual_buy_bands[1].min_margin, .04)
+        self.assertEqual(virtual_buy_bands[1].avg_margin, .04)
+        self.assertEqual(virtual_buy_bands[1].max_margin, .06)
+
+        self.assertEqual(virtual_buy_bands[2].min_margin, .06)
+        self.assertEqual(virtual_buy_bands[2].avg_margin, .06)
+        self.assertEqual(virtual_buy_bands[2].max_margin, .08)
+
+
