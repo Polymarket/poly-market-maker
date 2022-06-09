@@ -201,7 +201,7 @@ class Bands:
     
     @staticmethod
     def _derive_buy_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> BuyBand:
-        # looks like I have this switched. THis should be for sell
+        # take price and buy target prices and return corresponding margins
 
         return BuyBand(
             {
@@ -216,6 +216,7 @@ class Bands:
 
     @staticmethod
     def _derive_sell_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> SellBand:
+        # take price and sell target prices and return corresponding margins
 
         return SellBand(
             {
@@ -229,7 +230,15 @@ class Bands:
         )
 
     def _calculate_virtual_buy_bands(self, price: float) -> list:
-        # looks like I have this switched. THis should be for sell
+        # take buy bands and spread orders if they are too tight together
+        # if price is .5 and there are two bands -> [min_margin, avg_margin, max_margin)
+        # [0.0, 0.001, 0.002) and [0.002, 0.003, 0.004)
+        # if we placed orders at these bands without adjustment we would place two orders @.5
+        # which would create issues (crossing book and can't associate orders to bands)
+        # so we adjust these bands so that we place two orders in the tightest band possible with tick
+        # so our orders should be .51 and .52 and our bands become
+        # [0.02, 0.02, 0.04) and [0.04, 0.04, 0.06)
+        # also make remove bands that would result in orders with price <= 0 or price >= 1.0
         if price <= 0.0:
             return []
         min_price = 1.0
@@ -256,6 +265,15 @@ class Bands:
 
 
     def _calculate_virtual_sell_bands(self, price: float) -> list:
+        # take sell bands and spread orders if they are too tight together
+        # if price is .5 and there are two bands -> [min_margin, avg_margin, max_margin)
+        # [0.0, 0.001, 0.002) and [0.002, 0.003, 0.004)
+        # if we placed orders at these bands without adjustment we would place two orders @.5
+        # which would create issues (crossing book and can't associate orders to bands)
+        # so we adjust these bands so that we place two orders in the tightest band possible with tick
+        # so our orders should be .49 and .48 and our bands become
+        # [0.02, 0.02, 0.04) and [0.04, 0.04, 0.06)
+        # also make remove bands that would result in orders with price <= 0 or price >= 1.0
         if price <= 0.0:
             return []
         min_price = 0

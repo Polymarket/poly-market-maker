@@ -156,11 +156,14 @@ class TestBand(TestCase):
         self.assertEqual(new_sells[1].price, 0.63)  # asks are rounded up
 
     def test_virtual_bands_orders(self):
+        # load bands with margins that are very close together 
+        # without adjustment all orders would be at same price
         with open("./tests/tight_bands.json") as fh:
             test_bands = Bands.read(json.load(fh))
 
         target_price = .50
 
+        # confirm adjustments are made to spread orders to neighboring ticks
         virtual_sell_bands = test_bands._calculate_virtual_sell_bands(target_price)
         
         self.assertEqual(virtual_sell_bands[0].min_margin, .02)
@@ -175,6 +178,7 @@ class TestBand(TestCase):
         self.assertEqual(virtual_sell_bands[2].avg_margin, .06)
         self.assertEqual(virtual_sell_bands[2].max_margin, .08)
 
+        # confirm adjustments are made to spread orders to neighboring ticks
         virtual_buy_bands = test_bands._calculate_virtual_buy_bands(target_price)
 
         self.assertEqual(virtual_buy_bands[0].min_margin, .02)
@@ -191,6 +195,7 @@ class TestBand(TestCase):
 
         target_price = .80
 
+        # confirm adjustments are made to spread orders to neighboring ticks
         virtual_sell_bands = test_bands._calculate_virtual_sell_bands(target_price)
 
         self.assertEqual(virtual_sell_bands[0].min_margin, .0125)
@@ -207,6 +212,7 @@ class TestBand(TestCase):
 
         target_price = .20
 
+        # confirm adjustments are made to spread orders to neighboring ticks
         virtual_buy_bands = test_bands._calculate_virtual_buy_bands(target_price)
 
         self.assertEqual(virtual_buy_bands[0].min_margin, .05)
@@ -225,7 +231,7 @@ class TestBand(TestCase):
         with open("./tests/tight_bands.json") as fh:
             test_bands = Bands.read(json.load(fh))
 
-        # Initialize buys and sells that fit in both bands
+        # Initialize buys and sells that fit in two of 3 adjusted bands on each side
         target_price = 0.50
         buys = [
             Order(size=100, price=0.49, side=BUY),
@@ -235,8 +241,6 @@ class TestBand(TestCase):
             Order(size=100, price=0.51, side=SELL),
             Order(size=100, price=0.52, side=SELL),
         ]
-
-        print(test_bands.cancellable_orders(buys, sells, target_price))
 
         # Expect none to be cancelled
         self.assertEqual(
@@ -272,6 +276,7 @@ class TestBand(TestCase):
             len(test_bands.cancellable_orders(buys, sells, target_price)), 4
         )
 
+        # Expect six to need to be created
         new_orders = test_bands.new_orders(
             [],
             [],
