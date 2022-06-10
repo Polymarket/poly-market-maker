@@ -251,7 +251,7 @@ class Bands:
             band_max_price = math_round_down(band._apply_margin(price, band.min_margin), 2)
             if band_min_price <= 0.0 or band_avg_price <= 0.0 or band_max_price <= 0.0:
                 continue
-            while band_min_price > min_price:
+            while band_max_price > min_price:
                 band_min_price -= MIN_TICK
                 band_avg_price -= MIN_TICK
                 band_max_price -= MIN_TICK
@@ -424,7 +424,7 @@ class Bands:
             ]
             total_amount = sum(order.size for order in orders)
             if total_amount < band.min_amount:
-                price = math_round_up(band.avg_price(target_price), 2)
+                price = round(band.avg_price(target_price), 2)
                 size = math_round_down(
                     min(band.avg_amount - total_amount, our_sell_balance), 2
                 )
@@ -458,7 +458,7 @@ class Bands:
             ]
             total_amount = sum(order.size for order in orders)
             if total_amount < band.min_amount:
-                price = math_round_down(band.avg_price(target_price), 2)
+                price = round(band.avg_price(target_price), 2)
                 min_size_from_buy_balance = our_buy_balance / price
                 size = math_round_down(
                     min(band.avg_amount - total_amount, min_size_from_buy_balance), 2
