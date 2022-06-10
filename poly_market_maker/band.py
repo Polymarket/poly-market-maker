@@ -3,7 +3,7 @@ import logging
 
 from .utils import math_round_down, math_round_up
 
-from .constants import BUY, SELL
+from .constants import BUY, SELL, MIN_TICK
 from .order import Order
 
 
@@ -156,7 +156,7 @@ class SellBand(Band):
     def includes(self, order, target_price: float) -> bool:
         price_min = self._apply_margin(target_price, self.min_margin)
         price_max = self._apply_margin(target_price, self.max_margin)
-        included = (order.price <= price_max) and (order.price > price_min)
+        included = (order.price < price_max) and (order.price >= price_min)
         self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
 
@@ -198,6 +198,103 @@ class Bands:
         if self._bands_overlap(self.buy_bands) or self._bands_overlap(self.sell_bands):
             self.logger.error("Bands in the config file overlap!")
             raise Exception("Bands in the config file overlap!")
+    
+    @staticmethod
+    def _derive_buy_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> BuyBand:
+        # take price and buy target prices and return corresponding margins
+
+        return BuyBand(
+            {
+                "minMargin": round(((price - max_price) / price), 4),
+                "avgMargin": round(((price - avg_price) / price), 4),
+                "maxMargin": round(((price - min_price) / price), 4),
+                "minAmount": min_amount,
+                "avgAmount": avg_amount,
+                "maxAmount": max_amount,
+            }
+        )
+
+    @staticmethod
+    def _derive_sell_band(price: float, min_price: float, avg_price: float, max_price: float, min_amount:float, avg_amount:float, max_amount:float) -> SellBand:
+        # take price and sell target prices and return corresponding margins
+
+        return SellBand(
+            {
+                "minMargin":  round(((min_price - price) / price), 4),
+                "avgMargin":  round(((avg_price - price) / price), 4),
+                "maxMargin":  round(((max_price - price) / price), 4),
+                "minAmount": min_amount,
+                "avgAmount": avg_amount,
+                "maxAmount": max_amount,
+            }
+        )
+
+    def _calculate_virtual_buy_bands(self, price: float) -> list:
+        # take buy bands and spread orders if they are too tight together
+        # if price is .5 and there are two bands -> [min_margin, avg_margin, max_margin)
+        # [0.0, 0.001, 0.002) and [0.002, 0.003, 0.004)
+        # if we placed orders at these bands without adjustment we would place two orders @.5
+        # which would create issues (crossing book and can't associate orders to bands)
+        # so we adjust these bands so that we place two orders in the tightest band possible with tick
+        # so our orders should be .51 and .52 and our bands become
+        # [0.02, 0.02, 0.04) and [0.04, 0.04, 0.06)
+        # also make remove bands that would result in orders with price <= 0 or price >= 1.0
+        if price <= 0.0:
+            return []
+        min_price = 1.0
+        avg_price = 1.0
+        max_price = 1.0
+        virtual_buy_bands = []
+        for band in self.buy_bands:
+            band_min_price = math_round_down(band._apply_margin(price, band.max_margin), 2)
+            band_avg_price = math_round_down(band._apply_margin(price, band.avg_margin), 2)
+            band_max_price = math_round_down(band._apply_margin(price, band.min_margin), 2)
+            if band_min_price <= 0.0 or band_avg_price <= 0.0 or band_max_price <= 0.0:
+                continue
+            while band_min_price > min_price:
+                band_min_price -= MIN_TICK
+                band_avg_price -= MIN_TICK
+                band_max_price -= MIN_TICK
+            if band_avg_price == band_min_price:
+                band_min_price -= MIN_TICK
+            min_price = band_min_price
+            avg_price = band_avg_price
+            max_price = band_max_price
+            virtual_buy_bands.append(self._derive_buy_band(price, band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
+        return virtual_buy_bands
+
+
+    def _calculate_virtual_sell_bands(self, price: float) -> list:
+        # take sell bands and spread orders if they are too tight together
+        # if price is .5 and there are two bands -> [min_margin, avg_margin, max_margin)
+        # [0.0, 0.001, 0.002) and [0.002, 0.003, 0.004)
+        # if we placed orders at these bands without adjustment we would place two orders @.5
+        # which would create issues (crossing book and can't associate orders to bands)
+        # so we adjust these bands so that we place two orders in the tightest band possible with tick
+        # so our orders should be .49 and .48 and our bands become
+        # [0.02, 0.02, 0.04) and [0.04, 0.04, 0.06)
+        # also make remove bands that would result in orders with price <= 0 or price >= 1.0
+        if price <= 0.0:
+            return []
+        min_price = 0
+        avg_price = 0
+        max_price = 0
+        virtual_sell_bands = []
+        for band in self.sell_bands:
+            band_min_price = math_round_up(band._apply_margin(price, band.min_margin), 2)
+            band_avg_price = math_round_up(band._apply_margin(price, band.avg_margin), 2)
+            band_max_price = math_round_up(band._apply_margin(price, band.max_margin), 2)
+            while band_min_price < max_price:
+                band_min_price += MIN_TICK
+                band_avg_price += MIN_TICK
+                band_max_price += MIN_TICK
+            if band_avg_price == band_max_price:
+                band_max_price += MIN_TICK
+            min_price = band_min_price
+            avg_price = band_avg_price
+            max_price = band_max_price
+            virtual_sell_bands.append(self._derive_sell_band(price, band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
+        return virtual_sell_bands
 
     def _excessive_sell_orders(self, our_sell_orders: list, target_price: float):
         """Return sell orders which need to be cancelled to bring total amounts within all sell bands below maximums."""
@@ -238,7 +335,7 @@ class Bands:
 
                 yield order
 
-    def cancellable_orders(
+    def cancellable_orders( #here
         self, our_buy_orders: list, our_sell_orders: list, target_price: float
     ) -> list:
         assert isinstance(our_buy_orders, list)
@@ -254,7 +351,7 @@ class Bands:
                 itertools.chain(
                     self._excessive_buy_orders(our_buy_orders, target_price),
                     self._outside_any_band_orders(
-                        our_buy_orders, self.buy_bands, target_price
+                        our_buy_orders, self._calculate_virtual_buy_bands(target_price), target_price
                     ),
                 )
             )
@@ -270,14 +367,14 @@ class Bands:
                 itertools.chain(
                     self._excessive_sell_orders(our_sell_orders, target_price),
                     self._outside_any_band_orders(
-                        our_sell_orders, self.sell_bands, target_price
+                        our_sell_orders, self._calculate_virtual_sell_bands(target_price), target_price #here
                     ),
                 )
             )
 
         return buy_orders_to_cancel + sell_orders_to_cancel
 
-    def new_orders(
+    def new_orders( #here
         self,
         our_buy_orders: list,
         our_sell_orders: list,
@@ -321,7 +418,7 @@ class Bands:
 
         new_orders = []
 
-        for band in self.sell_bands:
+        for band in self._calculate_virtual_sell_bands(target_price): #here
             orders = [
                 order for order in our_sell_orders if band.includes(order, target_price)
             ]
@@ -340,7 +437,7 @@ class Bands:
                     our_sell_balance = our_sell_balance - size
                     new_orders.append(Order(price=price, size=size, side=SELL))
 
-        return new_orders
+        return list(filter(lambda x: (x.price >= 0.0 and x.price <= 1.0), new_orders))
 
     def _new_buy_orders(
         self, our_buy_orders: list, our_buy_balance: float, target_price: float
@@ -354,7 +451,7 @@ class Bands:
 
         new_orders = []
         self.logger.debug("Running new buy orders...")
-        for band in self.buy_bands:
+        for band in self._calculate_virtual_buy_bands(target_price):
             self.logger.debug(band)
             orders = [
                 order for order in our_buy_orders if band.includes(order, target_price)
@@ -378,7 +475,7 @@ class Bands:
                     our_buy_balance = our_buy_balance - size_buy_token
                     new_orders.append(Order(size=size, price=price, side=BUY))
 
-        return new_orders
+        return list(filter(lambda x: (x.price >= 0.0 and x.price <= 1.0), new_orders))
 
     @staticmethod
     def _bands_overlap(bands: list):

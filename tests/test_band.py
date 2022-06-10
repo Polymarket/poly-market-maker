@@ -154,3 +154,171 @@ class TestBand(TestCase):
 
         self.assertEqual(new_sells[1].size, 30.0)
         self.assertEqual(new_sells[1].price, 0.63)  # asks are rounded up
+
+    def test_virtual_bands_orders(self):
+        # load bands with margins that are very close together 
+        # without adjustment all orders would be at same price
+        with open("./tests/tight_bands.json") as fh:
+            test_bands = Bands.read(json.load(fh))
+
+        target_price = .50
+
+        # confirm adjustments are made to spread orders to neighboring ticks
+        virtual_sell_bands = test_bands._calculate_virtual_sell_bands(target_price)
+        
+        self.assertEqual(virtual_sell_bands[0].min_margin, .02)
+        self.assertEqual(virtual_sell_bands[0].avg_margin, .02)
+        self.assertEqual(virtual_sell_bands[0].max_margin, .04)
+
+        self.assertEqual(virtual_sell_bands[1].min_margin, .04)
+        self.assertEqual(virtual_sell_bands[1].avg_margin, .04)
+        self.assertEqual(virtual_sell_bands[1].max_margin, .06)
+
+        self.assertEqual(virtual_sell_bands[2].min_margin, .06)
+        self.assertEqual(virtual_sell_bands[2].avg_margin, .06)
+        self.assertEqual(virtual_sell_bands[2].max_margin, .08)
+
+        # confirm adjustments are made to spread orders to neighboring ticks
+        virtual_buy_bands = test_bands._calculate_virtual_buy_bands(target_price)
+
+        self.assertEqual(virtual_buy_bands[0].min_margin, .02)
+        self.assertEqual(virtual_buy_bands[0].avg_margin, .02)
+        self.assertEqual(virtual_buy_bands[0].max_margin, .04)
+
+        self.assertEqual(virtual_buy_bands[1].min_margin, .04)
+        self.assertEqual(virtual_buy_bands[1].avg_margin, .04)
+        self.assertEqual(virtual_buy_bands[1].max_margin, .06)
+
+        self.assertEqual(virtual_buy_bands[2].min_margin, .06)
+        self.assertEqual(virtual_buy_bands[2].avg_margin, .06)
+        self.assertEqual(virtual_buy_bands[2].max_margin, .08)
+
+        target_price = .80
+
+        # confirm adjustments are made to spread orders to neighboring ticks
+        virtual_sell_bands = test_bands._calculate_virtual_sell_bands(target_price)
+
+        self.assertEqual(virtual_sell_bands[0].min_margin, .0125)
+        self.assertEqual(virtual_sell_bands[0].avg_margin, .0125)
+        self.assertEqual(virtual_sell_bands[0].max_margin, .025)
+
+        self.assertEqual(virtual_sell_bands[1].min_margin, .025)
+        self.assertEqual(virtual_sell_bands[1].avg_margin, .025)
+        self.assertEqual(virtual_sell_bands[1].max_margin, .0375)
+
+        self.assertEqual(virtual_sell_bands[2].min_margin, .0375)
+        self.assertEqual(virtual_sell_bands[2].avg_margin, .0375)
+        self.assertEqual(virtual_sell_bands[2].max_margin, .05)
+
+        target_price = .20
+
+        # confirm adjustments are made to spread orders to neighboring ticks
+        virtual_buy_bands = test_bands._calculate_virtual_buy_bands(target_price)
+
+        self.assertEqual(virtual_buy_bands[0].min_margin, .05)
+        self.assertEqual(virtual_buy_bands[0].avg_margin, .05)
+        self.assertEqual(virtual_buy_bands[0].max_margin, .1)
+
+        self.assertEqual(virtual_buy_bands[1].min_margin, .1)
+        self.assertEqual(virtual_buy_bands[1].avg_margin, .1)
+        self.assertEqual(virtual_buy_bands[1].max_margin, .15)
+
+        self.assertEqual(virtual_buy_bands[2].min_margin, .15)
+        self.assertEqual(virtual_buy_bands[2].avg_margin, .15)
+        self.assertEqual(virtual_buy_bands[2].max_margin, .2)
+
+    def test_tight_bands_cancellable_and_new_orders(self):
+        with open("./tests/tight_bands.json") as fh:
+            test_bands = Bands.read(json.load(fh))
+
+        # Initialize buys and sells that fit in two of 3 adjusted bands on each side
+        target_price = 0.50
+        buys = [
+            Order(size=100, price=0.49, side=BUY),
+            Order(size=100, price=0.48, side=BUY),
+        ]
+        sells = [
+            Order(size=100, price=0.51, side=SELL),
+            Order(size=100, price=0.52, side=SELL),
+        ]
+
+        # Expect none to be cancelled
+        self.assertEqual(
+            len(test_bands.cancellable_orders(buys, sells, target_price)), 0
+        )
+
+        # Expect two to need to be created
+        keeper_usdc_balance = 500.0
+        keeper_yes_balance = 500.0
+
+        new_orders = test_bands.new_orders(
+            buys,
+            sells,
+            keeper_usdc_balance,
+            keeper_yes_balance,
+            target_price,
+        )
+
+        self.assertEqual(len(new_orders), 2)
+
+        self.assertEqual(new_orders[0].price, .47)
+        self.assertEqual(new_orders[0].side, BUY)
+
+        self.assertEqual(new_orders[1].price, .53)
+        self.assertEqual(new_orders[1].side, SELL)
+
+
+        # Say price moves to 80c
+        target_price = 0.80
+
+        # All 4 orders are now cancellable
+        self.assertEqual(
+            len(test_bands.cancellable_orders(buys, sells, target_price)), 4
+        )
+
+        # Expect six to need to be created
+        new_orders = test_bands.new_orders(
+            [],
+            [],
+            keeper_usdc_balance,
+            keeper_yes_balance,
+            target_price,
+        )
+
+        self.assertEqual(len(new_orders), 6)
+
+        self.assertEqual(new_orders[0].price, .79)
+        self.assertEqual(new_orders[0].side, BUY)
+
+        self.assertEqual(new_orders[1].price, .78)
+        self.assertEqual(new_orders[1].side, BUY)
+
+        self.assertEqual(new_orders[2].price, .77)
+        self.assertEqual(new_orders[2].side, BUY)
+
+        self.assertEqual(new_orders[3].price, .81)
+        self.assertEqual(new_orders[3].side, SELL)
+
+        self.assertEqual(new_orders[4].price, .82)
+        self.assertEqual(new_orders[4].side, SELL)
+
+        self.assertEqual(new_orders[5].price, .83)
+        self.assertEqual(new_orders[5].side, SELL)
+
+    def test_cant_create_order_over_dollar_or_under_zero(self):
+        with open("./tests/tight_bands.json") as fh:
+            test_bands = Bands.read(json.load(fh))
+        
+        target_price = 1.0
+        new_asks = test_bands._new_sell_orders([], 500.0, target_price)
+
+        # shouldn't be any valid asks because they would all be over 1.0
+        self.assertEqual(len(new_asks), 0)
+
+        target_price = 0.0
+        new_asks = test_bands._new_buy_orders([], 500.0, target_price)
+
+        # shouldn't be any valid bids because they would all be under 0.0
+        self.assertEqual(len(new_asks), 0)
+
+
