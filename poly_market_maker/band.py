@@ -120,8 +120,8 @@ class BuyBand(Band):
         # self.logger.info(f"target_price: {target_price}")
         # self.logger.info(f"min_margin: {self.min_margin}")
         # self.logger.info(f"max_margin: {self.max_margin}")
-        price_max = self._apply_margin(target_price, self.min_margin)
-        price_min = self._apply_margin(target_price, self.max_margin)
+        price_max = round(self._apply_margin(target_price, self.min_margin), 2)
+        price_min = round(self._apply_margin(target_price, self.max_margin), 2)
         # self.logger.info(f"price_min: {price_min}")
         # self.logger.info(f"price_max: {price_max}")
         included = (order.price <= price_max) and (order.price > price_min)
@@ -154,8 +154,8 @@ class SellBand(Band):
         return "sell"
 
     def includes(self, order, target_price: float) -> bool:
-        price_min = self._apply_margin(target_price, self.min_margin)
-        price_max = self._apply_margin(target_price, self.max_margin)
+        price_min = round(self._apply_margin(target_price, self.min_margin), 2)
+        price_max = round(self._apply_margin(target_price, self.max_margin), 2)
         included = (order.price < price_max) and (order.price >= price_min)
         self.logger.debug(f"{order} is included in band: {self}?: {included}")
         return included
