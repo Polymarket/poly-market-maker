@@ -428,7 +428,7 @@ class Bands:
                 size = math_round_down(
                     min(band.avg_amount - total_amount, our_sell_balance), 2
                 )
-                if (price > float(0)) and (size > float(0)):
+                if (price > float(0)) and (price < float(1.0)) and (size >= float(15.0)): # min order size
                     self.logger.debug(
                         f"{band} has existing amount {total_amount},"
                         f" creating new sell order with price {price} and size: {size}"
@@ -464,7 +464,7 @@ class Bands:
                     min(band.avg_amount - total_amount, min_size_from_buy_balance), 2
                 )
 
-                if (price > float(0)) and (size > float(0)):
+                if (price > float(0)) and (price < float(1.0)) and (size >= float(15.0)): # min order size
                     self.logger.debug(
                         f"{band} has existing amount {total_amount},"
                         f" creating new buy order with price {price} and size: {size}"
