@@ -13,6 +13,7 @@ ODDS_API_TEAM_A_NAME=$8
 ODDS_API_TEAM_B_NAME=$9
 IMAGE_ID="${10}"
 ENVIRONMENT="${11}"
+BOT="${12}"
 
 echo "Bands file: $BANDS_CONFIG_FILE" # bands file
 echo "Token id team A: $TOKEN_ID_TEAM_A" # token id
@@ -25,6 +26,7 @@ echo "Team A: $ODDS_API_TEAM_A_NAME" # team name
 echo "Team B: $ODDS_API_TEAM_B_NAME" # team name
 echo "Image id: $IMAGE_ID" # ecr image id
 echo "Environment: $ENVIRONMENT" # ecr image id
+echo "Group: $GROUP" # group id
 
 ## Variable for the file
 
@@ -85,7 +87,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: $SECRETS_NAME
-                  key: team_a_pk
+                  key: team_${GROUP}_a_pk
             - name: CHAIN_ID
               value: "$CHAIN_ID"
             - name: RPC_URL
@@ -194,7 +196,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: $SECRETS_NAME
-                  key: team_b_pk
+                  key: team_${GROUP}_b_pk
             - name: CHAIN_ID
               value: "$CHAIN_ID"
             - name: RPC_URL
