@@ -2,7 +2,7 @@ import json
 from unittest import TestCase
 import unittest
 
-from poly_market_maker.band import BuyBand, Bands
+from poly_market_maker.band import BuyBand, SellBand, Bands
 from poly_market_maker.constants import BUY, SELL
 from poly_market_maker.order import Order
 
@@ -320,5 +320,49 @@ class TestBand(TestCase):
 
         # shouldn't be any valid bids because they would all be under 0.0
         self.assertEqual(len(new_asks), 0)
+    
+    def test_order_size_limit(self):
+        buy_band = BuyBand(
+            {
+                "minMargin": 0.005,
+                "avgMargin": 0.01,
+                "maxMargin": 0.02,
+                "minAmount": 5.0,
+                "avgAmount": 10.0,
+                "maxAmount": 15.0,
+            }
+        )
 
+        sell_band = SellBand(
+            {
+                "minMargin": 0.005,
+                "avgMargin": 0.01,
+                "maxMargin": 0.02,
+                "minAmount": 5.0,
+                "avgAmount": 10.0,
+                "maxAmount": 15.0,
+            }
+        )
+
+        test_bands = Bands(buy_bands=[buy_band],sell_bands=[sell_band])
+
+        # Given the following balances:
+        target_price = 0.5
+        keeper_usdc_balance = 100.0
+        keeper_yes_balance = 100.0
+
+        # and the following existing orders (none):
+        existing_buys = []
+        existing_sells = []
+
+        # place new orders
+        new_orders = test_bands.new_orders(
+            existing_buys,
+            existing_sells,
+            keeper_usdc_balance,
+            keeper_yes_balance,
+            target_price,
+        )
+
+        self.assertEqual(len(new_orders), 0)
 
