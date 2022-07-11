@@ -52,6 +52,7 @@ on:
           - "basketball_ncaab"
           - "basketball_euroleague"
           - "tennis_atp_wimbledon"
+          - "baseball_mlb"
         required: true
       
       region:
