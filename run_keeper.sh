@@ -32,3 +32,5 @@ exec python3 -m poly_market_maker.market_maker \
 --odds-api-market $ODDS_API_MARKET \
 --odds-api-match-id $ODDS_API_MATCH_ID \
 --odds-api-team-name "$ODDS_API_TEAM_NAME" \
+--fpmm-address "$FPMM_ADDRESS" \
+--complement-id "$COMPLEMENT_ID" \

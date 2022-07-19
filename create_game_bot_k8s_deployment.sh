@@ -14,6 +14,8 @@ ODDS_API_TEAM_B_NAME=$9
 IMAGE_ID="${10}"
 ENVIRONMENT="${11}"
 BOT="${12}"
+PRICE_FEED_SOURCE="${13}"
+FPMM_ADDRESS="${14}"
 
 echo "Bands file: $BANDS_CONFIG_FILE" # bands file
 echo "Token id team A: $TOKEN_ID_TEAM_A" # token id
@@ -27,6 +29,8 @@ echo "Team B: $ODDS_API_TEAM_B_NAME" # team name
 echo "Image id: $IMAGE_ID" # ecr image id
 echo "Environment: $ENVIRONMENT" # ecr image id
 echo "Group: $GROUP" # group id
+echo "Price feed source: $PRICE_FEED_SOURCE" # price feed source
+echo "FPMM address: $FPMM_ADDRESS" # fpmm address for pricing
 
 ## Variable for the file
 
@@ -126,7 +130,7 @@ spec:
             - name: ODDS_API_URL
               value: "https://api.the-odds-api.com/v4/sports"
             - name: PRICE_FEED_SOURCE
-              value: "odds_api"
+              value: $PRICE_FEED_SOURCE
             - name: ODDS_API_SPORT
               value: $ODDS_API_SPORT
             - name: ODDS_API_REGION
@@ -142,6 +146,10 @@ spec:
                 secretKeyRef:
                   name: $SECRETS_NAME
                   key: odds_api_key
+            - name: COMPLEMENT_ID
+              value: "$TOKEN_ID_TEAM_B"
+            - name: FPMM_ADDRESS
+              value: $FPMM_ADDRESS
           ports:
             - containerPort: 9008
               name: $PORT_NAME_A
@@ -235,7 +243,7 @@ spec:
             - name: ODDS_API_URL
               value: "https://api.the-odds-api.com/v4/sports"
             - name: PRICE_FEED_SOURCE
-              value: "odds_api"
+              value: $PRICE_FEED_SOURCE
             - name: ODDS_API_SPORT
               value: $ODDS_API_SPORT
             - name: ODDS_API_REGION
@@ -251,6 +259,10 @@ spec:
                 secretKeyRef:
                   name: $SECRETS_NAME
                   key: odds_api_key
+            - name: COMPLEMENT_ID
+              value: "$TOKEN_ID_TEAM_A"
+            - name: FPMM_ADDRESS
+              value: $FPMM_ADDRESS
           ports:
             - containerPort: 9008
               name: $PORT_NAME_B
