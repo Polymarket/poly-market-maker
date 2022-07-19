@@ -5,11 +5,13 @@ import sys
 
 from prometheus_client import start_http_server
 from poly_market_maker.odds_api import OddsAPI
+from poly_market_maker.fpmm import FPMM
 
 from poly_market_maker.price_feed import (
     PriceFeedClob,
     PriceFeedOddsAPI,
     PriceFeedSource,
+    PriceFeedFPMM
 )
 
 from .gas import GasStation, GasStrategy
@@ -101,6 +103,9 @@ class ClobMarketMakerKeeper:
         parser.add_argument("--odds-api-match-id", type=str, required=False)
         parser.add_argument("--odds-api-team-name", type=str, required=False)
 
+        parser.add_argument("--fpmm-address", type=str, required=False)
+        parser.add_argument("--complement-id", type=int, required=False)
+
         parser.add_argument(
             "--metrics-server-port",
             type=int,
@@ -143,6 +148,15 @@ class ClobMarketMakerKeeper:
                 odds_api=odds_api,
                 match_id=self.args.odds_api_match_id,
                 team_name=self.args.odds_api_team_name,
+            )
+        elif self.price_feed_source == PriceFeedSource.FPMM:
+            fpmm = FPMM(self.contracts)
+            self.price_feed = PriceFeedFPMM(
+                fpmm=fpmm, 
+                conditional_token=self.clob_api.get_conditional_address(), 
+                fpmm_address=self.args.fpmm_address,
+                token_id=self.token_id, 
+                token_id_complement=self.args.complement_id,
             )
 
         self.order_book_manager = OrderBookManager(
