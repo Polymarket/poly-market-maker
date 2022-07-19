@@ -55,17 +55,6 @@ on:
           - "baseball_mlb"
         required: true
       
-      region:
-        description: 'Region of the match'
-        type: choice
-        default: "us"
-        options:
-          - "us"
-          - "uk"
-          - "eu"
-          - "au"
-        required: true
-      
       market:
         description: 'Type of market'
         type: choice
@@ -78,7 +67,7 @@ on:
       group:
         description: 'Market group number'
         type: choice
-        default: "us"
+        default: "1"
         options:
           - "1"
           - "2"
@@ -148,7 +137,7 @@ jobs:
           TEAM_A: ${{ github.event.inputs.team_a }}
           TEAM_B: ${{ github.event.inputs.team_b }}
           SPORT: ${{ github.event.inputs.sport }}
-          REGION: ${{ github.event.inputs.region }}
+          REGION: "us"
           MARKET: ${{ github.event.inputs.market }}
           BANDS_FILE: "bands.json"
           ENVIRONMENT: ${{ github.event.inputs.environment }}
