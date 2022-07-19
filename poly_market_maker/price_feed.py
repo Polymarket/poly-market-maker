@@ -3,11 +3,12 @@ import logging
 
 from poly_market_maker.clob_api import ClobApi
 from poly_market_maker.odds_api import OddsAPI
-
+from poly_market_maker.fpmm import FPMM
 
 class PriceFeedSource(enum.Enum):
     CLOB = "clob"
     ODDS_API = "odds_api"
+    FPMM = "fpmm"
 
 
 class PriceFeed:
@@ -69,3 +70,42 @@ class PriceFeedOddsAPI(PriceFeed):
         target_price = self.odds_api.get_price(self.match_id, self.team_name)
         self.logger.debug(f"target_price: {target_price}")
         return target_price
+
+class PriceFeedFPMM(PriceFeed):
+    """Gets the midpoint from the corresponding FPMM"""
+
+    def __init__(self, fpmm: FPMM,  conditional_token: str, fpmm_address: str, token_id: int, token_id_complement: int):
+        super().__init__()
+
+        if not fpmm:
+            self.logger.fatal('contracts parameter is mandatory')
+            raise Exception('contracts parameter is mandatory')
+
+        if not conditional_token or not len(conditional_token):
+            self.logger.fatal('conditional_token parameter is mandatory and can not be empty')
+            raise Exception('conditional_token parameter is mandatory and can not be empty')
+
+        if not fpmm_address or not len(fpmm_address):
+            self.logger.fatal('fpmm parameter is mandatory and can not be empty')
+            raise Exception('fpmm parameter is mandatory and can not be empty')
+
+        if not token_id:
+            self.logger.fatal('token_id parameter is mandatory and can not be empty')
+            raise Exception('token_id parameter is mandatory and can not be empty')
+
+        if not token_id_complement:
+            self.logger.fatal('token_id_complement parameter is mandatory and can not be empty')
+            raise Exception('token_id_complement parameter is mandatory and can not be empty')
+        
+        self.fpmm = fpmm
+        self.conditional_token = conditional_token
+        self.fpmm_address = fpmm_address
+        self.token_id = token_id
+        self.token_id_complement = token_id_complement
+
+    def get_price(self) -> float:
+        self.logger.debug("Fetching target price from the fpmm...")
+        target_price = self.fpmm.get_price(self.conditional_token, self.fpmm_address, self.token_id, self.token_id_complement)
+        self.logger.debug(f"target_price: {target_price}")
+        return target_price
+        
