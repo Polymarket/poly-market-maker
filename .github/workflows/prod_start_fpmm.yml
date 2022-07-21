@@ -19,7 +19,7 @@ on:
         required: true
       
       token_id_team_b:
-        description: 'Token ID A: ID of the second conditional token in the set'
+        description: 'Token ID B: ID of the second conditional token in the set'
         type: string
         required: true
       

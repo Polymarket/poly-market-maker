@@ -13,9 +13,8 @@ ODDS_API_TEAM_A_NAME=$8
 ODDS_API_TEAM_B_NAME=$9
 IMAGE_ID="${10}"
 ENVIRONMENT="${11}"
-BOT="${12}"
+GROUP="${12}"
 PRICE_FEED_SOURCE="${13}"
-FPMM_ADDRESS="${14}"
 
 echo "Bands file: $BANDS_CONFIG_FILE" # bands file
 echo "Token id team A: $TOKEN_ID_TEAM_A" # token id
@@ -30,7 +29,6 @@ echo "Image id: $IMAGE_ID" # ecr image id
 echo "Environment: $ENVIRONMENT" # ecr image id
 echo "Group: $GROUP" # group id
 echo "Price feed source: $PRICE_FEED_SOURCE" # price feed source
-echo "FPMM address: $FPMM_ADDRESS" # fpmm address for pricing
 
 ## Variable for the file
 
@@ -146,10 +144,6 @@ spec:
                 secretKeyRef:
                   name: $SECRETS_NAME
                   key: odds_api_key
-            - name: COMPLEMENT_ID
-              value: "$TOKEN_ID_TEAM_B"
-            - name: FPMM_ADDRESS
-              value: $FPMM_ADDRESS
           ports:
             - containerPort: 9008
               name: $PORT_NAME_A
@@ -259,10 +253,6 @@ spec:
                 secretKeyRef:
                   name: $SECRETS_NAME
                   key: odds_api_key
-            - name: COMPLEMENT_ID
-              value: "$TOKEN_ID_TEAM_A"
-            - name: FPMM_ADDRESS
-              value: $FPMM_ADDRESS
           ports:
             - containerPort: 9008
               name: $PORT_NAME_B

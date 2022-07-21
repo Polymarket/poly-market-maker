@@ -5,17 +5,17 @@
 BANDS_CONFIG_FILE=$1
 TOKEN_ID_TEAM_A=$2
 TOKEN_ID_TEAM_B=$3
-EVENT_ID=$4
+BOT_ID=$4
 IMAGE_ID=$5
 ENVIRONMENT=$6
 GROUP=$7
 PRICE_FEED_SOURCE=$8
-FPMM_ADDRESS=$9s
+FPMM_ADDRESS=$9
 
 echo "Bands file: $BANDS_CONFIG_FILE" # bands file
 echo "Token ID team A: $TOKEN_ID_TEAM_A" # token id
 echo "Token ID team B: $TOKEN_ID_TEAM_B" # token id
-echo "Event ID: $EVENT_ID" # token id
+echo "Bot ID: $BOT_ID" # token id
 echo "Image id: $IMAGE_ID" # ecr image id
 echo "Environment: $ENVIRONMENT" # ecr image id
 echo "Group: $GROUP" # group id
@@ -24,11 +24,11 @@ echo "FPMM address: $FPMM_ADDRESS" # fpmm address for pricing
 
 ## Variable for the file
 
-NAME_TEAM_A="mmk-game-$EVENT_ID-team-a"
-PORT_NAME_A="${EVENT_ID:0:11}a"
+NAME_TEAM_A="mmk-game-$BOT_ID-team-a"
+PORT_NAME_A="${BOT_ID:0:11}a"
 
-NAME_TEAM_B="mmk-game-$EVENT_ID-team-b"
-PORT_NAME_B="${EVENT_ID:0:11}b"
+NAME_TEAM_B="mmk-game-$BOT_ID-team-b"
+PORT_NAME_B="${BOT_ID:0:11}b"
 
 SECRETS_NAME=""
 CHAIN_ID=""
@@ -116,9 +116,6 @@ spec:
               value: "station"
             - name: GAS_STATION_URL
               value: $GAS_STATION_URL
-            # odds
-            - name: ODDS_API_URL
-              value: "https://api.the-odds-api.com/v4/sports"
             - name: PRICE_FEED_SOURCE
               value: $PRICE_FEED_SOURCE
             - name: COMPLEMENT_ID
@@ -214,9 +211,6 @@ spec:
               value: "station"
             - name: GAS_STATION_URL
               value: $GAS_STATION_URL
-            # odds
-            - name: ODDS_API_URL
-              value: "https://api.the-odds-api.com/v4/sports"
             - name: PRICE_FEED_SOURCE
               value: $PRICE_FEED_SOURCE
             - name: COMPLEMENT_ID

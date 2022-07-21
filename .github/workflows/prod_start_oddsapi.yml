@@ -1,6 +1,6 @@
 # This is a basic workflow that is manually triggered
 
-name: Start a Production Bot
+name: Start a Odds API Production Bot
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
@@ -66,19 +66,13 @@ on:
           - "4"
           - "5"
         required: true
-
-      feed_source:
-        description: 'Price feed source'
-        type: choice
-        default: "odds_api"
-        options:
-          - "odds_api"
-          - "fpmm"
-        required: true
       
-      fpmm_address:
-        description: 'FPMM address for price reference'
-        type: string
+      bands_config:
+        description: 'Bands config to use'
+        type: choice
+        default: "bands.json"
+        options:
+          - "bands.json"
         required: true
 
 jobs:
@@ -121,22 +115,21 @@ jobs:
 
       - name: Create kubernetes files
         env:
-          GAME_ID: ${{ github.event.inputs.game_id }}
+          BANDS_FILE: ${{ github.event.inputs.bands_config }}
           TOKEN_ID_TEAM_A: ${{ github.event.inputs.token_id_team_a }}
           TOKEN_ID_TEAM_B: ${{ github.event.inputs.token_id_team_b }}
-          TEAM_A: ${{ github.event.inputs.team_a }}
-          TEAM_B: ${{ github.event.inputs.team_b }}
           SPORT: ${{ github.event.inputs.sport }}
           REGION: "us"
           MARKET: ${{ github.event.inputs.market }}
-          BANDS_FILE: "bands.json"
+          GAME_ID: ${{ github.event.inputs.game_id }}
+          TEAM_A: ${{ github.event.inputs.team_a }}
+          TEAM_B: ${{ github.event.inputs.team_b }}
           ENVIRONMENT: "prod"
           GROUP: ${{ github.event.inputs.group }}
-          PRICE_FEED_SOURCE: ${{ github.event.inputs.feed_source }}
-          FPMM_ADDRESS: ${{ github.event.inputs.fpmm_address }}
+          PRICE_FEED_SOURCE: "odds_api"
 
         run: |
-          ./create_game_bot_k8s_deployment.sh $BANDS_FILE $TOKEN_ID_TEAM_A $TOKEN_ID_TEAM_B $SPORT $REGION $MARKET $GAME_ID "$TEAM_A" "$TEAM_B" $IMAGE_TAG $ENVIRONMENT $GROUP $PRICE_FEED_SOURCE $FPMM_ADDRESS
+          ./create_game_bot_k8s_deployment.sh $BANDS_FILE $TOKEN_ID_TEAM_A $TOKEN_ID_TEAM_B $SPORT $REGION $MARKET $GAME_ID "$TEAM_A" "$TEAM_B" $IMAGE_TAG $ENVIRONMENT $GROUP $PRICE_FEED_SOURCE
 
       - name: Deploy market maker bot for team A
         uses: ckuroki/kubectl-aws-eks@v1
