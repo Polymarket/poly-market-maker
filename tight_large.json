@@ -1,0 +1,70 @@
+{
+  "buyBands": [
+      {
+          "minMargin": 0.01,
+          "avgMargin": 0.01,
+          "maxMargin": 0.02,
+          "minAmount": 100.0,
+          "avgAmount": 100.0,
+          "maxAmount": 100.0
+      },
+      {
+          "minMargin": 0.02,
+          "avgMargin": 0.02,
+          "maxMargin": 0.03,
+          "minAmount": 100.0,
+          "avgAmount": 150.0,
+          "maxAmount": 200.0
+      },
+      {
+          "minMargin": 0.03,
+          "avgMargin": 0.03,
+          "maxMargin": 0.04,
+          "minAmount": 150.0,
+          "avgAmount": 200.0,
+          "maxAmount": 300.0
+      },
+      {
+          "minMargin": 0.04,
+          "avgMargin": 0.04,
+          "maxMargin": 0.05,
+          "minAmount": 200.0,
+          "avgAmount": 300.0,
+          "maxAmount": 500.0
+      }
+  ],
+  "sellBands": [
+      {
+          "minMargin": 0.01,
+          "avgMargin": 0.01,
+          "maxMargin": 0.02,
+          "minAmount": 100.0,
+          "avgAmount": 100.0,
+          "maxAmount": 100.0
+      },
+      {
+          "minMargin": 0.02,
+          "avgMargin": 0.02,
+          "maxMargin": 0.03,
+          "minAmount": 100.0,
+          "avgAmount": 150.0,
+          "maxAmount": 200.0
+      },
+      {
+          "minMargin": 0.03,
+          "avgMargin": 0.03,
+          "maxMargin": 0.04,
+          "minAmount": 150.0,
+          "avgAmount": 200.0,
+          "maxAmount": 300.0
+      },
+      {
+          "minMargin": 0.04,
+          "avgMargin": 0.04,
+          "maxMargin": 0.05,
+          "minAmount": 200.0,
+          "avgAmount": 300.0,
+          "maxAmount": 500.0
+      }
+  ]
+}

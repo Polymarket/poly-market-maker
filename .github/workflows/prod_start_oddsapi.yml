@@ -73,6 +73,10 @@ on:
         default: "bands.json"
         options:
           - "bands.json"
+          - "loose_small.json"
+          - "loose_large.json"
+          - "tight_small.json"
+          - "tight_large.json"
         required: true
 
 jobs:
