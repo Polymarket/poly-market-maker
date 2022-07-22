@@ -448,7 +448,7 @@ class TestBand(TestCase):
         test_bands = Bands(buy_bands,sell_bands)
 
         # Given the following balances:
-        target_price = 0.65
+        target_price = 0.6416888120654723
         keeper_usdc_balance = 1000.0
         keeper_yes_balance = 1000.0
 
@@ -468,40 +468,9 @@ class TestBand(TestCase):
 
         self.assertEqual(len(new_orders), 8)
 
-        self.assertEqual(
-            len(BuyBand(
-            {
-                "minMargin": 0.03,
-                "avgMargin": 0.05,
-                "maxMargin": 0.07,
-                "minAmount": 30.0,
-                "avgAmount": 50.0,
-                "maxAmount": 100.0
-            }).excessive_orders(new_orders, target_price, True, False)), 0
-        )
+        buys = [o for o in new_orders if o.side == BUY]
+        sells = [o for o in new_orders if o.side == SELL]
 
-        self.assertEqual(
-            len(BuyBand(
-            {
-                "minMargin": 0.07,
-                "avgMargin": 0.09,
-                "maxMargin": 0.11,
-                "minAmount": 50.0,
-                "avgAmount": 75.0,
-                "maxAmount": 120.0
-            }).excessive_orders(new_orders, target_price, False, False)), 0
-        )
-
-        self.assertEqual(
-            len(BuyBand(
-            {
-                "minMargin": 0.15,
-                "avgMargin": 0.17,
-                "maxMargin": 0.19,
-                "minAmount": 100.0,
-                "avgAmount": 100.0,
-                "maxAmount": 200.0
-            }).excessive_orders(new_orders, target_price, False, True)), 0
-        )
+        self.assertEqual(len(test_bands.cancellable_orders(buys, sells, target_price)), 0)
 
 
