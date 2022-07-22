@@ -366,3 +366,142 @@ class TestBand(TestCase):
 
         self.assertEqual(len(new_orders), 0)
 
+
+    def test_loose_bands(self):
+        buy_bands = [
+            BuyBand(
+            {
+                "minMargin": 0.03,
+                "avgMargin": 0.05,
+                "maxMargin": 0.07,
+                "minAmount": 30.0,
+                "avgAmount": 50.0,
+                "maxAmount": 100.0
+            }), 
+            BuyBand(
+            {
+                "minMargin": 0.07,
+                "avgMargin": 0.09,
+                "maxMargin": 0.11,
+                "minAmount": 50.0,
+                "avgAmount": 75.0,
+                "maxAmount": 120.0
+            }),
+            BuyBand(
+            {
+                "minMargin": 0.11,
+                "avgMargin": 0.13,
+                "maxMargin": 0.15,
+                "minAmount": 75.0,
+                "avgAmount": 100.0,
+                "maxAmount": 150.0
+            }),
+            BuyBand(
+            {
+                "minMargin": 0.15,
+                "avgMargin": 0.17,
+                "maxMargin": 0.19,
+                "minAmount": 100.0,
+                "avgAmount": 100.0,
+                "maxAmount": 200.0
+            })
+        ]
+
+        sell_bands = [SellBand(
+            {
+                "minMargin": 0.03,
+                "avgMargin": 0.05,
+                "maxMargin": 0.07,
+                "minAmount": 30.0,
+                "avgAmount": 50.0,
+                "maxAmount": 100.0
+            }),
+            SellBand(
+            {
+                "minMargin": 0.07,
+                "avgMargin": 0.09,
+                "maxMargin": 0.11,
+                "minAmount": 50.0,
+                "avgAmount": 75.0,
+                "maxAmount": 120.0
+            }),
+            SellBand(
+            {
+                "minMargin": 0.11,
+                "avgMargin": 0.13,
+                "maxMargin": 0.15,
+                "minAmount": 75.0,
+                "avgAmount": 100.0,
+                "maxAmount": 150.0
+            }),
+            SellBand(
+            {
+                "minMargin": 0.15,
+                "avgMargin": 0.17,
+                "maxMargin": 0.19,
+                "minAmount": 100.0,
+                "avgAmount": 100.0,
+                "maxAmount": 200.0
+            })
+        ]
+
+        test_bands = Bands(buy_bands,sell_bands)
+
+        # Given the following balances:
+        target_price = 0.65
+        keeper_usdc_balance = 1000.0
+        keeper_yes_balance = 1000.0
+
+        # and the following existing orders (none):
+        existing_buys = []
+        existing_sells = []
+
+        # place new orders
+        new_orders = test_bands.new_orders(
+            existing_buys,
+            existing_sells,
+            keeper_usdc_balance,
+            keeper_yes_balance,
+            target_price,
+        )
+        print(new_orders)
+
+        self.assertEqual(len(new_orders), 8)
+
+        self.assertEqual(
+            len(BuyBand(
+            {
+                "minMargin": 0.03,
+                "avgMargin": 0.05,
+                "maxMargin": 0.07,
+                "minAmount": 30.0,
+                "avgAmount": 50.0,
+                "maxAmount": 100.0
+            }).excessive_orders(new_orders, target_price, True, False)), 0
+        )
+
+        self.assertEqual(
+            len(BuyBand(
+            {
+                "minMargin": 0.07,
+                "avgMargin": 0.09,
+                "maxMargin": 0.11,
+                "minAmount": 50.0,
+                "avgAmount": 75.0,
+                "maxAmount": 120.0
+            }).excessive_orders(new_orders, target_price, False, False)), 0
+        )
+
+        self.assertEqual(
+            len(BuyBand(
+            {
+                "minMargin": 0.15,
+                "avgMargin": 0.17,
+                "maxMargin": 0.19,
+                "minAmount": 100.0,
+                "avgAmount": 100.0,
+                "maxAmount": 200.0
+            }).excessive_orders(new_orders, target_price, False, True)), 0
+        )
+
+
