@@ -437,7 +437,7 @@ class Bands:
                     our_sell_balance = our_sell_balance - size
                     new_orders.append(Order(price=price, size=size, side=SELL))
 
-        return list(filter(lambda x: (x.price >= 0.0 and x.price <= 1.0), new_orders))
+        return list(filter(lambda x: (x.price >= 0.0 and x.price <= 0.95), new_orders))
 
     def _new_buy_orders(
         self, our_buy_orders: list, our_buy_balance: float, target_price: float
@@ -475,7 +475,7 @@ class Bands:
                     our_buy_balance = our_buy_balance - size_buy_token
                     new_orders.append(Order(size=size, price=price, side=BUY))
 
-        return list(filter(lambda x: (x.price >= 0.0 and x.price <= 1.0), new_orders))
+        return list(filter(lambda x: (x.price >= 0.05 and x.price <= 1.0), new_orders))
 
     @staticmethod
     def _bands_overlap(bands: list):
