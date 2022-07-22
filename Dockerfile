@@ -12,6 +12,10 @@ COPY requirements.txt .
 COPY logging.yaml .
 COPY run_keeper.sh .
 COPY bands.json .
+COPY loose_small.json .
+COPY loose_large.json .
+COPY tight_small.json .
+COPY tight_large.json .
 COPY install.sh .
 
 RUN ./install.sh

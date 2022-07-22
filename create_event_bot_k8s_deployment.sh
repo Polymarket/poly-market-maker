@@ -5,38 +5,30 @@
 BANDS_CONFIG_FILE=$1
 TOKEN_ID_TEAM_A=$2
 TOKEN_ID_TEAM_B=$3
-ODDS_API_SPORT=$4
-ODDS_API_REGION=$5
-ODDS_API_MARKET=$6
-ODDS_API_MATCH_ID=$7
-ODDS_API_TEAM_A_NAME=$8
-ODDS_API_TEAM_B_NAME=$9
-IMAGE_ID="${10}"
-ENVIRONMENT="${11}"
-GROUP="${12}"
-PRICE_FEED_SOURCE="${13}"
+BOT_ID=$4
+IMAGE_ID=$5
+ENVIRONMENT=$6
+GROUP=$7
+PRICE_FEED_SOURCE=$8
+FPMM_ADDRESS=$9
 
 echo "Bands file: $BANDS_CONFIG_FILE" # bands file
-echo "Token id team A: $TOKEN_ID_TEAM_A" # token id
-echo "Token id team B: $TOKEN_ID_TEAM_B" # token id
-echo "Sport: $ODDS_API_SPORT" # odds api sport
-echo "Region: $ODDS_API_REGION" # odds api region
-echo "Market: $ODDS_API_MARKET" # odds api market
-echo "Game id: $ODDS_API_MATCH_ID" # match id
-echo "Team A: $ODDS_API_TEAM_A_NAME" # team name
-echo "Team B: $ODDS_API_TEAM_B_NAME" # team name
+echo "Token ID team A: $TOKEN_ID_TEAM_A" # token id
+echo "Token ID team B: $TOKEN_ID_TEAM_B" # token id
+echo "Bot ID: $BOT_ID" # token id
 echo "Image id: $IMAGE_ID" # ecr image id
 echo "Environment: $ENVIRONMENT" # ecr image id
 echo "Group: $GROUP" # group id
 echo "Price feed source: $PRICE_FEED_SOURCE" # price feed source
+echo "FPMM address: $FPMM_ADDRESS" # fpmm address for pricing
 
 ## Variable for the file
 
-NAME_TEAM_A="mmk-game-$ODDS_API_MATCH_ID-team-a"
-PORT_NAME_A="${ODDS_API_MATCH_ID:0:11}${ODDS_API_MARKET:0:3}a"
+NAME_TEAM_A="mmk-game-$BOT_ID-team-a"
+PORT_NAME_A="${BOT_ID:0:11}a"
 
-NAME_TEAM_B="mmk-game-$ODDS_API_MATCH_ID-team-b"
-PORT_NAME_B="${ODDS_API_MATCH_ID:0:11}${ODDS_API_MARKET:0:3}b"
+NAME_TEAM_B="mmk-game-$BOT_ID-team-b"
+PORT_NAME_B="${BOT_ID:0:11}b"
 
 SECRETS_NAME=""
 CHAIN_ID=""
@@ -124,26 +116,12 @@ spec:
               value: "station"
             - name: GAS_STATION_URL
               value: $GAS_STATION_URL
-            # odds
-            - name: ODDS_API_URL
-              value: "https://api.the-odds-api.com/v4/sports"
             - name: PRICE_FEED_SOURCE
               value: $PRICE_FEED_SOURCE
-            - name: ODDS_API_SPORT
-              value: $ODDS_API_SPORT
-            - name: ODDS_API_REGION
-              value: $ODDS_API_REGION
-            - name: ODDS_API_MARKET
-              value: $ODDS_API_MARKET
-            - name: ODDS_API_MATCH_ID
-              value: $ODDS_API_MATCH_ID
-            - name: ODDS_API_TEAM_NAME
-              value: "$ODDS_API_TEAM_A_NAME"
-            - name: ODDS_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: $SECRETS_NAME
-                  key: odds_api_key
+            - name: COMPLEMENT_ID
+              value: "$TOKEN_ID_TEAM_B"
+            - name: FPMM_ADDRESS
+              value: $FPMM_ADDRESS
           ports:
             - containerPort: 9008
               name: $PORT_NAME_A
@@ -233,26 +211,12 @@ spec:
               value: "station"
             - name: GAS_STATION_URL
               value: $GAS_STATION_URL
-            # odds
-            - name: ODDS_API_URL
-              value: "https://api.the-odds-api.com/v4/sports"
             - name: PRICE_FEED_SOURCE
               value: $PRICE_FEED_SOURCE
-            - name: ODDS_API_SPORT
-              value: $ODDS_API_SPORT
-            - name: ODDS_API_REGION
-              value: $ODDS_API_REGION
-            - name: ODDS_API_MARKET
-              value: $ODDS_API_MARKET
-            - name: ODDS_API_MATCH_ID
-              value: $ODDS_API_MATCH_ID
-            - name: ODDS_API_TEAM_NAME
-              value: "$ODDS_API_TEAM_B_NAME"
-            - name: ODDS_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: $SECRETS_NAME
-                  key: odds_api_key
+            - name: COMPLEMENT_ID
+              value: "$TOKEN_ID_TEAM_A"
+            - name: FPMM_ADDRESS
+              value: $FPMM_ADDRESS
           ports:
             - containerPort: 9008
               name: $PORT_NAME_B
