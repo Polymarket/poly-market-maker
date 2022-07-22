@@ -31,6 +31,7 @@ class ClobMarketMakerKeeper:
     """Market maker keeper on Polymarket CLOB"""
 
     logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
 
     def __init__(self, args: list, **kwargs):
         parser = argparse.ArgumentParser(prog="poly-market-maker")
