@@ -296,24 +296,23 @@ class Bands:
             virtual_sell_bands.append(self._derive_sell_band(price, band_min_price, band_avg_price, band_max_price, band.min_amount, band.avg_amount, band.max_amount))
         return virtual_sell_bands
 
-    def _excessive_sell_orders(self, our_sell_orders: list, target_price: float):
+    def _excessive_sell_orders(self, our_sell_orders: list, bands: list, target_price: float):
         """Return sell orders which need to be cancelled to bring total amounts within all sell bands below maximums."""
         assert isinstance(our_sell_orders, list)
+        assert isinstance(bands, list)
         assert isinstance(target_price, float)
 
-        bands = self.sell_bands
         for band in bands:
             for order in band.excessive_orders(
                 our_sell_orders, target_price, band == bands[0], band == bands[-1]
             ):
                 yield order
 
-    def _excessive_buy_orders(self, our_buy_orders: list, target_price: float):
+    def _excessive_buy_orders(self, our_buy_orders: list, bands: list, target_price: float):
         """Return buy orders which need to be cancelled to bring total amounts within all buy bands below maximums."""
         assert isinstance(our_buy_orders, list)
+        assert isinstance(bands, list)
         assert isinstance(target_price, float)
-
-        bands = self.buy_bands
 
         for band in bands:
             for order in band.excessive_orders(
@@ -349,7 +348,7 @@ class Bands:
         else:
             buy_orders_to_cancel = list(
                 itertools.chain(
-                    self._excessive_buy_orders(our_buy_orders, target_price),
+                    self._excessive_buy_orders(our_buy_orders, self._calculate_virtual_buy_bands(target_price), target_price),
                     self._outside_any_band_orders(
                         our_buy_orders, self._calculate_virtual_buy_bands(target_price), target_price
                     ),
@@ -365,7 +364,7 @@ class Bands:
         else:
             sell_orders_to_cancel = list(
                 itertools.chain(
-                    self._excessive_sell_orders(our_sell_orders, target_price),
+                    self._excessive_sell_orders(our_sell_orders, self._calculate_virtual_sell_bands(target_price), target_price),
                     self._outside_any_band_orders(
                         our_sell_orders, self._calculate_virtual_sell_bands(target_price), target_price #here
                     ),
