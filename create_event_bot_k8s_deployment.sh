@@ -122,6 +122,18 @@ spec:
               value: "$TOKEN_ID_TEAM_B"
             - name: FPMM_ADDRESS
               value: $FPMM_ADDRESS
+            - name: ODDS_API_URL
+              value: "undefined"
+            - name: ODDS_API_SPORT
+              value: "undefined"
+            - name: ODDS_API_REGION
+              value: "undefined"
+            - name: ODDS_API_MARKET
+              value: "undefined"
+            - name: ODDS_API_MATCH_ID
+              value: "undefined"
+            - name: ODDS_API_TEAM_NAME
+              value: "undefined"
           ports:
             - containerPort: 9008
               name: $PORT_NAME_A
@@ -217,6 +229,18 @@ spec:
               value: "$TOKEN_ID_TEAM_A"
             - name: FPMM_ADDRESS
               value: $FPMM_ADDRESS
+            - name: ODDS_API_URL
+              value: "undefined"
+            - name: ODDS_API_SPORT
+              value: "undefined"
+            - name: ODDS_API_REGION
+              value: "undefined"
+            - name: ODDS_API_MARKET
+              value: "undefined"
+            - name: ODDS_API_MATCH_ID
+              value: "undefined"
+            - name: ODDS_API_TEAM_NAME
+              value: "undefined"
           ports:
             - containerPort: 9008
               name: $PORT_NAME_B
