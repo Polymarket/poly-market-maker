@@ -134,6 +134,8 @@ spec:
               value: "undefined"
             - name: ODDS_API_TEAM_NAME
               value: "undefined"
+            - name: ODDS_API_KEY
+              value: "undefined"
           ports:
             - containerPort: 9008
               name: $PORT_NAME_A
@@ -240,6 +242,8 @@ spec:
             - name: ODDS_API_MATCH_ID
               value: "undefined"
             - name: ODDS_API_TEAM_NAME
+              value: "undefined"
+            - name: ODDS_API_KEY
               value: "undefined"
           ports:
             - containerPort: 9008
