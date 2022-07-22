@@ -253,6 +253,8 @@ spec:
                 secretKeyRef:
                   name: $SECRETS_NAME
                   key: odds_api_key
+            - name: COMPLEMENT_ID
+              value: "1"
           ports:
             - containerPort: 9008
               name: $PORT_NAME_B
