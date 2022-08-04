@@ -44,6 +44,7 @@ on:
           - "basketball_euroleague"
           - "tennis_atp_wimbledon"
           - "baseball_mlb"
+          - "americanfootball_nfl_preseason"
         required: true
       
       market:
