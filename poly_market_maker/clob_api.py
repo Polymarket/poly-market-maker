@@ -185,7 +185,7 @@ class ClobApi:
             sys.exit(1)
 
     def _get_order(self, order_dict: dict):
-        size = order_dict.get("size")
+        size = order_dict.get("available_size")
         side = order_dict.get("side")
         price = order_dict.get("price")
         order_id = order_dict.get("orderID")
