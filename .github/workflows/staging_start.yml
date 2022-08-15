@@ -45,6 +45,7 @@ on:
           - "tennis_atp_wimbledon"
           - "baseball_mlb"
           - "americanfootball_nfl_preseason"
+          - "soccer_epl"
         required: true
       
       market:
