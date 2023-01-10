@@ -1,5 +1,7 @@
-[![Tests](https://github.com/Polymarket/poly-market-maker/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/Polymarket/poly-market-maker/actions/workflows/tests.yaml)
 ## poly-market-maker
+
+[![Tests](https://github.com/Polymarket/poly-market-maker/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/Polymarket/poly-market-maker/actions/workflows/tests.yaml)
+
 
 Market maker keeper for the Polymarket CLOB
 
@@ -7,8 +9,9 @@ Requires:
 - Python 3.9.10
 - virtualenv
 
-
 ### Usage
+
+- Start and activate a virtualenv: `python -m venv .venv && source .venv/bin/activate`
 
 - Install dependencies: `make init`
 
