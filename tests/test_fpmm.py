@@ -1,4 +1,3 @@
-
 import json
 from re import M
 from unittest import TestCase, mock
@@ -9,24 +8,24 @@ from poly_market_maker.gas import GasStation, GasStrategy
 from poly_market_maker.contracts import Contracts
 
 
-class TestOddsAPI(TestCase):
+class TestFPMM(TestCase):
     def test_get_price(self):
-      w3 = Web3(Web3.HTTPProvider(""))
-      gas_station = GasStation(strat=GasStrategy("station"),w3=w3)
-      contracts = Contracts(w3, gas_station)
+        w3 = Web3(Web3.HTTPProvider(""))
+        gas_station = GasStation(strat=GasStrategy("station"), w3=w3)
+        contracts = Contracts(w3, gas_station)
 
-      fpmm = FPMM(contracts)
+        fpmm = FPMM(contracts)
 
-      m = mock.Mock()
-      m.side_effect = [100, 300]
+        m = mock.Mock()
+        m.side_effect = [100, 300]
 
-      contracts.balance_of_erc1155 = m
+        contracts.balance_of_erc1155 = m
 
-      price = fpmm.get_price(
-        conditional_token = "",
-        fpmm = "",
-        token_id = "",
-        token_complement_id = "",
-      )
+        price = fpmm.get_price(
+            conditional_token="",
+            fpmm="",
+            token_id="",
+            token_complement_id="",
+        )
 
-      self.assertEqual(price, 0.75)
+        self.assertEqual(price, 0.75)
