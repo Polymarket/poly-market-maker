@@ -75,7 +75,7 @@ class ClobApi:
         self.logger.debug("Fetching open keeper orders from the API...")
         start_time = time.time()
         try:
-            resp = self.client.get_open_orders(FilterParams(market=self.token_id))
+            resp = self.client.get_open_orders(FilterParams(market=self.condition_id))
             clob_requests_latency.labels(method="get_open_orders", status="ok").observe(
                 (time.time() - start_time)
             )
@@ -90,18 +90,18 @@ class ClobApi:
             ).observe((time.time() - start_time))
         return []
 
-    def place_order(self, price, size, side):
+    def place_order(self, price, size, side, token_id):
         """
         Places a new order
         """
         self.logger.info(
-            f"Placing a new order: Order[price={price},size={size},side={side}]"
+            f"Placing a new order: Order[price={price},size={size},side={side},token_id={token_id}]"
         )
         start_time = time.time()
         try:
             resp = self.client.create_and_post_limit_order(
                 LimitOrderArgs(
-                    price=price, size=size, side=side, token_id=self.token_id
+                    price=price, size=size, side=side, token_id=token_id
                 )
             )
             clob_requests_latency.labels(
@@ -185,8 +185,10 @@ class ClobApi:
             sys.exit(1)
 
     def _get_order(self, order_dict: dict):
-        size = order_dict.get("available_size")
+        size = order_dict.get("original_size") - order_dict.get("size_matched")
         side = order_dict.get("side")
         price = order_dict.get("price")
-        order_id = order_dict.get("orderID")
-        return Order(size=float(size), price=float(price), side=side, id=order_id)
+        order_id = order_dict.get("id")
+        token_id = order_dict.get("asset_id")
+
+        return Order(size=float(size), price=float(price), side=side, token_id=int(token_id), id=order_id)

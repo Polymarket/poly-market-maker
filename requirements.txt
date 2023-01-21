@@ -51,4 +51,4 @@ web3==5.28.0
 websockets==9.1
 yarl==1.7.2
 prometheus_client==0.14.1
-black==22.1.0
+black==22.12.0
