@@ -156,8 +156,18 @@ class ClobMarketMakerKeeper:
         ).address
 
         self.bands_config = self.args.config
-        self.token_id_A = self.args.token_id_A
-        self.token_id_B = self.args.token_id_B
+
+        # enforce token_id_A < token_id_B
+        # (self.token_id_A, self.token_id_B) = (
+        #     (self.args.token_id_A, self.args.token_id_B)
+        #     if self.args.token_id_A < self.args.token_id_B
+        #     else (self.args.token_id_B, self.args.token_id_A)
+        # )
+        (self.token_id_A, self.token_id_B) = (
+            self.args.token_id_A,
+            self.args.token_id_B,
+        )
+
         self.clob_api = ClobApi(self.token_id, self.args)
 
         self.gas_station = GasStation(
@@ -294,6 +304,13 @@ class ClobMarketMakerKeeper:
             bands = Bands.read(json.load(fh))
 
         orderbook = self.order_book_manager.get_order_book()
+        if (
+            orderbook.balances.get("collateral") is None
+            or orderbook.balances.get("tokenA") is None
+            or orderbook.balances.get("tokenB") is None
+        ):
+            self.logger.debug("Balances invalid/non-existent")
+            return
 
         def prepare_order(order):
             if order == BUY:
@@ -303,14 +320,25 @@ class ClobMarketMakerKeeper:
                 order.type = B if (order.asset_id == self.token_id_A) else A
 
         orders = [prepare_order(order) for order in orderbook.orders]
-        target_price = self.price_feed.get_price()
 
         # Cancel orders
         orders_A = [order for order in orders if (order.type == A)]
-        # buys_B = [order for order in orders if (order.type == B)]
+        orders_B = [order for order in orders if (order.type == B)]
 
+        target_price_A = self.price_feed.get_price(self.token_id_A)
+        target_price_B = 1 - target_price_A
+
+        self.synchronize_by_type(orderbook, bands, A, orders_A, target_price_A)
+        self.synchronize_by_type(orderbook, bands, B, orders_B, target_price_B)
+
+        self.logger.debug("Synchronized orderbook!")
+
+    def synchronize_by_type(
+        self, orderbook, bands, type, orders, target_price
+    ):
+        token = "tokenA" if type == A else "tokenB"
         cancellable_orders = bands.cancellable_orders(
-            orders=orders_A,
+            orders=orders,
             target_price=target_price,
         )
 
@@ -325,41 +353,32 @@ class ClobMarketMakerKeeper:
             )
             return
 
-        if (
-            orderbook.balances.get("collateral") is None
-            or orderbook.balances.get("tokenA") is None
-            or orderbook.balances.get("tokenB") is None
-        ):
-            self.logger.debug("Balances invalid/non-existent")
-            return
-
-        balance_locked_by_open_buys_A = sum(
-            order.size * order.price for order in orders_A if order.type == BUY
+        balance_locked_by_open_buys = sum(
+            order.size * order.price for order in orders if order.type == BUY
         )
-        balance_locked_by_open_sells_A = sum(
-            1 - order.price for order in orders_A if order.type == SELL
+        balance_locked_by_open_sells = sum(
+            order.size for order in orders if order.type == SELL
         )
         self.logger.debug(
-            f"Collateral locked by buys for token A: {balance_locked_by_open_buys_A}"
+            f"Collateral locked by buys: {balance_locked_by_open_buys}"
         )
         self.logger.debug(
-            f"Conditional locked by sells of token A: {balance_locked_by_open_sells_A}"
+            f"Token {type} locked by sells: {balance_locked_by_open_sells}"
         )
 
         free_buy_balance = (
-            orderbook.balances.get("collateral")
-            - balance_locked_by_open_buys_A
+            orderbook.balances.get("collateral") - balance_locked_by_open_buys
         )
         free_sell_balance = (
-            orderbook.balances.get("tokenA") - balance_locked_by_open_sells_A
+            orderbook.balances.get(token) - balance_locked_by_open_sells
         )
 
-        self.logger.debug(f"Free buy balance: {free_buy_balance}")
-        self.logger.debug(f"Free sell balance: {free_sell_balance}")
+        self.logger.debug(f"Free collateral balance: {free_buy_balance}")
+        self.logger.debug(f"Free token {type} balance: {free_sell_balance}")
 
         # Create new orders if needed
         new_orders = bands.new_orders(
-            orders=orders_A,
+            orders=orders,
             collateral_balance=free_buy_balance,
             token_balance=free_sell_balance,
             target_price=target_price,
@@ -368,8 +387,6 @@ class ClobMarketMakerKeeper:
         if len(new_orders) > 0:
             self.logger.info(f"About to place {len(new_orders)} new orders!")
             self.place_orders(new_orders)
-
-        self.logger.debug("Synchronized orderbook!")
 
     def place_orders(self, new_orders):
         """
