@@ -252,8 +252,8 @@ class ClobMarketMakerKeeper:
 
         return {
             "collateral": collateral_balance,
-            "token_A": token_A_balance,
-            "token_B": token_B_balance,
+            "tokenA": token_A_balance,
+            "tokenB": token_B_balance,
         }
 
     def approve(self):
@@ -306,12 +306,11 @@ class ClobMarketMakerKeeper:
         target_price = self.price_feed.get_price()
 
         # Cancel orders
-        buys_A = [order for order in orders if (order.type == A)]
-        buys_B = [order for order in orders if (order.type == B)]
+        orders_A = [order for order in orders if (order.type == A)]
+        # buys_B = [order for order in orders if (order.type == B)]
 
         cancellable_orders = bands.cancellable_orders(
-            our_buy_orders=buys,
-            our_sell_orders=sells,
+            orders=orders_A,
             target_price=target_price,
         )
 
@@ -328,26 +327,31 @@ class ClobMarketMakerKeeper:
 
         if (
             orderbook.balances.get("collateral") is None
-            or orderbook.balances.get("conditional") is None
+            or orderbook.balances.get("tokenA") is None
+            or orderbook.balances.get("tokenB") is None
         ):
             self.logger.debug("Balances invalid/non-existent")
             return
 
-        balance_locked_by_open_buys = sum(o.size * o.price for o in buys)
-        balance_locked_by_open_sells = sum(o.size for o in sells)
-        self.logger.debug(
-            f"Collateral locked by buys: {balance_locked_by_open_buys}"
+        balance_locked_by_open_buys_A = sum(
+            order.size * order.price for order in orders_A if order.type == BUY
+        )
+        balance_locked_by_open_sells_A = sum(
+            1 - order.price for order in orders_A if order.type == SELL
         )
         self.logger.debug(
-            f"Conditional locked by sells: {balance_locked_by_open_sells}"
+            f"Collateral locked by buys for token A: {balance_locked_by_open_buys_A}"
+        )
+        self.logger.debug(
+            f"Conditional locked by sells of token A: {balance_locked_by_open_sells_A}"
         )
 
         free_buy_balance = (
-            orderbook.balances.get("collateral") - balance_locked_by_open_buys
+            orderbook.balances.get("collateral")
+            - balance_locked_by_open_buys_A
         )
         free_sell_balance = (
-            orderbook.balances.get("conditional")
-            - balance_locked_by_open_sells
+            orderbook.balances.get("tokenA") - balance_locked_by_open_sells_A
         )
 
         self.logger.debug(f"Free buy balance: {free_buy_balance}")
@@ -355,10 +359,9 @@ class ClobMarketMakerKeeper:
 
         # Create new orders if needed
         new_orders = bands.new_orders(
-            our_buy_orders=buys,
-            our_sell_orders=sells,
-            our_buy_balance=free_buy_balance,
-            our_sell_balance=free_sell_balance,
+            orders=orders_A,
+            collateral_balance=free_buy_balance,
+            token_balance=free_sell_balance,
             target_price=target_price,
         )
 
@@ -375,9 +378,15 @@ class ClobMarketMakerKeeper:
         """
 
         def place_order_function(new_order_to_be_placed):
-            price = math_round_down(new_order_to_be_placed.price, 2)
+
             size = new_order_to_be_placed.size
             side = new_order_to_be_placed.side
+            price = new_order_to_be_placed.price
+
+            # translate price if necessary
+            if side == SELL:
+                price = 1 - price
+
             order_id = self.clob_api.place_order(
                 price=price, size=size, side=side
             )
