@@ -52,7 +52,7 @@ class Band:
         is_last_band: bool,
     ):
         """Return orders which need to be cancelled to bring the total order amount in the band below maximum."""
-        self.logger.debug(f"Running excessive orders for {self.type()}")
+        self.logger.debug("Running excessive orders.")
         # Get all orders which are currently present in the band.
         orders_in_band = [
             order for order in orders if self.includes(order, target_price)
@@ -106,7 +106,7 @@ class Band:
         result = set(orders_in_band) - set(buys_in_band) - set(sells_in_band)
         if len(result) > 0:
             self.logger.info(
-                f"{self.type().capitalize()} band (spread <{self.min_margin}, {self.max_margin}>,"
+                f"Band (spread <{self.min_margin}, {self.max_margin}>,"
                 f" amount <{self.min_amount}, {self.max_amount}>) has amount {orders_total_size}, scheduling"
                 f" {len(result)} order(s) for cancellation: {', '.join(map(lambda o: '#' + str(o.id), result))}"
             )
@@ -151,8 +151,7 @@ class Bands:
         assert isinstance(config, dict)
 
         try:
-            bands = list(map(Band, config["bands"]))
-            bands = list(map(Band, config["bands"]))
+            bands = [Band(*list(band.values())) for band in config["bands"]]
 
         except Exception as e:
             logging.getLogger().exception(
