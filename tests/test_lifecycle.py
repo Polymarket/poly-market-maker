@@ -11,7 +11,7 @@ class TestLifecycle(TestCase):
         self.counter = 0
 
     def test_init_lifecycle(self):
-        l = Lifecycle()
+        lc = Lifecycle()
 
         def side_effect():
             self.counter += 1
@@ -23,10 +23,10 @@ class TestLifecycle(TestCase):
         shutdown = MagicMock()
 
         with pytest.raises(SystemExit):
-            with l as lifecycle:
+            with lc as lifecycle:
                 lifecycle.on_startup(startup)
-                l.every(0.1, callback)
-                l.on_shutdown(shutdown)
+                lc.every(0.1, callback)
+                lc.on_shutdown(shutdown)
 
         # assert relevant functions were called
         self.assertEqual(startup.call_count, 1)
@@ -34,7 +34,7 @@ class TestLifecycle(TestCase):
         self.assertEqual(shutdown.call_count, 1)
 
         # assert state changes
-        self.assertTrue(l.terminated_internally)
+        self.assertTrue(lc.terminated_internally)
         self.assertEqual(self.counter, 2)
 
     pass
