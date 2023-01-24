@@ -80,7 +80,6 @@ class TestBand(TestCase):
         with open("./tests/bands.json") as fh:
             test_bands = Bands.read(json.load(fh))
 
-        print(test_bands)
         self.assertIsNotNone(test_bands)
         self.assertEqual(len(test_bands.bands), 2)
 
@@ -110,7 +109,121 @@ class TestBand(TestCase):
             len(test_bands.cancellable_orders(orders, target_price)), 4
         )
 
-    def test_bands_new_orders(self):
+    def test_bands_new_orders_usdc_only(self):
+        with open("./tests/bands.json") as fh:
+            test_bands = Bands.read(json.load(fh))
+
+        # Given the following balances:
+        target_price = 0.5
+        keeper_usdc_balance = 100.0
+        keeper_token_balance = 0.0
+
+        # and the following existing orders:
+        existing_orders = [
+            Order(size=5, price=0.48, side=BUY, token_id=1),
+        ]
+
+        # place new orders
+        new_orders = test_bands.new_orders(
+            existing_orders,
+            keeper_usdc_balance,
+            keeper_token_balance,
+            target_price,
+            buy_token_id=1,
+            sell_token_id=2,
+        )
+
+        new_buys = [o for o in new_orders if o.side == BUY]
+        new_sells = [o for o in new_orders if o.side == SELL]
+
+        # no new sells, bc we have no tokens
+        self.assertEqual(len(new_sells), 0)
+
+        # new buys in band 1 to bring amount to avgAmount
+        self.assertEqual(new_buys[0].size, 15.0)
+        self.assertEqual(new_buys[0].price, 0.47)
+
+        # new buys in band 2 to bring amount to avgAmount
+        self.assertEqual(new_buys[1].size, 30.0)
+        self.assertEqual(new_buys[1].price, 0.45)
+
+    def test_bands_new_orders_token_only(self):
+        with open("./tests/bands.json") as fh:
+            test_bands = Bands.read(json.load(fh))
+
+        # Given the following balances:
+        target_price = 0.5
+        keeper_usdc_balance = 100.0
+        keeper_token_balance = 100.0
+
+        # and the following existing orders:
+        existing_orders = [
+            Order(size=5, price=0.48, side=BUY, token_id=1),
+        ]
+
+        # place new orders
+        new_orders = test_bands.new_orders(
+            existing_orders,
+            keeper_usdc_balance,
+            keeper_token_balance,
+            target_price,
+            buy_token_id=1,
+            sell_token_id=2,
+        )
+
+        new_buys = [o for o in new_orders if o.side == BUY]
+        new_sells = [o for o in new_orders if o.side == SELL]
+
+        # no new buys, bc we could achieve avgAmount with tokens only
+        self.assertEqual(len(new_buys), 0)
+
+        # new sells in band 1 to bring amount to avgAmount
+        self.assertEqual(new_sells[0].size, 15.0)
+        self.assertEqual(new_sells[0].price, 0.47)
+
+        # new sells in band 2 to bring amount to avgAmount
+        self.assertEqual(new_sells[1].size, 30.0)
+        self.assertEqual(new_sells[1].price, 0.45)
+
+    def test_bands_new_orders_mixed(self):
+        with open("./tests/bands.json") as fh:
+            test_bands = Bands.read(json.load(fh))
+
+        # Given the following balances:
+        target_price = 0.5
+        keeper_usdc_balance = 30.0
+        keeper_token_balance = 30.0
+
+        # and the following existing orders:
+        existing_orders = [
+            Order(size=5, price=0.48, side=BUY, token_id=1),
+        ]
+
+        # place new orders
+        new_orders = test_bands.new_orders(
+            existing_orders,
+            keeper_usdc_balance,
+            keeper_token_balance,
+            target_price,
+            buy_token_id=1,
+            sell_token_id=2,
+        )
+
+        new_buys = [o for o in new_orders if o.side == BUY]
+        new_sells = [o for o in new_orders if o.side == SELL]
+
+        # new sells in band 1 to bring amount to avgAmount
+        self.assertEqual(new_sells[0].size, 15.0)
+        self.assertEqual(new_sells[0].price, 0.47)
+
+        # new sells in band 2 to bring amount to avgAmount
+        self.assertEqual(new_sells[1].size, 15.0)
+        self.assertEqual(new_sells[1].price, 0.45)
+
+        self.assertEqual(new_buys[0].size, 15.0)
+        self.assertEqual(new_buys[0].price, 0.45)
+
+    def test_bands_new_orders_mixed_and_limited(self):
         with open("./tests/bands.json") as fh:
             test_bands = Bands.read(json.load(fh))
 
@@ -134,32 +247,21 @@ class TestBand(TestCase):
             sell_token_id=2,
         )
 
-        print(new_orders)
         new_buys = [o for o in new_orders if o.side == BUY]
         new_sells = [o for o in new_orders if o.side == SELL]
 
-        # # For Band1 = Band[spread<0.02, 0.4>, amount<10.0, 50.0>]
-        # # the existing buy has a size 5, failing the minAmount 10 requirement
-        # # so we expect to have created a new buy with:
-        # # size = avgAmount - existingSize = 20.0 - 5 = 15.0
-        # # price = target_price - avgMargin = 0.5 - .03 = 0.47
-        # self.assertEqual(new_buys[0].size, 15.0)
-        # self.assertEqual(new_buys[0].price, 0.47)
-
-        # # For Band2 = Band[type=buy, spread<0.2, 0.4>, amount<20.0, 40.0>]
-        # # we have no buys in that band, failing the minAmount 20 requirement
-        # # new buy:
-        # # size = avgAmount - existingAmount = 30 - 0
-        # # price = target_price - avgMargin = 0.5 -.05 = .45
-        self.assertEqual(new_buys[0].size, 15.0)
-        self.assertEqual(new_buys[0].price, 0.45)
-
-        # Similarly for sells
+        # new sells in band 1 to bring amount to avgAmount
         self.assertEqual(new_sells[0].size, 15.0)
         self.assertEqual(new_sells[0].price, 0.47)
 
+        # new sells in band 2 to use the rest of token balance
+        # note that we don't have enough to get to avgAmount
         self.assertEqual(new_sells[1].size, 15.0)
-        self.assertEqual(new_sells[1].price, 0.45)  # asks are rounded up
+        self.assertEqual(new_sells[1].price, 0.45)
+
+        # we place buy order with size 15 to get to avgAmount = 30
+        self.assertEqual(new_buys[0].size, 15.0)
+        self.assertEqual(new_buys[0].price, 0.45)
 
     def test_virtual_bands_orders(self):
         # load bands with margins that are very close together

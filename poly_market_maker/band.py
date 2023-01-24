@@ -3,7 +3,7 @@ import logging
 
 from .utils import math_round_down, math_round_up
 
-from .constants import BUY, SELL, MIN_TICK, A, B
+from .constants import BUY, SELL, MIN_TICK, MIN_SIZE, A, B
 from .order import Order
 
 
@@ -309,11 +309,8 @@ class Bands:
             if total_amount < band.min_amount:
                 price = band.avg_price(target_price)
                 size = min(band.avg_amount - total_amount, token_balance)
-                if (
-                    (price > float(0))
-                    and (price < float(1.0))
-                    and (size >= float(15.0))
-                ):  # min order size
+
+                if self._new_order_is_valid(price, size):
                     self.logger.debug(
                         f"{band} has existing amount {total_amount},"
                         f" creating new sell order with price {price} and size: {size}"
@@ -348,7 +345,7 @@ class Bands:
         assert isinstance(collateral_balance, float)
         assert isinstance(target_price, float)
 
-        new_orders = []
+        new_buy_orders = []
         self.logger.debug("Running new buy orders...")
         for band in self._calculate_virtual_bands(target_price):
             self.logger.debug(band)
@@ -364,18 +361,14 @@ class Bands:
                     size_available,
                 )
 
-                if (
-                    (price > float(0))
-                    and (price < float(1.0))
-                    and (size >= float(15.0))
-                ):  # min order size
+                if self._new_order_is_valid(price, size):
                     self.logger.debug(
                         f"{band} has existing amount {band_size},"
                         f" creating new buy order with price {price} and size: {size}"
                     )
 
                     collateral_balance -= size * price
-                    new_orders.append(
+                    new_buy_orders.append(
                         Order(
                             size=size,
                             price=price,
@@ -384,8 +377,14 @@ class Bands:
                         )
                     )
 
-        return list(
-            filter(lambda x: (x.price >= 0.05 and x.price <= 1.0), new_orders)
+        return new_buy_orders
+
+    @staticmethod
+    def _new_order_is_valid(price, size):
+        return (
+            (price > float(0))
+            and (price < float(1.0))
+            and (size >= float(15.0))
         )
 
     @staticmethod
