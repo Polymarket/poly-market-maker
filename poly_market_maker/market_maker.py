@@ -226,12 +226,12 @@ class ClobMarketMakerKeeper:
         token_A_balance = self.contracts.token_balance_of(
             self.clob_api.get_conditional_address(),
             self.address,
-            self.token_A_id,
+            self.market.token_id(A),
         )
         token_B_balance = self.contracts.token_balance_of(
             self.clob_api.get_conditional_address(),
             self.address,
-            self.token_B_id,
+            self.market.token_id(B),
         )
         gas_balance = self.contracts.gas_balance(self.address)
 
@@ -258,8 +258,8 @@ class ClobMarketMakerKeeper:
 
         return {
             "collateral": collateral_balance,
-            "tokenA": token_A_balance,
-            "tokenB": token_B_balance,
+            A: token_A_balance,
+            B: token_B_balance,
         }
 
     def approve(self):

@@ -10,7 +10,7 @@ from .metrics import clob_requests_latency
 from py_clob_client.client import (
     ClobClient,
     ApiCreds,
-    LimitOrderArgs,
+    OrderArgs,
     FilterParams,
 )
 
@@ -109,9 +109,7 @@ class ClobApi:
         start_time = time.time()
         try:
             resp = self.client.create_and_post_limit_order(
-                LimitOrderArgs(
-                    price=price, size=size, side=side, token_id=token_id
-                )
+                OrderArgs(price=price, size=size, side=side, token_id=token_id)
             )
             clob_requests_latency.labels(
                 method="create_and_post_limit_order", status="ok"
@@ -200,7 +198,7 @@ class ClobApi:
         side = order_dict.get("side")
         price = order_dict.get("price")
         order_id = order_dict.get("id")
-        token_id = order_dict.get("asset_id")
+        token_id = order_dict.get("token_id")
 
         return Order(
             size=float(size),
