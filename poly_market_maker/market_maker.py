@@ -19,6 +19,7 @@ from .utils import math_round_down, setup_logging, setup_web3
 
 from .band import Bands
 from .order import Order
+from .market import Market
 from .clob_api import ClobApi
 from .constants import BUY, SELL, A, B
 from .lifecycle import Lifecycle
@@ -157,18 +158,13 @@ class ClobMarketMakerKeeper:
 
         self.bands_config = self.args.config
 
-        # enforce token_id_A < token_id_B
-        # (self.token_id_A, self.token_id_B) = (
-        #     (self.args.token_id_A, self.args.token_id_B)
-        #     if self.args.token_id_A < self.args.token_id_B
-        #     else (self.args.token_id_B, self.args.token_id_A)
-        # )
-        (self.token_id_A, self.token_id_B) = (
+        self.market = Market(
+            self.args.condition_id,
             self.args.token_id_A,
             self.args.token_id_B,
         )
 
-        self.clob_api = ClobApi(self.token_id, self.args)
+        self.clob_api = ClobApi(self.args)
 
         self.gas_station = GasStation(
             strat=GasStrategy(self.args.gas_strategy),
@@ -193,21 +189,21 @@ class ClobMarketMakerKeeper:
                 match_id=self.args.odds_api_match_id,
                 team_name=self.args.odds_api_team_name,
             )
-        elif self.price_feed_source == PriceFeedSource.FPMM:
-            fpmm = FPMM(self.contracts)
-            self.price_feed = PriceFeedFPMM(
-                fpmm=fpmm,
-                conditional_token=self.clob_api.get_conditional_address(),
-                fpmm_address=self.args.fpmm_address,
-                token_id=self.token_id,
-                token_id_complement=self.args.complement_id,
-            )
+        # elif self.price_feed_source == PriceFeedSource.FPMM:
+        #     fpmm = FPMM(self.contracts)
+        #     self.price_feed = PriceFeedFPMM(
+        #         fpmm=fpmm,
+        #         conditional_token=self.clob_api.get_conditional_address(),
+        #         fpmm_address=self.args.fpmm_address,
+        #         token_id=self.token_id,
+        #         token_id_complement=self.args.complement_id,
+        #     )
 
         self.order_book_manager = OrderBookManager(
             self.args.refresh_frequency, max_workers=1
         )
         self.order_book_manager.get_orders_with(
-            lambda: self.clob_api.get_orders()
+            lambda: self.clob_api.get_orders(self.market.condition_id)
         )
         self.order_book_manager.get_balances_with(lambda: self.get_balances())
         self.order_book_manager.cancel_orders_with(
@@ -247,12 +243,12 @@ class ClobMarketMakerKeeper:
         keeper_balance_amount.labels(
             accountaddress=self.address,
             assetaddress=self.clob_api.get_conditional_address(),
-            tokenid=self.token_A_id,
+            tokenid=self.market.token_id(A),
         ).set(token_A_balance)
         keeper_balance_amount.labels(
             accountaddress=self.address,
             assetaddress=self.clob_api.get_conditional_address(),
-            tokenid=self.token_B_id,
+            tokenid=self.market.token_id(B),
         ).set(token_B_balance)
         keeper_balance_amount.labels(
             accountaddress=self.address,
@@ -312,38 +308,35 @@ class ClobMarketMakerKeeper:
             self.logger.debug("Balances invalid/non-existent")
             return
 
-        def prepare_order(order):
-            if order == BUY:
-                order.type = A if (order.asset_id == self.token_id_A) else B
-            else:
-                order.price = 1 - order.price
-                order.type = B if (order.asset_id == self.token_id_A) else A
+        orders = [self.prepare_order(order) for order in orderbook.orders]
 
-        orders = [prepare_order(order) for order in orderbook.orders]
+        for type in [A, B]:
+            orders_by_type = [
+                order for order in orders if (order.type == type)
+            ]
 
-        # Cancel orders
-        orders_A = [order for order in orders if (order.type == A)]
-        orders_B = [order for order in orders if (order.type == B)]
+            target_price = self.price_feed.get_price(
+                self.market.token_id(type)
+            )
 
-        target_price_A = self.price_feed.get_price(self.token_id_A)
-        target_price_B = 1 - target_price_A
-
-        self.synchronize_by_token(
-            orderbook, bands, A, orders_A, target_price_A
-        )
-        self.synchronize_by_token(
-            orderbook, bands, B, orders_B, target_price_B
-        )
+            self.synchronize_by_token(
+                orderbook, bands, A, orders_by_type, target_price
+            )
 
         self.logger.debug("Synchronized orderbook!")
 
-    def get_complementary_token(self, token):
-        return A if token == B else B
+    @staticmethod
+    def prepare_order(order, market):
+        if order.side == BUY:
+            order.type = A if order.asset_id == market.token_id(A) else B
+        else:
+            order.price = 1 - order.price
+            order.type = B if order.asset_id == market.token_id(A) else A
 
     def synchronize_by_token(
         self, orderbook, bands, buy_token, orders, target_price
     ):
-        sell_token = self.get_complementary_token(buy_token)
+        sell_token = A if buy_token == B else B
         cancellable_orders = bands.cancellable_orders(
             orders=orders,
             target_price=target_price,
@@ -412,7 +405,7 @@ class ClobMarketMakerKeeper:
             if side == SELL:
                 price = 1 - price
 
-            token_id = self.get_token_id(buy_token, side)
+            token_id = self.market.token_id(buy_token, side)
             order_id = self.clob_api.place_order(
                 price=price, size=size, side=side, token_id=token_id
             )

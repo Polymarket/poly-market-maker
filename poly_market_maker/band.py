@@ -1,8 +1,6 @@
 import itertools
 import logging
 
-from .utils import math_round_down, math_round_up
-
 from .constants import BUY, SELL, MIN_TICK, MIN_SIZE, A, B
 from .order import Order
 
@@ -78,32 +76,17 @@ class Band:
             reverse = False
         else:
             sorting = size_sorting
-            reverse = True
+            reverse = False
 
         orders_in_band = sorted(orders_in_band, key=sorting, reverse=reverse)
-        buys_in_band = [order for order in orders_in_band if order.side == BUY]
-        sells_in_band = [
-            order for order in orders_in_band if order.side == SELL
-        ]
+        orders_for_cancellation = []
+        band_amount = sum(order.size for order in orders_in_band)
 
-        buys_in_band_total_size = sum(order.size for order in buys_in_band)
-        sells_in_band_total_size = sum(order.size for order in sells_in_band)
+        while band_amount > self.max_amount:
+            order = orders_in_band.pop()
+            orders_for_cancellation.append(order)
+            band_amount -= order.size
 
-        while (
-            sells_in_band_total_size > 0
-            and sells_in_band_total_size + buys_in_band_total_size
-            > self.max_amount
-        ):
-            order = sells_in_band.pop()
-            sells_in_band_total_size -= order.size
-
-        while buys_in_band_total_size > self.max_amount:
-            order = buys_in_band.pop()
-            buys_in_band_total_size -= order.size
-
-        orders_for_cancellation = (
-            set(orders_in_band) - set(buys_in_band) - set(sells_in_band)
-        )
         if len(orders_for_cancellation) > 0:
             self.logger.info(
                 f"Band (spread <{self.min_margin}, {self.max_margin}>,"
@@ -126,7 +109,7 @@ class Band:
         # self.logger.info(f"price_min: {price_min}")
         # self.logger.info(f"price_max: {price_max}")
 
-        included = (order.price <= price_max) and (order.price > price_min)
+        included = (order.price > price_min) and (order.price <= price_max)
         # self.logger.info(f"{order} is included in band: {self}?: {included}")
         return included
 
@@ -204,8 +187,8 @@ class Bands:
             for order in band.excessive_orders(
                 orders,
                 target_price,
-                band == bands[0],
-                band == bands[-1],
+                band == bands[0],  # is first
+                band == bands[-1],  # is last
             ):
                 yield order
 
@@ -259,132 +242,68 @@ class Bands:
         collateral_balance: float,
         token_balance: float,
         target_price: float,
-        buy_token_id: str,
-        sell_token_id: str,
     ) -> list:
         assert isinstance(orders, list)
         assert isinstance(collateral_balance, float)
         assert isinstance(target_price, float)
 
-        if target_price is not None:
-            new_sell_orders = self._new_sell_orders(
-                orders,
-                token_balance,
-                target_price,
-                sell_token_id,
-            )
-            new_buy_orders = self._new_buy_orders(
-                orders + new_sell_orders,
-                collateral_balance,
-                target_price,
-                buy_token_id,
-            )
-
-            return new_buy_orders + new_sell_orders
-        else:
+        if target_price is None:
             return []
 
-    def _new_sell_orders(
-        self,
-        orders: list,
-        token_balance: float,
-        target_price: float,
-        sell_token_id: str,
-    ):
+        new_orders = []
+        for band in self._calculate_virtual_bands(target_price):
+            self.logger.debug(band)
+
+            band_avg_price = band.avg_price(target_price)
+            band_amount = sum(
+                order.size
+                for order in orders
+                if band.includes(order, target_price)
+            )
+
+            self.logger.debug(f"{band} has existing amount {band_amount},")
+
+            if band_amount < band.min_amount:
+                # sell
+                sell_size = min(band.avg_amount - band_amount, token_balance)
+                sell_order = self._new_order(band_avg_price, sell_size, SELL)
+
+                if sell_order is not None:
+                    band_amount += sell_size
+                    token_balance -= sell_size
+                    new_orders.append(sell_order)
+
+                if band_amount < band.avg_amount:
+                    # buy
+                    buy_size = min(
+                        band.avg_amount - band_amount,
+                        collateral_balance / band_avg_price,
+                    )
+                    buy_order = self._new_order(band_avg_price, buy_size, BUY)
+
+                    if buy_order is not None:
+                        band_amount += buy_size
+                        collateral_balance -= buy_size * band_avg_price
+                        new_orders.append(buy_order)
+
+        return new_orders
+
+    def _new_order(self, price: float, size: float, side: str):
         """
         Return sell orders which need to be placed to bring total amounts within all sell bands above minimums
         """
-        assert isinstance(orders, list)
-        assert isinstance(token_balance, float)
-        assert isinstance(target_price, float)
 
-        new_orders = []
+        if self._new_order_is_valid(price, size):
+            self.logger.debug(
+                f" creating new {side} order with price {price} and size: {size}"
+            )
 
-        for band in self._calculate_virtual_bands(target_price):
-            self.logger.debug(band)
-            orders_in_band = [
-                order for order in orders if band.includes(order, target_price)
-            ]
-            total_amount = sum(order.size for order in orders_in_band)
-            if total_amount < band.min_amount:
-                price = band.avg_price(target_price)
-                size = min(band.avg_amount - total_amount, token_balance)
-
-                if self._new_order_is_valid(price, size):
-                    self.logger.debug(
-                        f"{band} has existing amount {total_amount},"
-                        f" creating new sell order with price {price} and size: {size}"
-                    )
-
-                    token_balance -= size
-                    new_orders.append(
-                        Order(
-                            price=price,
-                            size=size,
-                            side=SELL,
-                            token_id=sell_token_id,
-                        )
-                    )
-
-        # what's this ??
-        return list(
-            filter(lambda x: (x.price >= 0.0 and x.price <= 0.95), new_orders)
-        )
-
-    def _new_buy_orders(
-        self,
-        orders: list,
-        collateral_balance: float,
-        target_price: float,
-        buy_token_id: str,
-    ):
-        """
-        Return buy orders which need to be placed to bring total amounts within all buy bands above minimums
-        """
-        assert isinstance(orders, list)
-        assert isinstance(collateral_balance, float)
-        assert isinstance(target_price, float)
-
-        new_buy_orders = []
-        self.logger.debug("Running new buy orders...")
-        for band in self._calculate_virtual_bands(target_price):
-            self.logger.debug(band)
-            orders_in_band = [
-                order for order in orders if band.includes(order, target_price)
-            ]
-            band_size = sum(order.size for order in orders_in_band)
-            if band_size < band.min_amount:
-                price = band.avg_price(target_price)
-                size_available = collateral_balance / price
-                size = min(
-                    band.avg_amount - band_size,
-                    size_available,
-                )
-
-                if self._new_order_is_valid(price, size):
-                    self.logger.debug(
-                        f"{band} has existing amount {band_size},"
-                        f" creating new buy order with price {price} and size: {size}"
-                    )
-
-                    collateral_balance -= size * price
-                    new_buy_orders.append(
-                        Order(
-                            size=size,
-                            price=price,
-                            side=BUY,
-                            token_id=buy_token_id,
-                        )
-                    )
-
-        return new_buy_orders
+            return Order(price=price, size=size, side=side)
 
     @staticmethod
     def _new_order_is_valid(price, size):
         return (
-            (price > float(0))
-            and (price < float(1.0))
-            and (size >= float(15.0))
+            (price > float(0)) and (price < float(1.0)) and (size >= MIN_SIZE)
         )
 
     @staticmethod

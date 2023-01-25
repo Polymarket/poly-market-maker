@@ -129,8 +129,6 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            buy_token_id=1,
-            sell_token_id=2,
         )
 
         new_buys = [o for o in new_orders if o.side == BUY]
@@ -167,8 +165,6 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            buy_token_id=1,
-            sell_token_id=2,
         )
 
         new_buys = [o for o in new_orders if o.side == BUY]
@@ -205,8 +201,6 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            buy_token_id=1,
-            sell_token_id=2,
         )
 
         new_buys = [o for o in new_orders if o.side == BUY]
@@ -243,8 +237,6 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            buy_token_id=1,
-            sell_token_id=2,
         )
 
         new_buys = [o for o in new_orders if o.side == BUY]
