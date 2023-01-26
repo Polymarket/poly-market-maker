@@ -1,7 +1,7 @@
 import itertools
 import logging
 
-from .constants import MIN_TICK, MIN_SIZE
+from .constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
 from .order import Order, BUY, SELL
 
 
@@ -111,7 +111,7 @@ class Band:
     def _apply_margin(price: float, margin: float) -> float:
         # absolute margins
         # round to 6 decimals to avoid floating point issues
-        return round(price - margin, 6)
+        return round(price - margin, MAX_DECIMALS)
 
     def min_price(self, target_price: float) -> float:
         return self._apply_margin(target_price, self.max_margin)
@@ -261,7 +261,10 @@ class Bands:
                 # sell
                 sell_price = band.sell_price(target_price)
 
-                sell_size = min(band.avg_amount - band_amount, token_balance)
+                sell_size = round(
+                    min(band.avg_amount - band_amount, token_balance),
+                    MAX_DECIMALS,
+                )
                 sell_order = self._new_order(sell_price, sell_size, SELL)
 
                 if sell_order is not None:
@@ -272,9 +275,12 @@ class Bands:
                 if band_amount < band.avg_amount:
                     # buy
                     buy_price = band.buy_price(target_price)
-                    buy_size = min(
-                        band.avg_amount - band_amount,
-                        collateral_balance / buy_price,
+                    buy_size = round(
+                        min(
+                            band.avg_amount - band_amount,
+                            collateral_balance / buy_price,
+                        ),
+                        MAX_DECIMALS,
                     )
                     buy_order = self._new_order(buy_price, buy_size, BUY)
 
@@ -290,12 +296,14 @@ class Bands:
         Return sell orders which need to be placed to bring total amounts within all sell bands above minimums
         """
 
-        if self._new_order_is_valid(price, size):
-            self.logger.debug(
-                f"Creating new {side} order with price {price} and size: {size}"
-            )
+        if not self._new_order_is_valid(price, size):
+            return None
 
-            return Order(price=price, size=size, side=side)
+        self.logger.debug(
+            f"Creating new {side} order with price {price} and size: {size}"
+        )
+
+        return Order(price=price, size=size, side=side)
 
     @staticmethod
     def _new_order_is_valid(price, size):

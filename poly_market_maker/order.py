@@ -1,5 +1,4 @@
-BUY = "BUY"
-SELL = "SELL"
+from py_clob_client.order_builder.constants import BUY, SELL
 
 
 class Order:

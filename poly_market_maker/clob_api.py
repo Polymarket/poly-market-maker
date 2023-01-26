@@ -3,7 +3,7 @@ import sys
 import time
 
 from .utils import randomize_default_price
-from .order import Order
+from .order import Order, BUY, SELL
 from .constants import OK
 from .metrics import clob_requests_latency
 
@@ -196,7 +196,7 @@ class ClobApi:
             order_dict.get("size_matched")
         )
         price = float(order_dict.get("price"))
-        side = order_dict.get("side")
+        side = BUY if order_dict.get("side").lower() == BUY else SELL
         order_id = order_dict.get("id")
         token_id = order_dict.get("asset_id")
 

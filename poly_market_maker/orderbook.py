@@ -5,7 +5,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
-from .order import Order
+from .order import Order, BUY, SELL
 
 
 class OrderBook:
@@ -394,7 +394,9 @@ class OrderBookManager:
 
                 self.logger.debug(
                     f"Fetched the order book"
-                    f" (orders: {[order.id for order in orders]})"
+                    f" (orders: {[order.id for order in orders]}, "
+                    f" buys: {len([order for order in orders if order.side == BUY])}, "
+                    f" sells: {len([order for order in orders if order.side == SELL])})"
                 )
             except Exception as e:
                 self.logger.error(
