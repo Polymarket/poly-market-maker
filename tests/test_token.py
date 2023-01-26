@@ -12,4 +12,4 @@ class TestToken(TestCase):
 
     def test_complement(self):
         self.assertEqual(Token.A.complement(), Token.B)
-        self.assertEqual(Token.B.complement().value, Token.A)
+        self.assertEqual(Token.B.complement(), Token.A)

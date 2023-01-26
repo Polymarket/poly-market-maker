@@ -3,8 +3,7 @@ from unittest import TestCase
 import unittest
 
 from poly_market_maker.band import Band, Bands
-from poly_market_maker.constants import BUY, SELL
-from poly_market_maker.order import Order
+from poly_market_maker.order import Order, BUY, SELL
 
 
 class TestBand(TestCase):
