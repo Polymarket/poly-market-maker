@@ -279,12 +279,6 @@ class Bands:
                     buy_order = self._new_order(buy_price, buy_size, BUY)
 
                     if buy_order is not None:
-                        print("BUY ORDER")
-                        print(collateral_balance)
-                        print(buy_size)
-                        print(buy_price)
-                        print(buy_size * buy_price)
-
                         band_amount += buy_size
                         collateral_balance -= buy_size * buy_price
                         new_orders.append(buy_order)

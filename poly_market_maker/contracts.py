@@ -74,7 +74,7 @@ class Contracts:
                 method="allowance", status="error"
             ).inc()
             raise e
-        print(allowance)
+
         return allowance > 0
 
     def is_approved_erc1155(self, token: str, owner: str, spender: str):
@@ -97,9 +97,6 @@ class Contracts:
         return approved
 
     def max_approve_erc20(self, token: str, owner: str, spender: str):
-        print("IS APPROVED")
-        print(token)
-        print(self.is_approved_erc20(token, owner, spender))
         if not self.is_approved_erc20(token, owner, spender):
             erc20 = self.w3.eth.contract(token, abi=erc20_approve)
             self.logger.info(
