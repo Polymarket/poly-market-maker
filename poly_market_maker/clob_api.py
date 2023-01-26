@@ -22,7 +22,7 @@ class ClobApi:
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.client: ClobClient = self._init_client(
-            args.eth_key,
+            args.private_key,
             args.chain_id,
             args.clob_api_url,
             args.clob_api_key,
@@ -82,20 +82,18 @@ class ClobApi:
         self.logger.debug("Fetching open keeper orders from the API...")
         start_time = time.time()
         try:
-            resp = self.client.get_open_orders(
-                FilterParams(market=condition_id)
-            )
+            resp = self.client.get_orders(FilterParams(market=condition_id))
             clob_requests_latency.labels(
-                method="get_open_orders", status="ok"
+                method="get_orders", status="ok"
             ).observe((time.time() - start_time))
-            if resp.get("orders") is not None:
-                return [self._get_order(o) for o in resp.get("orders")]
+
+            return [self._get_order(order) for order in resp]
         except Exception as e:
             self.logger.error(
                 f"Error fetching keeper open orders from the CLOB API: {e}"
             )
             clob_requests_latency.labels(
-                method="get_open_orders", status="error"
+                method="get_orders", status="error"
             ).observe((time.time() - start_time))
         return []
 
@@ -108,11 +106,11 @@ class ClobApi:
         )
         start_time = time.time()
         try:
-            resp = self.client.create_and_post_limit_order(
+            resp = self.client.create_and_post_order(
                 OrderArgs(price=price, size=size, side=side, token_id=token_id)
             )
             clob_requests_latency.labels(
-                method="create_and_post_limit_order", status="ok"
+                method="create_and_post_order", status="ok"
             ).observe((time.time() - start_time))
             order_id = None
             if resp and resp.get("success") and resp.get("orderID"):
@@ -131,7 +129,7 @@ class ClobApi:
                 f"Request exception: failed placing new order: {e}"
             )
             clob_requests_latency.labels(
-                method="create_and_post_limit_order", status="error"
+                method="create_and_post_order", status="error"
             ).observe((time.time() - start_time))
         return None
 
@@ -194,16 +192,18 @@ class ClobApi:
             sys.exit(1)
 
     def _get_order(self, order_dict: dict):
-        size = order_dict.get("original_size") - order_dict.get("size_matched")
+        size = float(order_dict.get("original_size")) - float(
+            order_dict.get("size_matched")
+        )
+        price = float(order_dict.get("price"))
         side = order_dict.get("side")
-        price = order_dict.get("price")
         order_id = order_dict.get("id")
-        token_id = order_dict.get("token_id")
+        token_id = order_dict.get("asset_id")
 
         return Order(
-            size=float(size),
-            price=float(price),
+            size=size,
+            price=price,
             side=side,
-            token_id=int(token_id),
+            token_id=token_id,
             id=order_id,
         )

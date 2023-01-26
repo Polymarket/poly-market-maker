@@ -1,6 +1,10 @@
+BUY = "BUY"
+SELL = "SELL"
+
+
 class Order:
     def __init__(
-        self, size: float, price: float, side: str, token_id=0, id=None
+        self, size: float, price: float, side: str, token_id=None, id=None
     ):
         self.size = size
         self.price = price

@@ -5,6 +5,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
+from .order import Order
+
 
 class OrderBook:
     """Represents the current snapshot of the order book.
@@ -18,7 +20,7 @@ class OrderBook:
 
     def __init__(
         self,
-        orders,
+        orders: list[Order],
         balances,
         orders_being_placed: bool,
         orders_being_cancelled: bool,

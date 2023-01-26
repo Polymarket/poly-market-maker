@@ -34,13 +34,17 @@ def setup_logging(
     if os.path.exists(log_path):
         with open(log_path) as fh:
             config.dictConfig(yaml.safe_load(fh.read()))
-        logging.getLogger(__name__).info("Logging configured with config file!")
+        logging.getLogger(__name__).info(
+            "Logging configured with config file!"
+        )
     else:
         logging.basicConfig(
             format="%(asctime)-15s %(levelname)-4s %(threadName)s %(message)s",
             level=(default_level),
         )
-        logging.getLogger(__name__).info("Logging configured with default attributes!")
+        logging.getLogger(__name__).info(
+            "Logging configured with default attributes!"
+        )
     # Suppress requests and web3 verbose logs
     logging.getLogger("requests").setLevel(logging.INFO)
     logging.getLogger("web3").setLevel(logging.INFO)
@@ -51,8 +55,10 @@ def setup_web3(args):
 
     # Middleware to sign transactions from a private key
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    w3.middleware_onion.add(construct_sign_and_send_raw_middleware(args.eth_key))
-    w3.eth.default_account = w3.eth.account.from_key(args.eth_key).address
+    w3.middleware_onion.add(
+        construct_sign_and_send_raw_middleware(args.private_key)
+    )
+    w3.eth.default_account = w3.eth.account.from_key(args.private_key).address
 
     # Gas Middleware
     w3.eth.set_gas_price_strategy(fast_gas_price_strategy)

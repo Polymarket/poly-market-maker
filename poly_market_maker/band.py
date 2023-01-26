@@ -1,8 +1,8 @@
 import itertools
 import logging
 
-from .constants import BUY, SELL, MIN_TICK, MIN_SIZE, A, B
-from .order import Order
+from .constants import MIN_TICK, MIN_SIZE
+from .order import Order, BUY, SELL
 
 
 class Band:
@@ -97,32 +97,30 @@ class Band:
         return orders_for_cancellation
 
     def includes(self, order, target_price: float) -> bool:
-        # For Buys, the min_margin will produce the price_max
-        # E.g target=0.5, min_margin=0.01 = 0.5 * (1- 0.01) = 0.495
-        #     target=0.5, max_margin=0.20 = 0.5 * (1- 0.2) = 0.4
-        # self.logger.info(f"Included in band check...")
-        # self.logger.info(f"target_price: {target_price}")
-        # self.logger.info(f"min_margin: {self.min_margin}")
-        # self.logger.info(f"max_margin: {self.max_margin}")
-        price_max = self._apply_margin(target_price, self.min_margin)
-        price_min = self._apply_margin(target_price, self.max_margin)
-        # self.logger.info(f"price_min: {price_min}")
-        # self.logger.info(f"price_max: {price_max}")
+        if order.side == BUY:
+            price = order.price
+        else:
+            # round to 6 decimals to avoid floating point issues
+            price = round(1 - order.price, 6)
 
-        included = (order.price > price_min) and (order.price <= price_max)
-        # self.logger.info(f"{order} is included in band: {self}?: {included}")
-        return included
+        return (price > self.min_price(target_price)) and (
+            price <= self.max_price(target_price)
+        )
 
     @staticmethod
     def _apply_margin(price: float, margin: float) -> float:
         # absolute margins
-        return price - margin
+        # round to 6 decimals to avoid floating point issues
+        return round(price - margin, 6)
 
     def min_price(self, target_price: float) -> float:
         return self._apply_margin(target_price, self.max_margin)
 
-    def avg_price(self, target_price: float) -> float:
+    def buy_price(self, target_price: float) -> float:
         return self._apply_margin(target_price, self.avg_margin)
+
+    def sell_price(self, target_price: float) -> float:
+        return self._apply_margin(1 - target_price, -self.avg_margin)
 
     def max_price(self, target_price: float) -> float:
         return self._apply_margin(target_price, self.min_margin)
@@ -170,7 +168,7 @@ class Bands:
         # any bands with max_price <= 0 will not be used
         for band in self.bands:
             if band.max_price(target_price) > 0:
-                if band.avg_price(target_price) <= 0:
+                if band.buy_price(target_price) <= 0:
                     band.avg_margin = target_price - MIN_TICK
                 virtual_bands.append(band)
         return virtual_bands
@@ -205,7 +203,6 @@ class Bands:
                 self.logger.info(
                     f"Order #{order.id} doesn't belong to any band, scheduling it for cancellation"
                 )
-
                 yield order
 
     def cancellable_orders(self, orders: list, target_price: float) -> list:
@@ -252,9 +249,6 @@ class Bands:
 
         new_orders = []
         for band in self._calculate_virtual_bands(target_price):
-            self.logger.debug(band)
-
-            band_avg_price = band.avg_price(target_price)
             band_amount = sum(
                 order.size
                 for order in orders
@@ -265,8 +259,10 @@ class Bands:
 
             if band_amount < band.min_amount:
                 # sell
+                sell_price = band.sell_price(target_price)
+
                 sell_size = min(band.avg_amount - band_amount, token_balance)
-                sell_order = self._new_order(band_avg_price, sell_size, SELL)
+                sell_order = self._new_order(sell_price, sell_size, SELL)
 
                 if sell_order is not None:
                     band_amount += sell_size
@@ -275,15 +271,22 @@ class Bands:
 
                 if band_amount < band.avg_amount:
                     # buy
+                    buy_price = band.buy_price(target_price)
                     buy_size = min(
                         band.avg_amount - band_amount,
-                        collateral_balance / band_avg_price,
+                        collateral_balance / buy_price,
                     )
-                    buy_order = self._new_order(band_avg_price, buy_size, BUY)
+                    buy_order = self._new_order(buy_price, buy_size, BUY)
 
                     if buy_order is not None:
+                        print("BUY ORDER")
+                        print(collateral_balance)
+                        print(buy_size)
+                        print(buy_price)
+                        print(buy_size * buy_price)
+
                         band_amount += buy_size
-                        collateral_balance -= buy_size * band_avg_price
+                        collateral_balance -= buy_size * buy_price
                         new_orders.append(buy_order)
 
         return new_orders
@@ -295,7 +298,7 @@ class Bands:
 
         if self._new_order_is_valid(price, size):
             self.logger.debug(
-                f" creating new {side} order with price {price} and size: {size}"
+                f"Creating new {side} order with price {price} and size: {size}"
             )
 
             return Order(price=price, size=size, side=side)

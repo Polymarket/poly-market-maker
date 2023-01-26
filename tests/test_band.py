@@ -92,8 +92,8 @@ class TestBand(TestCase):
         orders = [
             Order(size=20, price=0.47, side=BUY, token_id=1),
             Order(size=30, price=0.44, side=BUY, token_id=1),
-            Order(size=20, price=0.47, side=SELL, token_id=1),
-            Order(size=30, price=0.44, side=SELL, token_id=1),
+            Order(size=20, price=0.53, side=SELL, token_id=1),
+            Order(size=30, price=0.56, side=SELL, token_id=1),
         ]
 
         # Expect none to be cancelled
@@ -175,11 +175,11 @@ class TestBand(TestCase):
 
         # new sells in band 1 to bring amount to avgAmount
         self.assertEqual(new_sells[0].size, 15.0)
-        self.assertEqual(new_sells[0].price, 0.47)
+        self.assertEqual(new_sells[0].price, 0.53)
 
         # new sells in band 2 to bring amount to avgAmount
         self.assertEqual(new_sells[1].size, 30.0)
-        self.assertEqual(new_sells[1].price, 0.45)
+        self.assertEqual(new_sells[1].price, 0.55)
 
     def test_bands_new_orders_mixed(self):
         with open("./tests/bands.json") as fh:
@@ -208,11 +208,11 @@ class TestBand(TestCase):
 
         # new sells in band 1 to bring amount to avgAmount
         self.assertEqual(new_sells[0].size, 15.0)
-        self.assertEqual(new_sells[0].price, 0.47)
+        self.assertEqual(new_sells[0].price, 0.53)
 
         # new sells in band 2 to bring amount to avgAmount
         self.assertEqual(new_sells[1].size, 15.0)
-        self.assertEqual(new_sells[1].price, 0.45)
+        self.assertEqual(new_sells[1].price, 0.55)
 
         self.assertEqual(new_buys[0].size, 15.0)
         self.assertEqual(new_buys[0].price, 0.45)
@@ -244,12 +244,12 @@ class TestBand(TestCase):
 
         # new sells in band 1 to bring amount to avgAmount
         self.assertEqual(new_sells[0].size, 15.0)
-        self.assertEqual(new_sells[0].price, 0.47)
+        self.assertEqual(new_sells[0].price, 0.53)
 
         # new sells in band 2 to use the rest of token balance
         # note that we don't have enough to get to avgAmount
         self.assertEqual(new_sells[1].size, 15.0)
-        self.assertEqual(new_sells[1].price, 0.45)
+        self.assertEqual(new_sells[1].price, 0.55)
 
         # we place buy order with size 15 to get to avgAmount = 30
         self.assertEqual(new_buys[0].size, 15.0)
