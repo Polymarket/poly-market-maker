@@ -18,7 +18,7 @@ from .gas import GasStation, GasStrategy
 from .utils import math_round_down, setup_logging, setup_web3
 
 from .band import Bands
-from .order import Order, BUY, SELL
+from .order import Order, Side
 from .market import Market, Token
 from .clob_api import ClobApi
 from .lifecycle import Lifecycle
@@ -286,13 +286,9 @@ class ClobMarketMakerKeeper:
         collateral = self.clob_api.get_collateral_address()
         conditional = self.clob_api.get_conditional_address()
         exchange = self.clob_api.get_exchange()
-        executor = self.clob_api.get_executor()
 
         self.contracts.max_approve_erc20(collateral, self.address, exchange)
-        self.contracts.max_approve_erc20(collateral, self.address, executor)
-
         self.contracts.max_approve_erc1155(conditional, self.address, exchange)
-        self.contracts.max_approve_erc1155(conditional, self.address, executor)
 
     def main(self):
         with Lifecycle() as lifecycle:
@@ -350,15 +346,15 @@ class ClobMarketMakerKeeper:
 
     def buy_token(self, order: Order):
         token = self.market.token(order.token_id)
-        return token if order.side == BUY else token.complement()
+        return token if order.side == Side.BUY else token.complement()
 
     def synchronize_token(
         self,
         orderbook: OrderBook,
-        bands,
+        bands: Bands,
         buy_token: Token,
         orders: list[Order],
-        target_price,
+        target_price: float,
     ):
         sell_token = Token.complement(buy_token)
         cancellable_orders = bands.cancellable_orders(
@@ -378,10 +374,12 @@ class ClobMarketMakerKeeper:
             return
 
         balance_locked_by_open_buys = sum(
-            order.size * order.price for order in orders if order.side == BUY
+            order.size * order.price
+            for order in orders
+            if order.side == Side.BUY
         )
         balance_locked_by_open_sells = sum(
-            order.size for order in orders if order.side == SELL
+            order.size for order in orders if order.side == Side.SELL
         )
         self.logger.debug(
             f"Collateral locked by buys: {balance_locked_by_open_buys}"
@@ -430,7 +428,7 @@ class ClobMarketMakerKeeper:
 
             token_id = (
                 self.market.token_id(buy_token)
-                if side == BUY
+                if side == Side.BUY
                 else self.market.token_id(sell_token)
             )
 

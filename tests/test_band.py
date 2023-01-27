@@ -3,7 +3,7 @@ from unittest import TestCase
 import unittest
 
 from poly_market_maker.band import Band, Bands
-from poly_market_maker.order import Order, BUY, SELL
+from poly_market_maker.order import Order, Side
 
 
 class TestBand(TestCase):
@@ -47,9 +47,9 @@ class TestBand(TestCase):
             )
         )
         orders = [
-            Order(size=10, price=0.48, side=BUY, token_id=1),
-            Order(size=20, price=0.45, side=BUY, token_id=1),
-            Order(size=30, price=0.42, side=BUY, token_id=1),
+            Order(size=10, price=0.48, side=Side.BUY, token_id=1),
+            Order(size=20, price=0.45, side=Side.BUY, token_id=1),
+            Order(size=30, price=0.42, side=Side.BUY, token_id=1),
         ]
 
         # with a target_price of fifty cents
@@ -89,10 +89,10 @@ class TestBand(TestCase):
         # Initialize buys and sells that fit in both bands
         target_price = 0.50
         orders = [
-            Order(size=20, price=0.47, side=BUY, token_id=1),
-            Order(size=30, price=0.44, side=BUY, token_id=1),
-            Order(size=20, price=0.53, side=SELL, token_id=1),
-            Order(size=30, price=0.56, side=SELL, token_id=1),
+            Order(size=20, price=0.47, side=Side.BUY, token_id=1),
+            Order(size=30, price=0.44, side=Side.BUY, token_id=1),
+            Order(size=20, price=0.53, side=Side.SELL, token_id=1),
+            Order(size=30, price=0.56, side=Side.SELL, token_id=1),
         ]
 
         # Expect none to be cancelled
@@ -119,7 +119,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
         ]
 
         # place new orders
@@ -130,8 +130,8 @@ class TestBand(TestCase):
             target_price,
         )
 
-        new_buys = [o for o in new_orders if o.side == BUY]
-        new_sells = [o for o in new_orders if o.side == SELL]
+        new_buys = [o for o in new_orders if o.side == Side.BUY]
+        new_sells = [o for o in new_orders if o.side == Side.SELL]
 
         # no new sells, bc we have no tokens
         self.assertEqual(len(new_sells), 0)
@@ -155,7 +155,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
         ]
 
         # place new orders
@@ -166,8 +166,8 @@ class TestBand(TestCase):
             target_price,
         )
 
-        new_buys = [o for o in new_orders if o.side == BUY]
-        new_sells = [o for o in new_orders if o.side == SELL]
+        new_buys = [o for o in new_orders if o.side == Side.BUY]
+        new_sells = [o for o in new_orders if o.side == Side.SELL]
 
         # no new buys, bc we could achieve avgAmount with tokens only
         self.assertEqual(len(new_buys), 0)
@@ -191,7 +191,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
         ]
 
         # place new orders
@@ -202,8 +202,8 @@ class TestBand(TestCase):
             target_price,
         )
 
-        new_buys = [o for o in new_orders if o.side == BUY]
-        new_sells = [o for o in new_orders if o.side == SELL]
+        new_buys = [o for o in new_orders if o.side == Side.BUY]
+        new_sells = [o for o in new_orders if o.side == Side.SELL]
 
         # new sells in band 1 to bring amount to avgAmount
         self.assertEqual(new_sells[0].size, 15.0)
@@ -227,7 +227,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
         ]
 
         # place new orders
@@ -238,8 +238,8 @@ class TestBand(TestCase):
             target_price,
         )
 
-        new_buys = [o for o in new_orders if o.side == BUY]
-        new_sells = [o for o in new_orders if o.side == SELL]
+        new_buys = [o for o in new_orders if o.side == Side.BUY]
+        new_sells = [o for o in new_orders if o.side == Side.SELL]
 
         # new sells in band 1 to bring amount to avgAmount
         self.assertEqual(new_sells[0].size, 15.0)
@@ -281,12 +281,12 @@ class TestBand(TestCase):
     #     # Initialize buys and sells that fit in two of 3 adjusted bands on each side
     #     target_price = 0.50
     #     buys = [
-    #         Order(size=100, price=0.49, side=BUY),
-    #         Order(size=100, price=0.48, side=BUY),
+    #         Order(size=100, price=0.49, side=Side.BUY),
+    #         Order(size=100, price=0.48, side=Side.BUY),
     #     ]
     #     sells = [
-    #         Order(size=100, price=0.51, side=SELL),
-    #         Order(size=100, price=0.52, side=SELL),
+    #         Order(size=100, price=0.51, side=Side.SELL),
+    #         Order(size=100, price=0.52, side=Side.SELL),
     #     ]
 
     #     # Expect none to be cancelled

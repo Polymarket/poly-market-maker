@@ -2,7 +2,7 @@ import itertools
 import logging
 
 from .constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
-from .order import Order, BUY, SELL
+from .order import Order, Side
 
 
 class Band:
@@ -97,7 +97,7 @@ class Band:
         return orders_for_cancellation
 
     def includes(self, order, target_price: float) -> bool:
-        if order.side == BUY:
+        if order.side == Side.BUY:
             price = order.price
         else:
             # round to 6 decimals to avoid floating point issues
@@ -265,7 +265,7 @@ class Bands:
                     min(band.avg_amount - band_amount, token_balance),
                     MAX_DECIMALS,
                 )
-                sell_order = self._new_order(sell_price, sell_size, SELL)
+                sell_order = self._new_order(sell_price, sell_size, Side.SELL)
 
                 if sell_order is not None:
                     band_amount += sell_size
@@ -282,7 +282,7 @@ class Bands:
                         ),
                         MAX_DECIMALS,
                     )
-                    buy_order = self._new_order(buy_price, buy_size, BUY)
+                    buy_order = self._new_order(buy_price, buy_size, Side.BUY)
 
                     if buy_order is not None:
                         band_amount += buy_size

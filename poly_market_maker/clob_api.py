@@ -3,7 +3,7 @@ import sys
 import time
 
 from .utils import randomize_default_price
-from .order import Order, BUY, SELL
+from .order import Order, Side
 from .constants import OK
 from .metrics import clob_requests_latency
 
@@ -41,9 +41,6 @@ class ClobApi:
 
     def get_exchange(self):
         return self.client.get_exchange_address()
-
-    def get_executor(self):
-        return self.client.get_executor_address()
 
     def get_price(self, token_id: str) -> float:
         """
@@ -97,17 +94,21 @@ class ClobApi:
             ).observe((time.time() - start_time))
         return []
 
-    def place_order(self, price, size, side, token_id):
+    def place_order(
+        self, price: float, size: float, side: Side, token_id: str
+    ):
         """
         Places a new order
         """
         self.logger.info(
-            f"Placing a new order: Order[price={price},size={size},side={side},token_id={token_id}]"
+            f"Placing a new order: Order[price={price},size={size},side={side.value},token_id={token_id}]"
         )
         start_time = time.time()
         try:
             resp = self.client.create_and_post_order(
-                OrderArgs(price=price, size=size, side=side, token_id=token_id)
+                OrderArgs(
+                    price=price, size=size, side=side.value, token_id=token_id
+                )
             )
             clob_requests_latency.labels(
                 method="create_and_post_order", status="ok"
@@ -116,7 +117,7 @@ class ClobApi:
             if resp and resp.get("success") and resp.get("orderID"):
                 order_id = resp.get("orderID")
                 self.logger.info(
-                    f"Succesfully placed new order: Order[id={order_id},price={price},size={size},side={side},tokenID={token_id}]!"
+                    f"Succesfully placed new order: Order[id={order_id},price={price},size={size},side={side.value},tokenID={token_id}]!"
                 )
                 return order_id
 
@@ -196,7 +197,7 @@ class ClobApi:
             order_dict.get("size_matched")
         )
         price = float(order_dict.get("price"))
-        side = BUY if order_dict.get("side").lower() == BUY else SELL
+        side = Side.from_string(order_dict.get("side"))
         order_id = order_dict.get("id")
         token_id = order_dict.get("asset_id")
 
