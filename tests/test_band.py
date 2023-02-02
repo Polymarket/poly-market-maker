@@ -2,7 +2,7 @@ import json
 from unittest import TestCase
 import unittest
 
-from poly_market_maker.band import Band, Bands
+from poly_market_maker.bands import Band, Bands
 from poly_market_maker.order import Order, Side
 
 
@@ -128,6 +128,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            1,
+            2,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -164,6 +166,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            1,
+            2,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -200,6 +204,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            1,
+            2,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -236,6 +242,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            1,
+            2,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]

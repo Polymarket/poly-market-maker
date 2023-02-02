@@ -20,7 +20,7 @@ class Side(Enum):
 
 class Order:
     def __init__(
-        self, size: float, price: float, side: Side, token_id=None, id=None
+        self, size: float, price: float, side: Side, token_id: str, id=None
     ):
         self.size = size
         self.price = price
