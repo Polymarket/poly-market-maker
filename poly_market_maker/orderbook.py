@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
 from .order import Order, Side
+from .market import Token, Collateral
 
 
 class OrderBook:
@@ -32,6 +33,14 @@ class OrderBook:
         self.balances = balances
         self.orders_being_placed = orders_being_placed
         self.orders_being_cancelled = orders_being_cancelled
+
+    def balance(self, key):
+        if key == Token.A:
+            return self.balances.get(Token.A.value)
+        if key == Token.B:
+            return self.balances.get(Token.B.value)
+        if key == Collateral:
+            return self.balances.get(Collateral)
 
 
 class OrderBookManager:

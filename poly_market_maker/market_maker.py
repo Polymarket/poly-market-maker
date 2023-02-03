@@ -19,7 +19,7 @@ from .utils import math_round_down, setup_logging, setup_web3
 
 from .bands_strategy import BandsStrategy
 from .order import Order, Side
-from .market import Market, Token
+from .market import Market, Token, Collateral
 from .clob_api import ClobApi
 from .lifecycle import Lifecycle
 from .orderbook import OrderBookManager, OrderBook
@@ -209,6 +209,12 @@ class ClobMarketMakerKeeper:
         #         team_name=args.odds_api_team_name,
         #     )
 
+        self.market = Market(
+            args.condition_id,
+            args.token_id_A,
+            args.token_id_B,
+        )
+
         self.order_book_manager = OrderBookManager(
             args.refresh_frequency, max_workers=1
         )
@@ -225,14 +231,7 @@ class ClobMarketMakerKeeper:
         )
         self.order_book_manager.start()
 
-        self.market = Market(
-            args.condition_id,
-            args.token_id_A,
-            args.token_id_B,
-        )
-
         self.strategy = BandsStrategy(
-            self.logger,
             self.price_feed,
             self.market,
             self.order_book_manager,
@@ -282,7 +281,7 @@ class ClobMarketMakerKeeper:
         ).set(gas_balance)
 
         return {
-            "collateral": collateral_balance,
+            Collateral: collateral_balance,
             Token.A.value: token_A_balance,
             Token.B.value: token_B_balance,
         }

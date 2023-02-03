@@ -1,110 +1,120 @@
-import math
+import itertools
+import logging
+from math import sqrt
+from .constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
+from .order import Order, Side
 
-X = 500
-Y = 1000
-Pa = 0.7
-Pb = 1 - Pa
-Pmin = 0
-Pmax = 0.95
-Delta = 0.05
-PminA = 0.05
-PminB = 0.05
-
-# 1. Get order sizes from orderbook
-# 2. Compute available funds
-# 3. Cancel all orders
-# 4. Place new orders
+from decimal import getcontext, Decimal
 
 
-def sell_size(x, pmin, pmax, pf):
-    L = sell_liquidity(x, pmin, pmax)
-    a = L / math.sqrt(pmax) - L / math.sqrt(pf) + x
-    return a
+class AMM:
+    def __init__(
+        self,
+        p_min: float,
+        p_max: float,
+        delta: float,
+    ):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        assert isinstance(p_min, float)
+        assert isinstance(p_max, float)
+        assert isinstance(delta, float)
 
+        self.p_min = p_min
+        self.p_max = p_max
+        self.delta = delta
 
-def sell_cost(x, pmin, pmax, pf):
-    L = sell_liquidity(x, pmin, pmax)
-    b = L * math.sqrt(pf) - L * math.sqrt(pmin)
-    return b
+        self.type = type
 
+        # getcontext().prec = 4
 
-def buy_size(y, pmin, pmax, pf):
-    L = buy_liquidity(y, pmin, pmax)
-    a = L / math.sqrt(pf) - L / math.sqrt(pmax)
-    return a
+    def sell_size(self, x, p, pf):
+        L = self.sell_liquidity(x, p)
+        a = L / sqrt(self.p_max) - L / sqrt(pf) + x
+        return a
 
+    def sell_cost(self, x, p, pf):
+        L = self.sell_liquidity(x, p)
+        b = L * sqrt(pf) - L * sqrt(p)
+        return b
 
-def buy_cost(y, pmin, pmax, pf):
-    L = buy_liquidity(y, pmin, pmax)
-    b = y + L * math.sqrt(pmin) - L * math.sqrt(pf)
-    return b
+    def buy_size(self, y, p, pf):
+        L = self.buy_liquidity(y, p)
+        a = L / sqrt(pf) - L / sqrt(p)
+        return a
 
+    def buy_cost(self, y, p, pf):
+        L = self.buy_liquidity(y, p)
+        b = y + L * sqrt(self.p_min) - L * sqrt(pf)
+        return b
 
-def sell_liquidity(x, pmin, pmax):
-    L = x / (1 / math.sqrt(pmin) - 1 / math.sqrt(pmax))
-    return L
+    def sell_liquidity(self, x, p):
+        L = x / (1 / sqrt(p) - 1 / sqrt(self.p_max))
+        return L
 
+    def buy_liquidity(self, y, p):
+        L = y / (sqrt(p) - sqrt(self.p_min))
+        return L
 
-def buy_liquidity(y, pmin, pmax):
-    L = y / (math.sqrt(pmax) - math.sqrt(pmin))
-    return L
+    def phi(self, p):
+        return (1 / (sqrt(p) - sqrt(self.p_min))) * (
+            1 / sqrt(p - self.delta) - 1 / sqrt(p)
+        )
 
+    def buy_liq_A(self, y, p_a, sell_a, sell_b):
+        return (sell_a - sell_b + y * self.phi(1 - p_a)) / (
+            self.phi(p_a) + self.phi(1 - p_a)
+        )
 
-def phi(p, pmin, delta):
-    return (1 / (math.sqrt(p) - math.sqrt(pmin))) * (
-        1 / math.sqrt(p - delta) - 1 / math.sqrt(p)
-    )
+    @staticmethod
+    def round(p: float):
+        return float(Decimal(p).quantize(Decimal(".01")))
 
+    def get_sell_orders(self, x, p, token_id: str):
+        steps = int((self.p_max - p) / self.delta)
+        prices = [
+            self.round(p + self.delta * (step + 1)) for step in range(steps)
+        ]
+        sizes = [
+            self.round(size)
+            for size in self.diff([self.sell_size(x, p, pf) for pf in prices])
+        ]
 
-def buy_liq_A(ya, pa, pminA, pminB, delta, sell_a, sell_b):
-    return (sell_a - sell_b + ya * phi(1 - pa, pminB, delta)) / (
-        phi(pa, pminA, delta) + phi(1 - pa, pminB, delta)
-    )
+        orders = [
+            Order(
+                price=price,
+                side=Side.SELL,
+                token_id=token_id,
+                size=size,
+            )
+            for (price, size) in zip(prices, sizes)
+        ]
 
+        return orders
 
-Ya = buy_liq_A(Y, Pa, PminA, PminB, Delta, 0, 0)
-Yb = Y - Ya
+    def get_buy_orders(self, y, p, token_id: str):
+        steps = int((p - self.p_min) / self.delta)
+        prices = [
+            self.round(p - self.delta * (step + 1)) for step in range(steps)
+        ]
+        sizes = [
+            self.round(size)
+            for size in self.diff([self.buy_size(y, p, pf) for pf in prices])
+        ]
 
+        orders = [
+            Order(
+                price=price,
+                side=Side.BUY,
+                token_id=token_id,
+                size=size,
+            )
+            for (price, size) in zip(prices, sizes)
+        ]
 
-def buy_diff(arr):
-    return [
-        arr[i] if i == len(arr) - 1 else arr[i] - arr[i + 1]
-        for i in range(len(arr))
-    ]
+        return orders
 
-
-print(Ya, Yb)
-
-
-buy_prices_a = [
-    float(p / 100)
-    for p in range(int(PminA * 100), int(Pa * 100), int(Delta * 100))
-]
-buy_sizes_a = buy_diff([buy_size(Ya, PminA, Pa, Pf) for Pf in buy_prices_a])
-buy_costs_a = [
-    price * size for (price, size) in zip(buy_prices_a, buy_sizes_a)
-]
-
-buy_prices_b = [
-    float(p / 100)
-    for p in range(int(PminB * 100), int(Pb * 100), int(Delta * 100))
-]
-buy_sizes_b = buy_diff([buy_size(Yb, PminB, Pb, Pf) for Pf in buy_prices_b])
-buy_costs_b = (
-    price * size for (price, size) in zip(buy_prices_b, buy_sizes_b)
-)
-
-# convert b to a sales
-# sizes are the same
-# costs are ?
-
-sell_prices = [1 - price for price in buy_prices_b][::-1]
-sell_sizes = buy_sizes_b[::-1]
-sell_costs = [
-    (1 - price) * size for (price, size) in zip(sell_prices, sell_sizes)
-]
-
-
-prices = buy_prices_a + [Pa] + sell_prices
-costs = buy_costs_a + [0] + sell_costs
-sizes = buy_sizes_a + [0] + sell_sizes
+    @staticmethod
+    def diff(arr: list[float]) -> list[float]:
+        return [
+            arr[i] if i == 0 else arr[i] - arr[i - 1] for i in range(len(arr))
+        ]

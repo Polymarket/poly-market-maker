@@ -1,28 +1,22 @@
 from .bands import Bands
 import json
-from .market import Token, Market
+from .market import Token, Market, Collateral
 from .order import Order, Side
 from .orderbook import OrderBook, OrderBookManager
-from logging import Logger
 from poly_market_maker.price_feed import PriceFeed
+from .strategy import Strategy
 
 
-class BandsStrategy:
+class BandsStrategy(Strategy):
     def __init__(
         self,
-        logger: Logger,
         price_feed: PriceFeed,
         market: Market,
         order_book_manager: OrderBookManager,
         bands_config,
     ):
-        self.logger = logger
-        self.price_feed = price_feed
-        self.market = market
-        self.order_book_manager = order_book_manager
-        self.bands_config = bands_config
-
-        with open(self.bands_config) as fh:
+        Strategy.__init__(price_feed, market, order_book_manager)
+        with open(bands_config) as fh:
             self.bands = Bands.read(json.load(fh))
 
     def synchronize(
@@ -35,9 +29,9 @@ class BandsStrategy:
 
         orderbook = self.order_book_manager.get_order_book()
         if (
-            orderbook.balances.get("collateral") is None
-            or orderbook.balances.get(Token.A.value) is None
-            or orderbook.balances.get(Token.B.value) is None
+            orderbook.balance(Collateral) is None
+            or orderbook.balance(Token.A) is None
+            or orderbook.balance(Token.B) is None
         ):
             self.logger.debug("Balances invalid/non-existent")
             return
@@ -103,11 +97,10 @@ class BandsStrategy:
         )
 
         free_collateral_balance = (
-            orderbook.balances.get("collateral") - balance_locked_by_open_buys
+            orderbook.balance(Collateral) - balance_locked_by_open_buys
         )
         free_token_balance = (
-            orderbook.balances.get(sell_token.value)
-            - balance_locked_by_open_sells
+            orderbook.balance(sell_token) - balance_locked_by_open_sells
         )
 
         self.logger.debug(

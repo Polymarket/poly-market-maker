@@ -1,5 +1,7 @@
 from enum import Enum
 
+Collateral = "collateral"
+
 
 class Token(Enum):
     A = "tokenA"
