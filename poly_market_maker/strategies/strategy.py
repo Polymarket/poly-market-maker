@@ -1,6 +1,6 @@
-from .market import Market
-from .orderbook import OrderBookManager
-from poly_market_maker.price_feed import PriceFeed
+from ..market import Market
+from ..orderbook import OrderBookManager
+from ..price_feed import PriceFeed
 import logging
 
 

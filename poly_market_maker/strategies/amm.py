@@ -1,10 +1,6 @@
-import itertools
 import logging
 from math import sqrt
-from .constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
-from .order import Order, Side
-
-from decimal import getcontext, Decimal
+from ..order import Order, Side
 
 
 class AMM:
@@ -24,8 +20,6 @@ class AMM:
         self.delta = delta
 
         self.type = type
-
-        # getcontext().prec = 4
 
     def sell_size(self, x, p, pf):
         L = self.sell_liquidity(x, p)
@@ -60,22 +54,18 @@ class AMM:
             1 / sqrt(p - self.delta) - 1 / sqrt(p)
         )
 
-    def buy_liq_A(self, y, p_a, sell_a, sell_b):
+    def collateral_allocation_a(self, y, p_a, sell_a, sell_b):
         return (sell_a - sell_b + y * self.phi(1 - p_a)) / (
             self.phi(p_a) + self.phi(1 - p_a)
         )
 
-    @staticmethod
-    def round(p: float):
-        return float(Decimal(p).quantize(Decimal(".01")))
-
     def get_sell_orders(self, x, p, token_id: str):
         steps = int((self.p_max - p) / self.delta)
         prices = [
-            self.round(p + self.delta * (step + 1)) for step in range(steps)
+            round(p + self.delta * (step + 1), 2) for step in range(steps)
         ]
         sizes = [
-            self.round(size)
+            round(size, 2)
             for size in self.diff([self.sell_size(x, p, pf) for pf in prices])
         ]
 
@@ -94,10 +84,10 @@ class AMM:
     def get_buy_orders(self, y, p, token_id: str):
         steps = int((p - self.p_min) / self.delta)
         prices = [
-            self.round(p - self.delta * (step + 1)) for step in range(steps)
+            round(p - self.delta * (step + 1), 2) for step in range(steps)
         ]
         sizes = [
-            self.round(size)
+            round(size, 2)
             for size in self.diff([self.buy_size(y, p, pf) for pf in prices])
         ]
 

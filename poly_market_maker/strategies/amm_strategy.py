@@ -1,9 +1,14 @@
-from .market import Token, Market, Collateral
-from .orderbook import OrderBookManager
-from poly_market_maker.price_feed import PriceFeed
+from ..market import Token, Market, Collateral
+from ..orderbook import OrderBookManager
+from ..price_feed import PriceFeed
 
 from .amm import AMM
 from .strategy import Strategy
+from ..constants import MIN_SIZE
+
+P_MIN = 0.05
+P_MAX = 0.95
+DELTA = 0.05
 
 
 class AMMStrategy(Strategy):
@@ -19,19 +24,13 @@ class AMMStrategy(Strategy):
             market=market,
             order_book_manager=order_book_manager,
         )
-        self.order_book_manager = order_book_manager
-
-        P_MIN = 0.05
-        P_MAX = 0.95
-        DELTA = 0.05
-
         self.amm = AMM(p_min=P_MIN, p_max=P_MAX, delta=DELTA)
 
     def synchronize(
         self,
     ):
         """
-        Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
+        Synchronize the orderbook by cancelling all orders and placing new orders
         """
         self.logger.debug("Synchronizing amm strategy...")
 
@@ -63,17 +62,16 @@ class AMMStrategy(Strategy):
         best_ask_a = sell_orders_a[0].size
         best_ask_b = sell_orders_b[0].size
 
-        collateral_balance_a = self.amm.buy_liq_A(
+        collateral_allocation_a = self.amm.collateral_allocation_a(
             collateral_balance, price_a, best_ask_a, best_ask_b
         )
-        collateral_balance_b = collateral_balance - collateral_balance_a
-        print(collateral_balance, collateral_balance_a, collateral_balance_b)
-        buy_orders_a = self.amm.get_buy_orders(
-            collateral_balance_a, price_a, token_id_a
-        )
+        collateral_allocation_b = collateral_balance - collateral_allocation_a
 
+        buy_orders_a = self.amm.get_buy_orders(
+            collateral_allocation_a, price_a, token_id_a
+        )
         buy_orders_b = self.amm.get_buy_orders(
-            collateral_balance_b, price_b, token_id_b
+            collateral_allocation_b, price_b, token_id_b
         )
 
         # cancel all orders
@@ -88,9 +86,14 @@ class AMMStrategy(Strategy):
             )
             return
 
-        new_orders = (
-            buy_orders_a + buy_orders_b + sell_orders_a + sell_orders_b
-        )
+        new_orders = [
+            order
+            for order in buy_orders_a
+            + buy_orders_b
+            + sell_orders_a
+            + sell_orders_b
+            if order.size > MIN_SIZE
+        ]
         if len(new_orders) > 0:
             self.logger.info(f"About to place {len(new_orders)} new orders!")
             self.order_book_manager.place_orders(new_orders)

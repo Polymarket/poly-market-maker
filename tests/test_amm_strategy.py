@@ -3,12 +3,12 @@ from re import M
 from unittest import TestCase, mock
 from web3 import Web3
 from poly_market_maker.market import Market, Token, Collateral
-from poly_market_maker.amm_strategy import AMMStrategy
+from poly_market_maker.strategies.amm_strategy import AMMStrategy
 
 
 class PriceFeed:
     def get_price(self, token_id):
-        return 0.6
+        return 0.71
 
 
 class OrderBook:

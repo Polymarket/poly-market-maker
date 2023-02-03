@@ -1,8 +1,8 @@
 import itertools
 import logging
 
-from .constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
-from .order import Order, Side
+from ..constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
+from ..order import Order, Side
 
 
 class Band:

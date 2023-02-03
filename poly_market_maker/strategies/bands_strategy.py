@@ -1,9 +1,9 @@
 from .bands import Bands
 import json
-from .market import Token, Market, Collateral
-from .order import Order, Side
-from .orderbook import OrderBook, OrderBookManager
-from poly_market_maker.price_feed import PriceFeed
+from ..market import Token, Market, Collateral
+from ..order import Order, Side
+from ..orderbook import OrderBook, OrderBookManager
+from ..price_feed import PriceFeed
 from .strategy import Strategy
 
 
@@ -15,7 +15,7 @@ class BandsStrategy(Strategy):
         order_book_manager: OrderBookManager,
         bands_config,
     ):
-        Strategy.__init__(price_feed, market, order_book_manager)
+        Strategy.__init__(self, price_feed, market, order_book_manager)
         with open(bands_config) as fh:
             self.bands = Bands.read(json.load(fh))
 
