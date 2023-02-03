@@ -4,7 +4,7 @@ from ..price_feed import PriceFeed
 import logging
 
 
-class Strategy:
+class BaseStrategy:
     def __init__(
         self,
         price_feed: PriceFeed,

@@ -17,7 +17,7 @@ from poly_market_maker.price_feed import (
 from .gas import GasStation, GasStrategy
 from .utils import math_round_down, setup_logging, setup_web3
 
-from .bands_strategy import BandsStrategy
+from .strategies.bands_strategy import BandsStrategy
 from .order import Order, Side
 from .market import Market, Token, Collateral
 from .clob_api import ClobApi
@@ -25,6 +25,7 @@ from .lifecycle import Lifecycle
 from .orderbook import OrderBookManager, OrderBook
 from .contracts import Contracts
 from .metrics import keeper_balance_amount
+from .strategies import init_strategy, Strategy
 
 
 class ClobMarketMakerKeeper:
@@ -67,13 +68,6 @@ class ClobMarketMakerKeeper:
             type=str,
             required=True,
             help="CLOB API passphrase",
-        )
-
-        parser.add_argument(
-            "--bands-config",
-            type=str,
-            required=True,
-            help="Bands configuration file",
         )
 
         parser.add_argument(
@@ -168,6 +162,17 @@ class ClobMarketMakerKeeper:
             help="The port where the process must start the metrics server",
         )
 
+        parser.add_argument(
+            "--strategy_config_path",
+            type=str,
+            required=False,
+            help="Strategy configuration file path",
+        )
+
+        parser.add_argument(
+            "--strategy", type=str, require=True, help="Market making strategy"
+        )
+
         args = parser.parse_args(args)
 
         self.sync_interval = args.sync_interval
@@ -231,11 +236,12 @@ class ClobMarketMakerKeeper:
         )
         self.order_book_manager.start()
 
-        self.strategy = BandsStrategy(
+        self.strategy = init_strategy(
+            Strategy(args.strategy),
             self.price_feed,
             self.market,
             self.order_book_manager,
-            args.bands_config,
+            args.strategy_config_path,
         )
 
     def get_balances(self):

@@ -4,12 +4,7 @@ from ..order import Order, Side
 
 
 class AMM:
-    def __init__(
-        self,
-        p_min: float,
-        p_max: float,
-        delta: float,
-    ):
+    def __init__(self, p_min: float, p_max: float, delta: float, radius=1.0):
         self.logger = logging.getLogger(self.__class__.__name__)
         assert isinstance(p_min, float)
         assert isinstance(p_max, float)
@@ -18,6 +13,7 @@ class AMM:
         self.p_min = p_min
         self.p_max = p_max
         self.delta = delta
+        self.radius = radius
 
         self.type = type
 
@@ -59,11 +55,14 @@ class AMM:
             self.phi(p_a) + self.phi(1 - p_a)
         )
 
-    def get_sell_orders(self, x, p, token_id: str):
-        steps = int((self.p_max - p) / self.delta)
+    def get_sell_orders(self, x: float, p: float, token_id: str):
+        p_u = min(p + self.radius, self.p_max)
+        steps = round((p_u - p) / self.delta)
+
         prices = [
             round(p + self.delta * (step + 1), 2) for step in range(steps)
         ]
+
         sizes = [
             round(size, 2)
             for size in self.diff([self.sell_size(x, p, pf) for pf in prices])
@@ -82,10 +81,13 @@ class AMM:
         return orders
 
     def get_buy_orders(self, y, p, token_id: str):
-        steps = int((p - self.p_min) / self.delta)
+        p_l = max(p - self.radius, self.p_min)
+        steps = round((p - p_l) / self.delta)
+
         prices = [
             round(p - self.delta * (step + 1), 2) for step in range(steps)
         ]
+
         sizes = [
             round(size, 2)
             for size in self.diff([self.buy_size(y, p, pf) for pf in prices])

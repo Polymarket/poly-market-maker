@@ -3,28 +3,29 @@ from ..orderbook import OrderBookManager
 from ..price_feed import PriceFeed
 
 from .amm import AMM
-from .strategy import Strategy
+from .base_strategy import BaseStrategy
 from ..constants import MIN_SIZE
 
 P_MIN = 0.05
 P_MAX = 0.95
 DELTA = 0.05
+RADIUS = 0.30
 
 
-class AMMStrategy(Strategy):
+class AMMStrategy(BaseStrategy):
     def __init__(
         self,
         price_feed: PriceFeed,
         market: Market,
         order_book_manager: OrderBookManager,
     ):
-        Strategy.__init__(
+        BaseStrategy.__init__(
             self,
             price_feed=price_feed,
             market=market,
             order_book_manager=order_book_manager,
         )
-        self.amm = AMM(p_min=P_MIN, p_max=P_MAX, delta=DELTA)
+        self.amm = AMM(p_min=P_MIN, p_max=P_MAX, delta=DELTA, radius=RADIUS)
 
     def synchronize(
         self,

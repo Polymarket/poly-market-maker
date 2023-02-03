@@ -4,19 +4,19 @@ from ..market import Token, Market, Collateral
 from ..order import Order, Side
 from ..orderbook import OrderBook, OrderBookManager
 from ..price_feed import PriceFeed
-from .strategy import Strategy
+from .base_strategy import BaseStrategy
 
 
-class BandsStrategy(Strategy):
+class BandsStrategy(BaseStrategy):
     def __init__(
         self,
         price_feed: PriceFeed,
         market: Market,
         order_book_manager: OrderBookManager,
-        bands_config,
+        config_path: str,
     ):
-        Strategy.__init__(self, price_feed, market, order_book_manager)
-        with open(bands_config) as fh:
+        BaseStrategy.__init__(self, price_feed, market, order_book_manager)
+        with open(config_path) as fh:
             self.bands = Bands.read(json.load(fh))
 
     def synchronize(
