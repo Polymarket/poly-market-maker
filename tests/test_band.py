@@ -2,7 +2,7 @@ import json
 from unittest import TestCase
 import unittest
 
-from poly_market_maker.bands import Band, Bands
+from poly_market_maker.strategies.bands import Band, Bands
 from poly_market_maker.order import Order, Side
 
 
