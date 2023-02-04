@@ -193,7 +193,7 @@ class AMMStrategy(BaseStrategy):
         if size < MIN_SIZE:
             return batched_order
 
-        min_size_orders = int(size / MIN_SIZE) - 1
+        min_size_orders = max(int(size / MIN_SIZE) - 1, 0)
         extra_order_size = round(size - min_size_orders * MIN_SIZE, 2)
 
         if extra_order_size >= MIN_SIZE:
