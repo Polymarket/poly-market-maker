@@ -197,7 +197,7 @@ class ClobApi:
             order_dict.get("size_matched")
         )
         price = float(order_dict.get("price"))
-        side = Side.from_string(order_dict.get("side"))
+        side = Side(order_dict.get("side"))
         order_id = order_dict.get("id")
         token_id = order_dict.get("asset_id")
 
