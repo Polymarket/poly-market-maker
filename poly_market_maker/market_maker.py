@@ -25,7 +25,7 @@ from .lifecycle import Lifecycle
 from .orderbook import OrderBookManager, OrderBook
 from .contracts import Contracts
 from .metrics import keeper_balance_amount
-from .strategies import init_strategy, Strategy
+from .strategies.strategy import Strategy
 
 
 class ClobMarketMakerKeeper:
@@ -239,8 +239,7 @@ class ClobMarketMakerKeeper:
         )
         self.order_book_manager.start()
 
-        self.strategy = init_strategy(
-            Strategy(args.strategy),
+        self.strategy = Strategy(args.strategy).init(
             self.price_feed,
             self.market,
             self.order_book_manager,
