@@ -163,14 +163,17 @@ class ClobMarketMakerKeeper:
         )
 
         parser.add_argument(
-            "--strategy_config_path",
+            "--strategy_config",
             type=str,
             required=False,
             help="Strategy configuration file path",
         )
 
         parser.add_argument(
-            "--strategy", type=str, require=True, help="Market making strategy"
+            "--strategy",
+            type=str,
+            required=True,
+            help="Market making strategy",
         )
 
         args = parser.parse_args(args)
@@ -241,7 +244,7 @@ class ClobMarketMakerKeeper:
             self.price_feed,
             self.market,
             self.order_book_manager,
-            args.strategy_config_path,
+            args.strategy_config,
         )
 
     def get_balances(self):

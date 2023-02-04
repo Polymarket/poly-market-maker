@@ -29,7 +29,7 @@ def init_strategy(
     market: Market,
     order_book_manager: OrderBookManager,
     config_path: str,
-) -> Strategy:
+) -> BaseStrategy:
     match strategy:
         case Strategy.AMM:
             return AMMStrategy(
