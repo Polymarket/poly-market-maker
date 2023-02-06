@@ -1,3 +1,5 @@
+import time
+
 from ..market import Token, Market, Collateral
 from ..orderbook import OrderBookManager
 from ..price_feed import PriceFeed
@@ -11,7 +13,7 @@ from ..order import Order
 P_MIN = 0.05
 P_MAX = 0.95
 DELTA = 0.01
-DEPTH = 0.1
+DEPTH = 0.05
 SPREAD = 0.03
 
 
@@ -97,14 +99,17 @@ class AMMStrategy(BaseStrategy):
                 f"About to cancel {len(orders_to_cancel)} existing orders!"
             )
             self.order_book_manager.cancel_orders(orders_to_cancel)
-            return
 
         # Do not place new orders if order book state is not confirmed
-        if orderbook.orders_being_placed or orderbook.orders_being_cancelled:
-            self.logger.debug(
-                "Order book sync is in progress, not placing new orders"
-            )
-            return
+
+        # time.sleep(0.1)
+        # orderbook = self.order_book_manager.get_order_book()
+        # while (
+        #     orderbook.orders_being_placed or orderbook.orders_being_cancelled
+        # ):
+        #     orderbook = self.order_book_manager.get_order_book()
+        #     self.logger.debug("Order book sync is in progress, waiting...")
+        #     time.sleep(0.1)
 
         orders_to_place = self.get_orders_to_place(orderbook, expected_orders)
         if len(orders_to_place) > 0:
@@ -183,7 +188,10 @@ class AMMStrategy(BaseStrategy):
             )
 
             remaining_size = expected_size - open_size
-            orders_to_place += self.batch_order(order_type, remaining_size)
+            if remaining_size > MIN_SIZE:
+                orders_to_place += [
+                    self._order_from_order_type(order_type, remaining_size)
+                ]
 
         return orders_to_place
 

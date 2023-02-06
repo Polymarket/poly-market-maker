@@ -1,10 +1,11 @@
 from enum import Enum
 
+
 from ..market import Market
 from ..orderbook import OrderBookManager
 from ..price_feed import PriceFeed
-from .base_strategy import BaseStrategy
 
+from .base_strategy import BaseStrategy
 from .amm_strategy import AMMStrategy
 from .bands_strategy import BandsStrategy
 

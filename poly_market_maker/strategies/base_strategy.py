@@ -1,7 +1,8 @@
+import logging
+
 from ..market import Market
 from ..orderbook import OrderBookManager
 from ..price_feed import PriceFeed
-import logging
 
 
 class BaseStrategy:
