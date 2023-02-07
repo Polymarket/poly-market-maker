@@ -17,15 +17,14 @@ from poly_market_maker.price_feed import (
 from .gas import GasStation, GasStrategy
 from .utils import math_round_down, setup_logging, setup_web3
 
-from .strategies.bands_strategy import BandsStrategy
-from .order import Order, Side
+from .order import Order
 from .market import Market, Token, Collateral
 from .clob_api import ClobApi
 from .lifecycle import Lifecycle
-from .orderbook import OrderBookManager, OrderBook
+from .orderbook import OrderBookManager
 from .contracts import Contracts
 from .metrics import keeper_balance_amount
-from .strategies.strategy import Strategy
+from .strategies.strategy_manager import StrategyManager
 
 
 class ClobMarketMakerKeeper:
@@ -163,9 +162,9 @@ class ClobMarketMakerKeeper:
         )
 
         parser.add_argument(
-            "--strategy_config",
+            "--strategy-config",
             type=str,
-            required=False,
+            required=True,
             help="Strategy configuration file path",
         )
 
@@ -239,7 +238,8 @@ class ClobMarketMakerKeeper:
         )
         self.order_book_manager.start()
 
-        self.strategy = Strategy(args.strategy).init(
+        self.strategy = StrategyManager.get_strategy(
+            args.strategy,
             self.price_feed,
             self.market,
             self.order_book_manager,
@@ -341,9 +341,7 @@ class ClobMarketMakerKeeper:
         Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
         """
         self.logger.debug("Synchronizing orderbook...")
-
         self.strategy.synchronize()
-
         self.logger.debug("Synchronized orderbook!")
 
     def shutdown(self):

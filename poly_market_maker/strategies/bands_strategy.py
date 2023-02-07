@@ -1,5 +1,4 @@
 from .bands import Bands
-import json
 from ..market import Token, Market, Collateral
 from ..order import Order, Side
 from ..orderbook import OrderBook, OrderBookManager
@@ -13,11 +12,10 @@ class BandsStrategy(BaseStrategy):
         price_feed: PriceFeed,
         market: Market,
         order_book_manager: OrderBookManager,
-        config_path: str,
+        config: dict,
     ):
+        self.bands = Bands.read(config)
         BaseStrategy.__init__(self, price_feed, market, order_book_manager)
-        with open(config_path) as fh:
-            self.bands = Bands.read(json.load(fh))
 
     def synchronize(
         self,

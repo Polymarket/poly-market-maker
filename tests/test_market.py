@@ -5,8 +5,8 @@ import unittest
 from poly_market_maker.market import Market, Token
 
 condition_id = "1111"
-token_id_a = "123"
-token_id_b = "456"
+token_id_a = 123
+token_id_b = 456
 
 
 class TestMarket(TestCase):
@@ -14,8 +14,8 @@ class TestMarket(TestCase):
 
     def test_init_market(self):
         self.assertEqual(self.market.condition_id, condition_id)
-        self.assertEqual(self.market.token_id_A, token_id_a)
-        self.assertEqual(self.market.token_id_B, token_id_b)
+        self.assertEqual(self.market.token_id_a, token_id_a)
+        self.assertEqual(self.market.token_id_b, token_id_b)
 
     def test_token_id(self):
         self.assertEqual(self.market.token_id(Token.A), token_id_a)

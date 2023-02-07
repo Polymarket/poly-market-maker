@@ -2,7 +2,7 @@ import json
 from unittest import TestCase
 import unittest
 
-from poly_market_maker.strategies import Strategy
+from poly_market_maker.strategies.strategy_manager import Strategy
 
 
 class TestStrategy(TestCase):

@@ -17,3 +17,6 @@ class BaseStrategy:
         self.order_book_manager = order_book_manager
 
         self.logger = logging.getLogger(self.__class__.__name__)
+
+    def synchronize(self):
+        pass

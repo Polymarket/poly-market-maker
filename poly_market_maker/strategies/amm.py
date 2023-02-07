@@ -6,48 +6,45 @@ from ..order import Order, Side
 class AMM:
     def __init__(
         self,
-        token_id: str,
+        token_id: int,
         p_min: float,
         p_max: float,
         delta: float,
-        depth=1.0,
-        spread=None,
+        depth: float,
+        spread: float,
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
+
+        assert isinstance(token_id, int)
         assert isinstance(p_min, float)
         assert isinstance(p_max, float)
         assert isinstance(delta, float)
+        assert isinstance(depth, float)
+        assert isinstance(spread, float)
 
         self.token_id = token_id
         self.p_min = p_min
         self.p_max = p_max
-
         self.delta = delta
-        self.spread = spread if spread is not None else delta
+        self.spread = spread
         self.depth = depth
 
     def set_price(self, p_i: float):
         self.p_i = p_i
-        self.p_u = min(p_i + self.depth, self.p_max)
-        self.p_l = max(p_i - self.depth, self.p_min)
+        self.p_u = round(min(p_i + self.spread + self.depth, self.p_max), 2)
+        self.p_l = round(max(p_i - self.spread - self.depth, self.p_min), 2)
 
-        buy_steps = (
-            int(round(((self.p_i - self.spread) - self.p_l) / self.delta, 4))
-            + 1
-        )
-        self.buy_prices = [
-            round(p_i - self.spread - self.delta * (step), 2)
-            for step in range(buy_steps)
-        ]
+        self.buy_prices = []
+        price = round(self.p_i - self.spread, 2)
+        while price >= self.p_l:
+            self.buy_prices.append(price)
+            price = round(price - self.delta, 2)
 
-        sell_steps = (
-            int(round((self.p_u - (self.p_i + self.spread)) / self.delta, 4))
-            + 1
-        )
-        self.sell_prices = [
-            round(self.p_i + self.spread + self.delta * (step), 2)
-            for step in range(sell_steps)
-        ]
+        self.sell_prices = []
+        price = round(self.p_i + self.spread, 2)
+        while price <= self.p_u:
+            self.sell_prices.append(price)
+            price = round(price + self.delta, 2)
 
     def get_sell_orders(self, x):
         sizes = [
@@ -149,7 +146,7 @@ class AMMManager:
             depth=depth,
         )
 
-    def get_orders(
+    def get_expected_orders(
         self, p_a: float, p_b: float, x_a: float, x_b: float, y: float
     ):
         self.amm_a.set_price(p_a)
@@ -157,6 +154,11 @@ class AMMManager:
 
         sell_orders_a = self.amm_a.get_sell_orders(x_a)
         sell_orders_b = self.amm_b.get_sell_orders(x_b)
+
+        print(x_a)
+        print(sell_orders_a)
+        print(x_b)
+        print(sell_orders_b)
 
         (y_a, y_b) = self.collateral_allocation(
             y,
@@ -167,7 +169,7 @@ class AMMManager:
         buy_orders_a = self.amm_a.get_buy_orders(y_a)
         buy_orders_b = self.amm_b.get_buy_orders(y_b)
 
-        orders = sell_orders_a + sell_orders_b + buy_orders_a + buy_orders_b
+        orders = sell_orders_a + sell_orders_b
 
         return orders
 

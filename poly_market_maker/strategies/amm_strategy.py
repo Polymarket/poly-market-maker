@@ -1,5 +1,3 @@
-import time
-
 from ..market import Token, Market, Collateral
 from ..orderbook import OrderBookManager
 from ..price_feed import PriceFeed
@@ -9,12 +7,6 @@ from .base_strategy import BaseStrategy
 from ..orderbook import OrderBook
 from ..constants import MIN_SIZE
 from ..order import Order
-
-P_MIN = 0.05
-P_MAX = 0.95
-DELTA = 0.01
-DEPTH = 0.05
-SPREAD = 0.03
 
 
 class OrderType:
@@ -42,21 +34,24 @@ class AMMStrategy(BaseStrategy):
         price_feed: PriceFeed,
         market: Market,
         order_book_manager: OrderBookManager,
+        config: dict,
     ):
+        assert isinstance(config, dict)
         BaseStrategy.__init__(
             self,
             price_feed=price_feed,
             market=market,
             order_book_manager=order_book_manager,
         )
+
         self.amm_manager = AMMManager(
             token_id_a=self.market.token_id(Token.A),
             token_id_b=self.market.token_id(Token.B),
-            p_min=P_MIN,
-            p_max=P_MAX,
-            delta=DELTA,
-            spread=SPREAD,
-            depth=DEPTH,
+            p_min=config.get("p_min"),
+            p_max=config.get("p_max"),
+            delta=config.get("delta"),
+            spread=config.get("spread"),
+            depth=config.get("depth"),
         )
 
     def synchronize(
@@ -65,7 +60,7 @@ class AMMStrategy(BaseStrategy):
         """
         Synchronize the orderbook by cancelling all orders and placing new orders
         """
-        self.logger.debug("Synchronizing amm strategy...")
+        self.logger.debug("Synchronizing AMM strategy...")
 
         orderbook = self.order_book_manager.get_order_book()
 
@@ -83,7 +78,7 @@ class AMMStrategy(BaseStrategy):
         price_a = self.price_feed.get_price(self.market.token_id(Token.A))
         price_b = 1 - price_a
 
-        expected_orders = self.amm_manager.get_orders(
+        expected_orders = self.amm_manager.get_expected_orders(
             price_a,
             price_b,
             token_a_balance,
@@ -100,17 +95,6 @@ class AMMStrategy(BaseStrategy):
             )
             self.order_book_manager.cancel_orders(orders_to_cancel)
 
-        # Do not place new orders if order book state is not confirmed
-
-        # time.sleep(0.1)
-        # orderbook = self.order_book_manager.get_order_book()
-        # while (
-        #     orderbook.orders_being_placed or orderbook.orders_being_cancelled
-        # ):
-        #     orderbook = self.order_book_manager.get_order_book()
-        #     self.logger.debug("Order book sync is in progress, waiting...")
-        #     time.sleep(0.1)
-
         orders_to_place = self.get_orders_to_place(orderbook, expected_orders)
         if len(orders_to_place) > 0:
             self.logger.info(
@@ -118,16 +102,8 @@ class AMMStrategy(BaseStrategy):
             )
             self.order_book_manager.place_orders(orders_to_place)
 
+        # self.order_book_manager.wait_for_stable_order_book()
         self.logger.debug("Synchronized orderbook!")
-
-    @staticmethod
-    def _order_from_order_type(order_type: OrderType, size: float) -> Order:
-        return Order(
-            price=order_type.price,
-            size=size,
-            side=order_type.side,
-            token_id=order_type.token_id,
-        )
 
     def get_orders_to_cancel(
         self,
@@ -195,23 +171,11 @@ class AMMStrategy(BaseStrategy):
 
         return orders_to_place
 
-    def batch_order(self, order_type: OrderType, size: float) -> Order:
-        batched_order = []
-
-        if size < MIN_SIZE:
-            return batched_order
-
-        min_size_orders = max(int(size / MIN_SIZE) - 1, 0)
-        extra_order_size = round(size - min_size_orders * MIN_SIZE, 2)
-
-        if extra_order_size >= MIN_SIZE:
-            batched_order += [
-                self._order_from_order_type(order_type, extra_order_size)
-            ]
-
-        if min_size_orders > 0:
-            batched_order += min_size_orders * [
-                self._order_from_order_type(order_type, MIN_SIZE)
-            ]
-
-        return batched_order
+    @staticmethod
+    def _order_from_order_type(order_type: OrderType, size: float) -> Order:
+        return Order(
+            price=order_type.price,
+            size=size,
+            side=order_type.side,
+            token_id=order_type.token_id,
+        )

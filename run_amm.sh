@@ -22,9 +22,9 @@ exec python3 -m poly_market_maker.market_maker \
     --condition-id "$CONDITION_ID" \
     --token-id-A "$TOKEN_ID_A" \
     --token-id-B "$TOKEN_ID_B" \
-    --strategy "amm"
+    --strategy "amm" \
+    --strategy-config "$AMM_STRATEGY_CONFIG_FILE"
 
-#  --strategy-config "$BANDS_CONFIG_FILE" \
 # --gas-strategy $GAS_STRATEGY \
 # --gas-station-url $GAS_STATION_URL \
 # --price-feed-source $PRICE_FEED_SOURCE \
