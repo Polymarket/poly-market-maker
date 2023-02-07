@@ -5,8 +5,8 @@ import unittest
 from poly_market_maker.market import Market, Token
 
 condition_id = "1111"
-token_id_a = 123
-token_id_b = 456
+token_id_a = "123"
+token_id_b = "456"
 
 
 class TestMarket(TestCase):

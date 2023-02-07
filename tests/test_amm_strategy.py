@@ -79,8 +79,8 @@ class OrderBookManager:
 
 
 class TestAMMStrategy(TestCase):
-    token_id = 1
-    market = Market("condition_id", 1, 2)
+    token_id = "123"
+    market = Market("9999", token_id, "456")
     config = {
         "p_min": 0.05,
         "p_max": 0.95,

@@ -7,7 +7,7 @@ from poly_market_maker.strategies.amm import AMM
 
 
 class TestAMM(TestCase):
-    token_id = 1
+    token_id = "123"
 
     def test_get_buy_orders(self):
         amm = AMM(

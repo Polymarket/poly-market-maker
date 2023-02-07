@@ -8,8 +8,8 @@ from poly_market_maker.order import Order, Side
 
 
 class TestAMM(TestCase):
-    token_id_a = 1
-    token_id_b = 2
+    token_id_a = "123"
+    token_id_b = "456"
 
     def test_get_expected_orders(self):
         p = 0.5
