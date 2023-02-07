@@ -202,19 +202,18 @@ class ClobMarketMakerKeeper:
         self.price_feed_source = args.price_feed_source
         if self.price_feed_source == PriceFeedSource.CLOB:
             self.price_feed = PriceFeedClob(self.clob_api)
-
-        # elif self.price_feed_source == PriceFeedSource.ODDS_API:
-        #     odds_api = OddsAPI(
-        #         api_key=args.odds_api_key,
-        #         sport=args.odds_api_sport,
-        ##         region=args.odds_api_region,
-        #         market=args.odds_api_market,
-        #     )
-        #     self.price_feed = PriceFeedOddsAPI(
-        #         odds_api=odds_api,
-        #         match_id=args.odds_api_match_id,
-        #         team_name=args.odds_api_team_name,
-        #     )
+        elif self.price_feed_source == PriceFeedSource.ODDS_API:
+            odds_api = OddsAPI(
+                api_key=args.odds_api_key,
+                sport=args.odds_api_sport,
+                region=args.odds_api_region,
+                market=args.odds_api_market,
+            )
+            self.price_feed = PriceFeedOddsAPI(
+                odds_api=odds_api,
+                match_id=args.odds_api_match_id,
+                team_name=args.odds_api_team_name,
+            )
 
         self.market = Market(
             args.condition_id,
