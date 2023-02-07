@@ -102,13 +102,13 @@ class ClobMarketMakerKeeper:
 
         parser.add_argument(
             "--token-id-A",
-            type=int,
+            type=str,
             required=True,
             help="Either of the two token ids of the market being made",
         )
         parser.add_argument(
             "--token-id-B",
-            type=int,
+            type=str,
             required=True,
             help="The other token id of the market being made",
         )

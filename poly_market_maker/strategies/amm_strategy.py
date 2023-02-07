@@ -20,12 +20,24 @@ class OrderType:
             return (
                 self.price == other.price
                 and self.side == other.side
-                and self.token_id == other.token_id
+                and int(self.token_id) == int(other.token_id)
             )
         return False
 
+    # def __ne__(self, other):
+    #     if isinstance(other, OrderType):
+    #         return (
+    #             self.price != other.price
+    #             or self.side != other.side
+    #             or int(self.token_id) != int(other.token_id)
+    #         )
+    #     return True
+
     def __hash__(self):
         return hash((self.price, self.side, self.token_id))
+
+    def __repr__(self):
+        return f"OrderType[price={self.price}, side={self.side}, token_id={self.token_id}]"
 
 
 class AMMStrategy(BaseStrategy):
@@ -141,6 +153,7 @@ class AMMStrategy(BaseStrategy):
             for order in orderbook.orders
             if OrderType(order) not in expected_order_types
         ]
+
         return orders_to_cancel
 
     def get_orders_to_place(

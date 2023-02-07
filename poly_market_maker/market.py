@@ -12,20 +12,20 @@ class Token(Enum):
 
 
 class Market:
-    def __init__(self, condition_id: str, token_id_a: int, token_id_b: int):
+    def __init__(self, condition_id: str, token_id_a: str, token_id_b: str):
         assert isinstance(condition_id, str)
-        assert isinstance(token_id_a, int)
-        assert isinstance(token_id_b, int)
+        assert isinstance(token_id_a, str)
+        assert isinstance(token_id_b, str)
 
         self.condition_id = condition_id
         self.token_id_a = token_id_a
         self.token_id_b = token_id_b
 
-    def token_id(self, token: Token) -> int:
+    def token_id(self, token: Token) -> str:
         return self.token_id_a if token == Token.A else self.token_id_b
 
-    def token(self, token_id: int) -> Token:
+    def token(self, token_id: str) -> Token:
         return Token.A if token_id == self.token_id_a else Token.B
 
     def __repr__(self):
-        return f"Market[condition_id={self.condition_id}, token_id_a={self.token_id_a}, token_id_b={self.token_id_b},]"
+        return f"Market[condition_id={self.condition_id}, token_id_a={self.token_id_a}, token_id_b={self.token_id_b}]"

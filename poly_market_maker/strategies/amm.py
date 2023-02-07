@@ -6,7 +6,7 @@ from ..order import Order, Side
 class AMM:
     def __init__(
         self,
-        token_id: int,
+        token_id: str,
         p_min: float,
         p_max: float,
         delta: float,
@@ -15,7 +15,7 @@ class AMM:
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        assert isinstance(token_id, int)
+        assert isinstance(token_id, str)
         assert isinstance(p_min, float)
         assert isinstance(p_max, float)
         assert isinstance(delta, float)
@@ -155,11 +155,6 @@ class AMMManager:
         sell_orders_a = self.amm_a.get_sell_orders(x_a)
         sell_orders_b = self.amm_b.get_sell_orders(x_b)
 
-        print(x_a)
-        print(sell_orders_a)
-        print(x_b)
-        print(sell_orders_b)
-
         (y_a, y_b) = self.collateral_allocation(
             y,
             sell_orders_a,
@@ -169,7 +164,7 @@ class AMMManager:
         buy_orders_a = self.amm_a.get_buy_orders(y_a)
         buy_orders_b = self.amm_b.get_buy_orders(y_b)
 
-        orders = sell_orders_a + sell_orders_b
+        orders = sell_orders_a + sell_orders_b + buy_orders_a + buy_orders_b
 
         return orders
 

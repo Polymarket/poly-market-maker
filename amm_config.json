@@ -3,5 +3,5 @@
   "p_max": 0.95,
   "spread": 0.02,
   "delta": 0.01,
-  "depth": 0.0
+  "depth": 0.05
 }

@@ -57,6 +57,3 @@ class TestAMM(TestCase):
         self.assertEqual(buy_prices_a, [0.48, 0.47, 0.46, 0.45, 0.44, 0.43])
         buy_prices_b = [order.price for order in buy_orders_b]
         self.assertEqual(buy_prices_b, [0.48, 0.47, 0.46, 0.45, 0.44, 0.43])
-
-        print(sell_orders_a)
-        self.assertEqual(5, 6)

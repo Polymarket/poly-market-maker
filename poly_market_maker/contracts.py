@@ -42,12 +42,12 @@ class Contracts:
 
         return bal
 
-    def balance_of_erc1155(self, token: str, address: str, token_id: int):
+    def balance_of_erc1155(self, token: str, address: str, token_id: str):
         erc1155 = self.w3.eth.contract(token, abi=erc1155_balance_of)
         bal = None
 
         try:
-            bal = erc1155.functions.balanceOf(address, token_id).call()
+            bal = erc1155.functions.balanceOf(address, int(token_id)).call()
             chain_requests_counter.labels(
                 method="ERC1155 balanceOf", status="ok"
             ).inc()
