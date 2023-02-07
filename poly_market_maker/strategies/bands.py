@@ -1,8 +1,8 @@
 import itertools
 import logging
 
-from .constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
-from .order import Order, Side
+from ..constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
+from ..order import Order, Side
 
 
 class Band:
@@ -235,11 +235,13 @@ class Bands:
 
     def new_orders(
         self,
-        orders: list,
+        orders: list[Order],
         collateral_balance: float,
         token_balance: float,
         target_price: float,
-    ) -> list:
+        buy_token_id: str,
+        sell_token_id: str,
+    ) -> list[Order]:
         assert isinstance(orders, list)
         assert isinstance(collateral_balance, float)
         assert isinstance(target_price, float)
@@ -265,7 +267,9 @@ class Bands:
                     min(band.avg_amount - band_amount, token_balance),
                     MAX_DECIMALS,
                 )
-                sell_order = self._new_order(sell_price, sell_size, Side.SELL)
+                sell_order = self._new_order(
+                    sell_price, sell_size, Side.SELL, sell_token_id
+                )
 
                 if sell_order is not None:
                     band_amount += sell_size
@@ -282,7 +286,9 @@ class Bands:
                         ),
                         MAX_DECIMALS,
                     )
-                    buy_order = self._new_order(buy_price, buy_size, Side.BUY)
+                    buy_order = self._new_order(
+                        buy_price, buy_size, Side.BUY, buy_token_id
+                    )
 
                     if buy_order is not None:
                         band_amount += buy_size
@@ -291,7 +297,7 @@ class Bands:
 
         return new_orders
 
-    def _new_order(self, price: float, size: float, side: str):
+    def _new_order(self, price: float, size: float, side: str, token_id: str):
         """
         Return sell orders which need to be placed to bring total amounts within all sell bands above minimums
         """
@@ -303,7 +309,7 @@ class Bands:
             f"Creating new {side} order with price {price} and size: {size}"
         )
 
-        return Order(price=price, size=size, side=side)
+        return Order(price=price, size=size, side=side, token_id=token_id)
 
     @staticmethod
     def _new_order_is_valid(price, size):

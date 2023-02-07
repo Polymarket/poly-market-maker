@@ -2,11 +2,13 @@ import json
 from unittest import TestCase
 import unittest
 
-from poly_market_maker.band import Band, Bands
+from poly_market_maker.strategies.bands import Band, Bands
 from poly_market_maker.order import Order, Side
 
 
 class TestBand(TestCase):
+    token_id = "123"
+
     def test_create_band(self):
 
         test_band = Band(
@@ -47,9 +49,9 @@ class TestBand(TestCase):
             )
         )
         orders = [
-            Order(size=10, price=0.48, side=Side.BUY, token_id=1),
-            Order(size=20, price=0.45, side=Side.BUY, token_id=1),
-            Order(size=30, price=0.42, side=Side.BUY, token_id=1),
+            Order(size=10, price=0.48, side=Side.BUY, token_id=self.token_id),
+            Order(size=20, price=0.45, side=Side.BUY, token_id=self.token_id),
+            Order(size=30, price=0.42, side=Side.BUY, token_id=self.token_id),
         ]
 
         # with a target_price of fifty cents
@@ -89,10 +91,10 @@ class TestBand(TestCase):
         # Initialize buys and sells that fit in both bands
         target_price = 0.50
         orders = [
-            Order(size=20, price=0.47, side=Side.BUY, token_id=1),
-            Order(size=30, price=0.44, side=Side.BUY, token_id=1),
-            Order(size=20, price=0.53, side=Side.SELL, token_id=1),
-            Order(size=30, price=0.56, side=Side.SELL, token_id=1),
+            Order(size=20, price=0.47, side=Side.BUY, token_id=self.token_id),
+            Order(size=30, price=0.44, side=Side.BUY, token_id=self.token_id),
+            Order(size=20, price=0.53, side=Side.SELL, token_id=self.token_id),
+            Order(size=30, price=0.56, side=Side.SELL, token_id=self.token_id),
         ]
 
         # Expect none to be cancelled
@@ -119,7 +121,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
         ]
 
         # place new orders
@@ -128,6 +130,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            self.token_id,
+            "456",
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -155,7 +159,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
         ]
 
         # place new orders
@@ -164,6 +168,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            self.token_id,
+            "456",
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -191,7 +197,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
         ]
 
         # place new orders
@@ -200,6 +206,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            self.token_id,
+            "456",
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -227,7 +235,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=1),
+            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
         ]
 
         # place new orders
@@ -236,6 +244,8 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
+            self.token_id,
+            "456",
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]

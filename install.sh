@@ -3,7 +3,7 @@ echo "Installing dependencies and activating virtualenv..."
 
 rm -rf .venv/
 
-python3.9 -m venv .venv
+python3.10 -m venv .venv
 
 source .venv/bin/activate
 

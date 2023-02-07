@@ -12,13 +12,13 @@ class TestSide(TestCase):
         self.assertEqual(Side.SELL.value, SELL)
 
     def test_side_from_string(self):
-        self.assertEqual(Side.from_string("buy"), Side.BUY)
-        self.assertEqual(Side.from_string("Buy"), Side.BUY)
-        self.assertEqual(Side.from_string("BUY"), Side.BUY)
+        self.assertEqual(Side("buy"), Side.BUY)
+        self.assertEqual(Side("Buy"), Side.BUY)
+        self.assertEqual(Side("BUY"), Side.BUY)
 
-        self.assertEqual(Side.from_string("sell"), Side.SELL)
-        self.assertEqual(Side.from_string("Sell"), Side.SELL)
-        self.assertEqual(Side.from_string("SELL"), Side.SELL)
+        self.assertEqual(Side("sell"), Side.SELL)
+        self.assertEqual(Side("Sell"), Side.SELL)
+        self.assertEqual(Side("SELL"), Side.SELL)
 
-        self.assertRaises(ValueError, Side.from_string, "sel")
-        self.assertRaises(ValueError, Side.from_string, "buyy")
+        self.assertRaises(ValueError, Side, "sel")
+        self.assertRaises(ValueError, Side, "buyy")

@@ -42,7 +42,7 @@ class ClobApi:
     def get_exchange(self):
         return self.client.get_exchange_address()
 
-    def get_price(self, token_id: str) -> float:
+    def get_price(self, token_id: int) -> float:
         """
         Get the current price on the orderbook
         """
@@ -95,7 +95,7 @@ class ClobApi:
         return []
 
     def place_order(
-        self, price: float, size: float, side: Side, token_id: str
+        self, price: float, size: float, side: Side, token_id: int
     ):
         """
         Places a new order
@@ -197,7 +197,7 @@ class ClobApi:
             order_dict.get("size_matched")
         )
         price = float(order_dict.get("price"))
-        side = Side.from_string(order_dict.get("side"))
+        side = Side(order_dict.get("side"))
         order_id = order_dict.get("id")
         token_id = order_dict.get("asset_id")
 

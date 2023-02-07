@@ -88,7 +88,7 @@ class PriceFeedFPMM(PriceFeed):
         fpmm: FPMM,
         conditional_token: str,
         fpmm_address: str,
-        token_id: int,
+        token_id: str,
         token_id_complement: int,
     ):
         super().__init__()

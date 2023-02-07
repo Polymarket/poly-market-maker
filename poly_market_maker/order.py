@@ -6,22 +6,22 @@ class Side(Enum):
     BUY = BUY
     SELL = SELL
 
-    @staticmethod
-    def from_string(side: str):
-        if side.lower() == Side.BUY.value.lower():
-            return Side.BUY
-        if side.lower() == Side.SELL.value.lower():
-            return Side.SELL
-        else:
-            raise ValueError(
-                f"side must be '{BUY}' or '{SELL}', got '{side}'."
-            )
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            if value.lower() == Side.BUY.value.lower():
+                return Side.BUY
+            if value.lower() == Side.SELL.value.lower():
+                return Side.SELL
+        return super()._missing_(value)
 
 
 class Order:
     def __init__(
-        self, size: float, price: float, side: Side, token_id=None, id=None
+        self, size: float, price: float, side: Side, token_id: str, id=None
     ):
+        assert isinstance(token_id, str)
+
         self.size = size
         self.price = price
         self.side = side
