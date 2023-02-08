@@ -227,13 +227,13 @@ class ClobMarketMakerKeeper:
         self.order_book_manager.get_orders_with(
             lambda: self.clob_api.get_orders(self.market.condition_id)
         )
-        self.order_book_manager.get_balances_with(lambda: self.get_balances())
+        self.order_book_manager.get_balances_with(self.get_balances)
         self.order_book_manager.cancel_orders_with(
             lambda order: self.clob_api.cancel_order(order.id)
         )
         self.order_book_manager.place_orders_with(self.place_order)
         self.order_book_manager.cancel_all_orders_with(
-            lambda: self.clob_api.cancel_all_orders()
+            lambda _: self.clob_api.cancel_all_orders()
         )
         self.order_book_manager.start()
 

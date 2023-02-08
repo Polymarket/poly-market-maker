@@ -163,8 +163,6 @@ class AMMManager:
             sell_orders_b[0],
         )
 
-        print(x_a, x_b, y_a, y_b)
-
         buy_orders_a = self.amm_a.get_buy_orders(y_a)
         buy_orders_b = self.amm_b.get_buy_orders(y_b)
 

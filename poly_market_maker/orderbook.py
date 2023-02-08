@@ -2,7 +2,7 @@ import logging
 import threading
 
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, wait
 from functools import partial
 
 from .order import Order, Side
@@ -196,7 +196,7 @@ class OrderBookManager:
             orders_being_cancelled=len(self._order_ids_cancelling) > 0,
         )
 
-    def place_order(self, place_order_function):
+    def place_order(self, place_order_function, order):
         """Places new order. Order placement will happen in a background thread.
 
         Args:
@@ -209,28 +209,32 @@ class OrderBookManager:
 
         self._report_order_book_updated()
 
-        self._executor.submit(self._thread_place_order(place_order_function))
+        result = self._executor.submit(
+            self._thread_place_order(place_order_function, order)
+        )
+        wait(result)
 
-    def place_orders(self, new_orders: list):
+    def place_orders(self, orders: list):
         """Places new orders. Order placement will happen in a background thread.
 
         Args:
             new_orders: List of new orders to place.
         """
-        assert isinstance(new_orders, list)
+        assert isinstance(orders, list)
         assert callable(self.place_order_function)
 
         with self._lock:
-            self._currently_placing_orders += len(new_orders)
+            self._currently_placing_orders += len(orders)
 
         self._report_order_book_updated()
 
-        for new_order in new_orders:
+        results = [
             self._executor.submit(
-                self._thread_place_order(
-                    partial(self.place_order_function, new_order)
-                )
+                self._thread_place_order(self.place_order_function, order)
             )
+            for order in orders
+        ]
+        wait(results)
 
     def cancel_orders(self, orders: list):
         """
@@ -249,12 +253,13 @@ class OrderBookManager:
 
         self._report_order_book_updated()
 
-        for order in orders:
+        results = [
             self._executor.submit(
-                self._thread_cancel_order(
-                    order.id, partial(self.cancel_order_function, order)
-                )
+                self._thread_cancel_order(self.cancel_order_function, order)
             )
+            for order in orders
+        ]
+        wait(results)
 
     def cancel_all_orders(self):
         """
@@ -265,7 +270,7 @@ class OrderBookManager:
             if len(orders) == 0:
                 self.logger.info("No open orders on order book.")
                 break
-            order_ids = [o.id for o in orders]
+            order_ids = [order.id for order in orders]
             with self._lock:
                 for order_id in order_ids:
                     self._order_ids_cancelling.add(order_id)
@@ -273,11 +278,12 @@ class OrderBookManager:
             self.logger.info(f"Cancelling {len(order_ids)} open orders...")
 
             # Cancel all orders
-            self._executor.submit(
+            result = self._executor.submit(
                 self._thread_cancel_all(
-                    order_ids, self.cancel_all_orders_function
+                    self.cancel_all_orders_function, orders
                 )
             )
+            wait(result)
             self.wait_for_stable_order_book()
 
         # Wait for the background thread to refresh the order book twice, so we are 99.9% sure
@@ -414,12 +420,12 @@ class OrderBookManager:
 
             time.sleep(self.refresh_frequency)
 
-    def _thread_place_order(self, place_order_function):
+    def _thread_place_order(self, place_order_function, order):
         assert callable(place_order_function)
 
         def func():
             try:
-                new_order = place_order_function()
+                new_order = place_order_function(order)
 
                 if new_order is not None:
                     with self._lock:
@@ -434,12 +440,13 @@ class OrderBookManager:
 
         return func
 
-    def _thread_cancel_order(self, order_id, cancel_order_function):
+    def _thread_cancel_order(self, cancel_order_function, order):
         assert callable(cancel_order_function)
+        order_id = order.id
 
         def func():
             try:
-                if cancel_order_function():
+                if cancel_order_function(order):
                     with self._lock:
                         self._order_ids_cancelled.add(order_id)
                         self._order_ids_cancelling.remove(order_id)
@@ -457,12 +464,13 @@ class OrderBookManager:
 
         return func
 
-    def _thread_cancel_all(self, order_ids, cancel_all_function):
-        assert callable(cancel_all_function)
+    def _thread_cancel_all(self, cancel_all_orders_function, orders):
+        assert callable(cancel_all_orders_function)
+        order_ids = [order.id for order in orders]
 
         def func():
             try:
-                if cancel_all_function():
+                if cancel_all_orders_function(orders):
                     with self._lock:
                         for order_id in order_ids:
                             self._order_ids_cancelled.add(order_id)
