@@ -3,7 +3,6 @@ import threading
 
 import time
 from concurrent.futures import ThreadPoolExecutor, wait
-from functools import partial
 
 from .order import Order, Side
 from .market import Token, Collateral
@@ -279,12 +278,13 @@ class OrderBookManager:
 
             # Cancel all orders
             result = self._executor.submit(
-                self._thread_cancel_all(
+                self._thread_cancel_all_orders(
                     self.cancel_all_orders_function, orders
                 )
             )
             wait([result])
             self.wait_for_stable_order_book()
+            time.sleep(2)
 
         # Wait for the background thread to refresh the order book twice, so we are 99.9% sure
         # that there are no orders left in the backend.
@@ -435,16 +435,15 @@ class OrderBookManager:
             finally:
                 with self._lock:
                     self._currently_placing_orders -= 1
-
                 self._report_order_book_updated()
 
         return func
 
     def _thread_cancel_order(self, cancel_order_function, order):
         assert callable(cancel_order_function)
-        order_id = order.id
 
         def func():
+            order_id = order.id
             try:
                 if cancel_order_function(order):
                     with self._lock:
@@ -459,12 +458,11 @@ class OrderBookManager:
                         self._order_ids_cancelling.remove(order_id)
                     except KeyError:
                         pass
-
                 self._report_order_book_updated()
 
         return func
 
-    def _thread_cancel_all(self, cancel_all_orders_function, orders):
+    def _thread_cancel_all_orders(self, cancel_all_orders_function, orders):
         assert callable(cancel_all_orders_function)
 
         def func():
@@ -479,12 +477,11 @@ class OrderBookManager:
                 self.logger.exception("Failed to cancel all")
             finally:
                 with self._lock:
-                    try:
-                        for order_id in order_ids:
+                    for order_id in order_ids:
+                        try:
                             self._order_ids_cancelling.remove(order_id)
-                    except KeyError:
-                        pass
-
+                        except KeyError:
+                            pass
                 self._report_order_book_updated()
 
         return func
