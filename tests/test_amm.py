@@ -42,7 +42,7 @@ class TestAMM(TestCase):
             spread=spread,
         )
 
-        sell_size = amm.sell_size(size, p, p_max, p_max)
+        sell_size = amm._sell_size(size, p, p_max, p_max)
         self.assertEqual(sell_size, size)
 
     def test_get_buy_size(self):
@@ -63,7 +63,7 @@ class TestAMM(TestCase):
             spread=spread,
         )
 
-        buy_size = amm.buy_size(collateral, p, p_min, p_min)
+        buy_size = amm._buy_size(collateral, p, p_min, p_min)
         self.assertLess(buy_size * p_min, collateral)
         self.assertGreater(buy_size * p, collateral)
 

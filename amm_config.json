@@ -1,7 +1,7 @@
 {
   "p_min": 0.05,
   "p_max": 0.95,
-  "spread": 0.02,
+  "spread": 0.01,
   "delta": 0.01,
-  "depth": 0.05
+  "depth": 1.0
 }

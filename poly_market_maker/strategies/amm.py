@@ -1,6 +1,7 @@
 import logging
 from math import sqrt
 from ..order import Order, Side
+from ..utils import math_round_down
 
 
 class AMM:
@@ -48,12 +49,10 @@ class AMM:
 
     def get_sell_orders(self, x):
         sizes = [
-            round(size, 2)
+            # round down to avoid too large orders
+            math_round_down(size, 2)
             for size in self.diff(
-                [
-                    self.sell_size(x, self.p_i, p_t, self.p_u)
-                    for p_t in self.sell_prices
-                ]
+                [self.sell_size(x, p_t) for p_t in self.sell_prices]
             )
         ]
 
@@ -71,12 +70,10 @@ class AMM:
 
     def get_buy_orders(self, y):
         sizes = [
-            round(size, 2)
+            # round down to avoid too large orders
+            math_round_down(size, 2)
             for size in self.diff(
-                [
-                    self.buy_size(y, self.p_i, p_t, self.p_l)
-                    for p_t in self.buy_prices
-                ]
+                [self.buy_size(y, p_t) for p_t in self.buy_prices]
             )
         ]
 
@@ -93,21 +90,26 @@ class AMM:
         return orders
 
     def phi(self):
-        p_1 = self.sell_prices[0]
         return (1 / (sqrt(self.p_i) - sqrt(self.p_l))) * (
-            1 / sqrt(p_1) - 1 / sqrt(self.p_i)
+            1 / sqrt(self.buy_prices[0]) - 1 / sqrt(self.p_i)
         )
 
+    def sell_size(self, x, p_t):
+        return self._sell_size(x, self.p_i, p_t, self.p_u)
+
     @staticmethod
-    def sell_size(x, p_i, p_t, p_u):
+    def _sell_size(x, p_i, p_t, p_u):
         L = x / (1 / sqrt(p_i) - 1 / sqrt(p_u))
         a = L / sqrt(p_u) - L / sqrt(p_t) + x
         return a
 
+    def buy_size(self, y, p_t):
+        return self._buy_size(y, self.p_i, p_t, self.p_l)
+
     @staticmethod
-    def buy_size(y, p_i, p_t, p_l):
+    def _buy_size(y, p_i, p_t, p_l):
         L = y / (sqrt(p_i) - sqrt(p_l))
-        a = L / sqrt(p_t) - L / sqrt(p_i)
+        a = L * (1 / sqrt(p_t) - 1 / sqrt(p_i))
         return a
 
     @staticmethod
@@ -157,9 +159,11 @@ class AMMManager:
 
         (y_a, y_b) = self.collateral_allocation(
             y,
-            sell_orders_a,
-            sell_orders_b,
+            sell_orders_a[0],
+            sell_orders_b[0],
         )
+
+        print(x_a, x_b, y_a, y_b)
 
         buy_orders_a = self.amm_a.get_buy_orders(y_a)
         buy_orders_b = self.amm_b.get_buy_orders(y_b)
@@ -168,19 +172,32 @@ class AMMManager:
 
         return orders
 
-    def collateral_allocation(self, y, sell_orders_a, sell_orders_b):
-        best_ask_size_a = self._get_best_ask_size(sell_orders_a)
-        best_ask_size_b = self._get_best_ask_size(sell_orders_b)
+    def collateral_allocation(
+        self, y: float, first_sell_order_a: Order, first_sell_order_b: Order
+    ):
 
-        y_a = (best_ask_size_a - best_ask_size_b + y * self.amm_b.phi()) / (
-            self.amm_a.phi() + self.amm_b.phi()
-        )
+        y_a = (
+            first_sell_order_a.size
+            - first_sell_order_b.size
+            + y * self.amm_b.phi()
+        ) / (self.amm_a.phi() + self.amm_b.phi())
+
+        if y_a < 0:
+            y_a = 0
+        elif y_a > y:
+            y_a = y
         y_b = y - y_a
 
-        return (y_a, y_b)
+        return (math_round_down(y_a, 2), math_round_down(y_b, 2))
 
     @staticmethod
     def _get_best_ask_size(orders):
         return next(
-            (order.size for order in sorted(orders, key=lambda o: o.price)), 0
+            (
+                order.size
+                for order in sorted(
+                    orders, key=lambda o: o.price, reverse=False
+                )
+            ),
+            0,
         )

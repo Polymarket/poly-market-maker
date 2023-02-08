@@ -6,7 +6,7 @@ from .amm import AMMManager
 from .base_strategy import BaseStrategy
 from ..orderbook import OrderBook
 from ..constants import MIN_SIZE
-from ..order import Order
+from ..order import Order, Side
 
 
 class OrderType:
@@ -23,15 +23,6 @@ class OrderType:
                 and int(self.token_id) == int(other.token_id)
             )
         return False
-
-    # def __ne__(self, other):
-    #     if isinstance(other, OrderType):
-    #         return (
-    #             self.price != other.price
-    #             or self.side != other.side
-    #             or int(self.token_id) != int(other.token_id)
-    #         )
-    #     return True
 
     def __hash__(self):
         return hash((self.price, self.side, self.token_id))
@@ -87,8 +78,10 @@ class AMMStrategy(BaseStrategy):
             self.logger.debug("Balances invalid/non-existent")
             return
 
-        price_a = self.price_feed.get_price(self.market.token_id(Token.A))
-        price_b = 1 - price_a
+        price_a = round(
+            self.price_feed.get_price(self.market.token_id(Token.A)), 2
+        )
+        price_b = round(1 - price_a, 2)
 
         expected_orders = self.amm_manager.get_expected_orders(
             price_a,
@@ -98,16 +91,16 @@ class AMMStrategy(BaseStrategy):
             collateral_balance,
         )
 
-        orders_to_cancel = self.get_orders_to_cancel(
+        (orders_to_cancel, orders_to_place) = self.get_orders(
             orderbook, expected_orders
         )
+
         if len(orders_to_cancel) > 0:
             self.logger.info(
                 f"About to cancel {len(orders_to_cancel)} existing orders!"
             )
             self.order_book_manager.cancel_orders(orders_to_cancel)
 
-        orders_to_place = self.get_orders_to_place(orderbook, expected_orders)
         if len(orders_to_place) > 0:
             self.logger.info(
                 f"About to place {len(orders_to_place)} new orders!"
@@ -116,6 +109,42 @@ class AMMStrategy(BaseStrategy):
 
         # self.order_book_manager.wait_for_stable_order_book()
         self.logger.debug("Synchronized orderbook!")
+
+    def get_orders(self, orderbook: OrderBook, expected_orders: list[Order]):
+        orders_to_cancel = []
+        orders_to_place = []
+
+        expected_order_types = set(
+            OrderType(order) for order in expected_orders
+        )
+
+        for order_type in expected_order_types:
+            open_orders = [
+                order
+                for order in orderbook.orders
+                if OrderType(order) == order_type
+            ]
+            open_size = sum(order.size for order in open_orders)
+            expected_size = sum(
+                order.size
+                for order in expected_orders
+                if OrderType(order) == order_type
+            )
+
+            if open_size > expected_size:
+                orders_to_cancel += open_orders
+                orders_to_place.append(
+                    self._order_from_order_type(order_type, expected_size)
+                )
+
+            else:
+                remaining_size = expected_size - open_size
+                if remaining_size >= MIN_SIZE:
+                    orders_to_place.append(
+                        self._order_from_order_type(order_type, remaining_size)
+                    )
+
+        return (orders_to_cancel, orders_to_place)
 
     def get_orders_to_cancel(
         self,
@@ -177,7 +206,7 @@ class AMMStrategy(BaseStrategy):
             )
 
             remaining_size = expected_size - open_size
-            if remaining_size > MIN_SIZE:
+            if remaining_size >= MIN_SIZE:
                 orders_to_place += [
                     self._order_from_order_type(order_type, remaining_size)
                 ]
