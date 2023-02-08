@@ -212,7 +212,7 @@ class OrderBookManager:
         result = self._executor.submit(
             self._thread_place_order(place_order_function, order)
         )
-        wait(result)
+        wait([result])
 
     def place_orders(self, orders: list):
         """Places new orders. Order placement will happen in a background thread.
@@ -283,7 +283,7 @@ class OrderBookManager:
                     self.cancel_all_orders_function, orders
                 )
             )
-            wait(result)
+            wait([result])
             self.wait_for_stable_order_book()
 
         # Wait for the background thread to refresh the order book twice, so we are 99.9% sure
@@ -466,9 +466,9 @@ class OrderBookManager:
 
     def _thread_cancel_all(self, cancel_all_orders_function, orders):
         assert callable(cancel_all_orders_function)
-        order_ids = [order.id for order in orders]
 
         def func():
+            order_ids = [order.id for order in orders]
             try:
                 if cancel_all_orders_function(orders):
                     with self._lock:

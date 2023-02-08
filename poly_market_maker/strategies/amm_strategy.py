@@ -138,7 +138,7 @@ class AMMStrategy(BaseStrategy):
                 )
 
             else:
-                remaining_size = expected_size - open_size
+                remaining_size = round(expected_size - open_size, 2)
                 if remaining_size >= MIN_SIZE:
                     orders_to_place.append(
                         self._order_from_order_type(order_type, remaining_size)
