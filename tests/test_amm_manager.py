@@ -145,5 +145,3 @@ class TestAMM(TestCase):
         expected_orders = amm_manager.get_expected_orders(
             p_a, p_b, x_a, x_b, y
         )
-        print([order for order in expected_orders if order.side == Side.SELL])
-        self.assertTrue(False)
