@@ -38,8 +38,8 @@ class AMMStrategy(BaseStrategy):
         assert isinstance(config, dict)
 
         self.amm_manager = AMMManager(
-            token_id_a=self.market.token_id(Token.A),
-            token_id_b=self.market.token_id(Token.B),
+            token_id_a=market.token_id(Token.A),
+            token_id_b=market.token_id(Token.B),
             p_min=config.get("p_min"),
             p_max=config.get("p_max"),
             delta=config.get("delta"),
@@ -47,10 +47,7 @@ class AMMStrategy(BaseStrategy):
             depth=config.get("depth"),
         )
 
-        BaseStrategy.__init__(
-            self,
-            market=market,
-        )
+        BaseStrategy.__init__(self, market)
 
     def synchronize(self, orderbook, token_prices):
         """
@@ -82,8 +79,8 @@ class AMMStrategy(BaseStrategy):
 
         orders_to_cancel += list(
             filter(
-                orderbook.orders,
                 lambda order: OrderType(order) not in expected_order_types,
+                orderbook.orders,
             )
         )
 
@@ -100,21 +97,25 @@ class AMMStrategy(BaseStrategy):
                 if OrderType(order) == order_type
             )
 
+            # if open_size too big, cancel all orders of this type
             if open_size > expected_size:
                 orders_to_cancel += open_orders
                 new_size = expected_size
+            # otherwise get the remaining size
             else:
                 new_size = round(expected_size - open_size, 2)
 
             if new_size >= MIN_SIZE:
                 orders_to_place += [
-                    self._order_from_order_type(order_type, new_size)
+                    self._new_order_from_order_type(order_type, new_size)
                 ]
 
         return (orders_to_cancel, orders_to_place)
 
     @staticmethod
-    def _order_from_order_type(order_type: OrderType, size: float) -> Order:
+    def _new_order_from_order_type(
+        order_type: OrderType, size: float
+    ) -> Order:
         return Order(
             price=order_type.price,
             size=size,

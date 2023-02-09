@@ -4,8 +4,8 @@ Collateral = "collateral"
 
 
 class Token(Enum):
-    A = "tokenA"
-    B = "tokenB"
+    A = "TokenA"
+    B = "TokenB"
 
     def complement(self):
         return Token.B if self == Token.A else Token.A

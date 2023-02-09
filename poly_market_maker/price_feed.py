@@ -1,4 +1,4 @@
-import enum
+from enum import Enum
 import logging
 
 from poly_market_maker.clob_api import ClobApi
@@ -6,7 +6,7 @@ from poly_market_maker.odds_api import OddsAPI
 from poly_market_maker.fpmm import FPMM
 
 
-class PriceFeedSource(enum.Enum):
+class PriceFeedSource(Enum):
     CLOB = "clob"
     ODDS_API = "odds_api"
     FPMM = "fpmm"

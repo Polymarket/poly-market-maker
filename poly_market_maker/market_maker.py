@@ -199,30 +199,30 @@ class ClobMarketMakerKeeper:
         )
         self.contracts = Contracts(self.web3, self.gas_station)
 
-        self.price_feed_source = args.price_feed_source
-        if self.price_feed_source == PriceFeedSource.CLOB:
-            self.price_feed = PriceFeedClob(self.clob_api)
-        elif self.price_feed_source == PriceFeedSource.ODDS_API:
-            odds_api = OddsAPI(
-                api_key=args.odds_api_key,
-                sport=args.odds_api_sport,
-                region=args.odds_api_region,
-                market=args.odds_api_market,
-            )
-            self.price_feed = PriceFeedOddsAPI(
-                odds_api=odds_api,
-                match_id=args.odds_api_match_id,
-                team_name=args.odds_api_team_name,
-            )
-        elif self.price_feed_source == PriceFeedSource.FPMM:
-            fpmm = FPMM(self.contracts)
-            self.price_feed = PriceFeedFPMM(
-                fpmm=fpmm,
-                conditional_token=self.clob_api.get_conditional_address(),
-                fpmm_address=self.args.fpmm_address,
-                token_id=self.token_id,
-                token_id_complement=self.args.complement_id,
-            )
+        match args.price_feed_source:
+            case PriceFeedSource.CLOB:
+                self.price_feed = PriceFeedClob(self.clob_api)
+            case PriceFeedSource.ODDS_API:
+                odds_api = OddsAPI(
+                    api_key=args.odds_api_key,
+                    sport=args.odds_api_sport,
+                    region=args.odds_api_region,
+                    market=args.odds_api_market,
+                )
+                self.price_feed = PriceFeedOddsAPI(
+                    odds_api=odds_api,
+                    match_id=args.odds_api_match_id,
+                    team_name=args.odds_api_team_name,
+                )
+            case PriceFeedSource.FPMM:
+                fpmm = FPMM(self.contracts)
+                self.price_feed = PriceFeedFPMM(
+                    fpmm=fpmm,
+                    conditional_token=self.clob_api.get_conditional_address(),
+                    fpmm_address=self.args.fpmm_address,
+                    token_id=self.token_id,
+                    token_id_complement=self.args.complement_id,
+                )
 
         self.market = Market(
             args.condition_id,

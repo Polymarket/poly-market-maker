@@ -115,10 +115,10 @@ class BandsStrategy(BaseStrategy):
     ):
         return list(
             filter(
-                orders,
                 lambda order: self._filter_by_corresponding_buy_token(
                     order, buy_token
                 ),
+                orders,
             )
         )
 

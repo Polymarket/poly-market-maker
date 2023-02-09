@@ -30,6 +30,7 @@ class StrategyManager:
 
         self.price_feed = price_feed
         self.order_book_manager = order_book_manager
+        self.market = market
 
         match Strategy(strategy):
             case Strategy.AMM:
@@ -72,7 +73,7 @@ class StrategyManager:
             MAX_DECIMALS,
         )
         price_b = round(1 - price_a, MAX_DECIMALS)
-        return [price_a, price_b]
+        return {Token.A: price_a, Token.B: price_b}
 
     def cancel_orders(self, orders_to_cancel):
         if len(orders_to_cancel) > 0:
