@@ -6,7 +6,7 @@ from .amm import AMMManager
 from .base_strategy import BaseStrategy
 from ..orderbook import OrderBook
 from ..constants import MIN_SIZE
-from ..order import Order, Side
+from ..order import Order
 
 
 class OrderType:
@@ -107,7 +107,6 @@ class AMMStrategy(BaseStrategy):
             )
             self.order_book_manager.place_orders(orders_to_place)
 
-        # self.order_book_manager.wait_for_stable_order_book()
         self.logger.debug("Synchronized orderbook!")
 
     def get_orders(self, orderbook: OrderBook, expected_orders: list[Order]):
@@ -116,6 +115,12 @@ class AMMStrategy(BaseStrategy):
 
         expected_order_types = set(
             OrderType(order) for order in expected_orders
+        )
+        orders_to_cancel += list(
+            filter(
+                orderbook.orders,
+                lambda order: OrderType(order) in expected_order_types,
+            )
         )
 
         for order_type in expected_order_types:
@@ -133,85 +138,16 @@ class AMMStrategy(BaseStrategy):
 
             if open_size > expected_size:
                 orders_to_cancel += open_orders
+                new_size = expected_size
+            else:
+                new_size = round(expected_size - open_size, 2)
+
+            if new_size >= MIN_SIZE:
                 orders_to_place.append(
-                    self._order_from_order_type(order_type, expected_size)
+                    self._order_from_order_type(order_type, new_size)
                 )
 
-            else:
-                remaining_size = round(expected_size - open_size, 2)
-                if remaining_size >= MIN_SIZE:
-                    orders_to_place.append(
-                        self._order_from_order_type(order_type, remaining_size)
-                    )
-
         return (orders_to_cancel, orders_to_place)
-
-    def get_orders_to_cancel(
-        self,
-        orderbook: OrderBook,
-        expected_orders: list[Order],
-    ):
-        orders_to_cancel = []
-        expected_order_types = set(
-            OrderType(order) for order in expected_orders
-        )
-        # check if too much size per type
-        for order_type in expected_order_types:
-            open_orders = [
-                order
-                for order in orderbook.orders
-                if OrderType(order) == order_type
-            ]
-            open_size = sum(order.size for order in open_orders)
-            expected_size = sum(
-                order.size
-                for order in expected_orders
-                if OrderType(order) == order_type
-            )
-            for order in sorted(
-                open_orders, key=lambda o: o.size, reverse=True
-            ):
-                if open_size <= expected_size:
-                    break
-                orders_to_cancel += [order]
-                open_size -= order.size
-
-        # cancel all orders without an expected type
-        orders_to_cancel += [
-            order
-            for order in orderbook.orders
-            if OrderType(order) not in expected_order_types
-        ]
-
-        return orders_to_cancel
-
-    def get_orders_to_place(
-        self, orderbook: OrderBook, expected_orders: list[Order]
-    ):
-        orders_to_place = []
-        expected_order_types = set(
-            OrderType(order) for order in expected_orders
-        )
-        for order_type in expected_order_types:
-            open_orders = [
-                order
-                for order in orderbook.orders
-                if OrderType(order) == order_type
-            ]
-            open_size = sum(order.size for order in open_orders)
-            expected_size = sum(
-                order.size
-                for order in expected_orders
-                if OrderType(order) == order_type
-            )
-
-            remaining_size = expected_size - open_size
-            if remaining_size >= MIN_SIZE:
-                orders_to_place += [
-                    self._order_from_order_type(order_type, remaining_size)
-                ]
-
-        return orders_to_place
 
     @staticmethod
     def _order_from_order_type(order_type: OrderType, size: float) -> Order:

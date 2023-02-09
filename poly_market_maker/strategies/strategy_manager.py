@@ -27,7 +27,7 @@ class StrategyManager:
                 return AMMStrategy(
                     price_feed, market, order_book_manager, config
                 )
-            case Strategy.Bands:
+            case Strategy.BANDS:
                 return BandsStrategy(
                     price_feed, market, order_book_manager, config
                 )
@@ -42,8 +42,7 @@ class Strategy(Enum):
     @classmethod
     def _missing_(cls, value):
         if isinstance(value, str):
-            if value.lower() == Strategy.AMM.value.lower():
-                return Strategy.AMM
-            if value.lower() == Strategy.BANDS.value.lower():
-                return Strategy.BANDS
+            for strategy in Strategy:
+                if value.lower() == strategy.value.lower():
+                    return strategy
         return super()._missing_(value)

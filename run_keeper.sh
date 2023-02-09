@@ -19,10 +19,11 @@ exec python3 -m poly_market_maker.market_maker \
     --clob-api-key "$CLOB_API_KEY" \
     --clob-api-secret "$CLOB_SECRET" \
     --clob-api-passphrase "$CLOB_PASS_PHRASE" \
-    --bands-config "$BANDS_CONFIG_FILE" \
     --condition-id "$CONDITION_ID" \
     --token-id-A "$TOKEN_ID_A" \
-    --token-id-B "$TOKEN_ID_B"
+    --token-id-B "$TOKEN_ID_B" \
+    --strategy "bands" \
+    --strategy-config "$BANDS_CONFIG_FILE"
 
 # --gas-strategy $GAS_STRATEGY \
 # --gas-station-url $GAS_STATION_URL \

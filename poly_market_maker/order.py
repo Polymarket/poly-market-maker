@@ -9,10 +9,9 @@ class Side(Enum):
     @classmethod
     def _missing_(cls, value):
         if isinstance(value, str):
-            if value.lower() == Side.BUY.value.lower():
-                return Side.BUY
-            if value.lower() == Side.SELL.value.lower():
-                return Side.SELL
+            for side in Side:
+                if value.lower() == side.value.lower():
+                    return side
         return super()._missing_(value)
 
 

@@ -16,6 +16,7 @@ class Band:
         max_amount: float,
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
+
         assert isinstance(min_margin, float)
         assert isinstance(avg_margin, float)
         assert isinstance(max_margin, float)
@@ -39,8 +40,6 @@ class Band:
         assert self.min_margin <= self.avg_margin
         assert self.avg_margin <= self.max_margin
         assert self.min_margin < self.max_margin
-
-        self.type = type
 
     def excessive_orders(
         self,
@@ -101,7 +100,7 @@ class Band:
             price = order.price
         else:
             # round to 6 decimals to avoid floating point issues
-            price = round(1 - order.price, 6)
+            price = round(1 - order.price, MAX_DECIMALS)
 
         return (price > self.min_price(target_price)) and (
             price <= self.max_price(target_price)
@@ -109,8 +108,6 @@ class Band:
 
     @staticmethod
     def _apply_margin(price: float, margin: float) -> float:
-        # absolute margins
-        # round to 6 decimals to avoid floating point issues
         return round(price - margin, MAX_DECIMALS)
 
     def min_price(self, target_price: float) -> float:
@@ -133,31 +130,25 @@ class Band:
 
 
 class Bands:
-    @staticmethod
-    def read(config: dict):
-        assert isinstance(config, dict)
+    def __init__(self, bands_from_config: list):
+        self.logger = logging.getLogger(self.__class__.__name__)
+        assert isinstance(bands_from_config, list)
 
         try:
-            bands = [Band(*list(band.values())) for band in config["bands"]]
+            self.bands = [
+                Band(*list(band.values())) for band in bands_from_config
+            ]
 
         except Exception as e:
             logging.getLogger().exception(
-                f"Config file is invalid ({e}). Treating the config file as if it has no bands."
+                f"Config is invalid ({e}). Treating the config as if it has no bands."
             )
 
-            bands = []
-
-        return Bands(bands=bands)
-
-    def __init__(self, bands: list):
-        self.logger = logging.getLogger(self.__class__.__name__)
-        assert isinstance(bands, list)
-
-        self.bands = bands
+            self.bands = []
 
         if self._bands_overlap(self.bands):
-            self.logger.error("Bands in the config file overlap!")
-            raise Exception("Bands in the config file overlap!")
+            self.logger.error("Bands in the config overlap!")
+            raise Exception("Bands in the config overlap!")
 
     def _calculate_virtual_bands(self, target_price: float) -> list:
         if target_price <= 0.0:
@@ -246,9 +237,6 @@ class Bands:
         assert isinstance(collateral_balance, float)
         assert isinstance(target_price, float)
 
-        if target_price is None:
-            return []
-
         new_orders = []
         for band in self._calculate_virtual_bands(target_price):
             band_amount = sum(
@@ -278,6 +266,7 @@ class Bands:
 
                 if band_amount < band.avg_amount:
                     # buy
+                    print(band_amount)
                     buy_price = band.buy_price(target_price)
                     buy_size = round(
                         min(
