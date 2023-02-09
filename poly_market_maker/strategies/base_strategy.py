@@ -1,22 +1,23 @@
 import logging
 
 from ..market import Market
-from ..orderbook import OrderBookManager
-from ..price_feed import PriceFeed
 
 
 class BaseStrategy:
     def __init__(
         self,
-        price_feed: PriceFeed,
         market: Market,
-        order_book_manager: OrderBookManager,
     ):
-        self.price_feed = price_feed
         self.market = market
-        self.order_book_manager = order_book_manager
-
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.place_orders = None
+        self.cancel_orders = None
 
-    def synchronize(self):
+    def synchronize(self, orderbook, token_prices):
         pass
+
+    def place_orders_with(self, place_orders_function):
+        self.place_orders = place_orders_function
+
+    def cancel_orders_with(self, cancel_orders_function):
+        self.cancel_orders = cancel_orders_function

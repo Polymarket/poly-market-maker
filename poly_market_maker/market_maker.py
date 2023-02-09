@@ -15,7 +15,7 @@ from poly_market_maker.price_feed import (
 )
 
 from .gas import GasStation, GasStrategy
-from .utils import math_round_down, setup_logging, setup_web3
+from .utils import setup_logging, setup_web3
 
 from .order import Order
 from .market import Market, Token, Collateral
@@ -214,6 +214,15 @@ class ClobMarketMakerKeeper:
                 match_id=args.odds_api_match_id,
                 team_name=args.odds_api_team_name,
             )
+        elif self.price_feed_source == PriceFeedSource.FPMM:
+            fpmm = FPMM(self.contracts)
+            self.price_feed = PriceFeedFPMM(
+                fpmm=fpmm,
+                conditional_token=self.clob_api.get_conditional_address(),
+                fpmm_address=self.args.fpmm_address,
+                token_id=self.token_id,
+                token_id_complement=self.args.complement_id,
+            )
 
         self.market = Market(
             args.condition_id,
@@ -237,12 +246,12 @@ class ClobMarketMakerKeeper:
         )
         self.order_book_manager.start()
 
-        self.strategy = StrategyManager.get_strategy(
+        self.strategy_manager = StrategyManager(
             args.strategy,
-            self.price_feed,
-            self.market,
-            self.order_book_manager,
             args.strategy_config,
+            self.price_feed,
+            self.order_book_manager,
+            self.market,
         )
 
     def get_balances(self):
@@ -289,8 +298,8 @@ class ClobMarketMakerKeeper:
 
         return {
             Collateral: collateral_balance,
-            Token.A.value: token_A_balance,
-            Token.B.value: token_B_balance,
+            Token.A: token_A_balance,
+            Token.B: token_B_balance,
         }
 
     def place_order(self, new_order: Order):
@@ -340,7 +349,7 @@ class ClobMarketMakerKeeper:
         Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
         """
         self.logger.debug("Synchronizing orderbook...")
-        self.strategy.synchronize()
+        self.strategy_manager.synchronize()
         self.logger.debug("Synchronized orderbook!")
 
     def shutdown(self):

@@ -1,12 +1,10 @@
 from ..market import Token, Market, Collateral
-from ..orderbook import OrderBookManager
-from ..price_feed import PriceFeed
-
-from .amm import AMMManager
-from .base_strategy import BaseStrategy
 from ..orderbook import OrderBook
 from ..constants import MIN_SIZE
 from ..order import Order
+
+from .amm import AMMManager
+from .base_strategy import BaseStrategy
 
 
 class OrderType:
@@ -34,18 +32,10 @@ class OrderType:
 class AMMStrategy(BaseStrategy):
     def __init__(
         self,
-        price_feed: PriceFeed,
         market: Market,
-        order_book_manager: OrderBookManager,
         config: dict,
     ):
         assert isinstance(config, dict)
-        BaseStrategy.__init__(
-            self,
-            price_feed=price_feed,
-            market=market,
-            order_book_manager=order_book_manager,
-        )
 
         self.amm_manager = AMMManager(
             token_id_a=self.market.token_id(Token.A),
@@ -57,69 +47,43 @@ class AMMStrategy(BaseStrategy):
             depth=config.get("depth"),
         )
 
-    def synchronize(
-        self,
-    ):
+        BaseStrategy.__init__(
+            self,
+            market=market,
+        )
+
+    def synchronize(self, orderbook, token_prices):
         """
         Synchronize the orderbook by cancelling all orders and placing new orders
         """
         self.logger.debug("Synchronizing AMM strategy...")
 
-        orderbook = self.order_book_manager.get_order_book()
-
-        collateral_balance = orderbook.balance(Collateral)
-        token_a_balance = orderbook.balance(Token.A)
-        token_b_balance = orderbook.balance(Token.B)
-        if (
-            collateral_balance is None
-            or token_a_balance is None
-            or token_b_balance is None
-        ):
-            self.logger.debug("Balances invalid/non-existent")
-            return
-
-        price_a = round(
-            self.price_feed.get_price(self.market.token_id(Token.A)), 2
-        )
-        price_b = round(1 - price_a, 2)
-
-        expected_orders = self.amm_manager.get_expected_orders(
-            price_a,
-            price_b,
-            token_a_balance,
-            token_b_balance,
-            collateral_balance,
-        )
-
         (orders_to_cancel, orders_to_place) = self.get_orders(
-            orderbook, expected_orders
+            orderbook, token_prices
         )
 
-        if len(orders_to_cancel) > 0:
-            self.logger.info(
-                f"About to cancel {len(orders_to_cancel)} existing orders!"
-            )
-            self.order_book_manager.cancel_orders(orders_to_cancel)
+        self.cancel_orders(orders_to_cancel)
+        self.place_orders(orders_to_place)
 
-        if len(orders_to_place) > 0:
-            self.logger.info(
-                f"About to place {len(orders_to_place)} new orders!"
-            )
-            self.order_book_manager.place_orders(orders_to_place)
-
-        self.logger.debug("Synchronized orderbook!")
-
-    def get_orders(self, orderbook: OrderBook, expected_orders: list[Order]):
+    def get_orders(self, orderbook: OrderBook, target_prices):
         orders_to_cancel = []
         orders_to_place = []
 
+        expected_orders = self.amm_manager.get_expected_orders(
+            orderbook.balances[Token.A],
+            orderbook.balances[Token.B],
+            orderbook.balances[Collateral],
+            target_prices[Token.A],
+            target_prices[Token.B],
+        )
         expected_order_types = set(
             OrderType(order) for order in expected_orders
         )
+
         orders_to_cancel += list(
             filter(
                 orderbook.orders,
-                lambda order: OrderType(order) in expected_order_types,
+                lambda order: OrderType(order) not in expected_order_types,
             )
         )
 
@@ -143,9 +107,9 @@ class AMMStrategy(BaseStrategy):
                 new_size = round(expected_size - open_size, 2)
 
             if new_size >= MIN_SIZE:
-                orders_to_place.append(
+                orders_to_place += [
                     self._order_from_order_type(order_type, new_size)
-                )
+                ]
 
         return (orders_to_cancel, orders_to_place)
 

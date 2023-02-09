@@ -149,7 +149,7 @@ class AMMManager:
         )
 
     def get_expected_orders(
-        self, p_a: float, p_b: float, x_a: float, x_b: float, y: float
+        self, x_a: float, x_b: float, y: float, p_a: float, p_b: float
     ):
         self.amm_a.set_price(p_a)
         self.amm_b.set_price(p_b)
