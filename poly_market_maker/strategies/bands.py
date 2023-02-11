@@ -135,9 +135,7 @@ class Bands:
         assert isinstance(bands_from_config, list)
 
         try:
-            self.bands = [
-                Band(*list(band.values())) for band in bands_from_config
-            ]
+            self.bands = [Band(*list(band.values())) for band in bands_from_config]
 
         except Exception as e:
             logging.getLogger().exception(
@@ -164,9 +162,7 @@ class Bands:
                 virtual_bands.append(band)
         return virtual_bands
 
-    def _excessive_orders(
-        self, orders: list, bands: list, target_price: float
-    ):
+    def _excessive_orders(self, orders: list, bands: list, target_price: float):
         """Return orders which need to be cancelled to bring total amounts within all bands below maximums."""
         assert isinstance(orders, list)
         assert isinstance(bands, list)
@@ -181,9 +177,7 @@ class Bands:
             ):
                 yield order
 
-    def _outside_any_band_orders(
-        self, orders: list, bands: list, target_price: float
-    ):
+    def _outside_any_band_orders(self, orders: list, bands: list, target_price: float):
         """Return buy or sell orders which need to be cancelled as they do not fall into any buy or sell band."""
         assert isinstance(orders, list)
         assert isinstance(bands, list)
@@ -201,9 +195,7 @@ class Bands:
         assert isinstance(target_price, float)
 
         if target_price is None:
-            self.logger.debug(
-                "Cancelling all orders as no price is available."
-            )
+            self.logger.debug("Cancelling all orders as no price is available.")
             orders_to_cancel = orders
 
         else:
@@ -240,9 +232,7 @@ class Bands:
         new_orders = []
         for band in self._calculate_virtual_bands(target_price):
             band_amount = sum(
-                order.size
-                for order in orders
-                if band.includes(order, target_price)
+                order.size for order in orders if band.includes(order, target_price)
             )
 
             self.logger.debug(f"{band} has existing amount {band_amount},")
@@ -302,9 +292,7 @@ class Bands:
 
     @staticmethod
     def _new_order_is_valid(price, size):
-        return (
-            (price > float(0)) and (price < float(1.0)) and (size >= MIN_SIZE)
-        )
+        return (price > float(0)) and (price < float(1.0)) and (size >= MIN_SIZE)
 
     @staticmethod
     def _bands_overlap(bands: list):

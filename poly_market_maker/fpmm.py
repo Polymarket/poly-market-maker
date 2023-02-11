@@ -12,12 +12,8 @@ class FPMM:
         self.logger = logging.getLogger(self.__class__.__name__)
 
         if not contracts:
-            self.logger.fatal(
-                "contracts parameter is mandatory and can not be empty"
-            )
-            raise Exception(
-                "contracts parameter is mandatory and can not be empty"
-            )
+            self.logger.fatal("contracts parameter is mandatory and can not be empty")
+            raise Exception("contracts parameter is mandatory and can not be empty")
 
         self.contracts = contracts
 

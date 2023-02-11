@@ -142,6 +142,4 @@ class TestAMM(TestCase):
             spread=spread,
         )
 
-        expected_orders = amm_manager.get_expected_orders(
-            p_a, p_b, x_a, x_b, y
-        )
+        expected_orders = amm_manager.get_expected_orders(p_a, p_b, x_a, x_b, y)

@@ -35,9 +35,7 @@ class GasStation:
         """
         Get gas price
         """
-        self.logger.info(
-            f"Using gas price strategy: {self.strat.value.upper()}..."
-        )
+        self.logger.info(f"Using gas price strategy: {self.strat.value.upper()}...")
         gas = None
         start_time = time.time()
 
@@ -53,9 +51,9 @@ class GasStation:
                 gas_station_gas_price = self._get_gas_station_gas()
                 gas = gas_station_gas_price
 
-            gas_station_latency.labels(
-                strategy=self.strat.value, status="ok"
-            ).observe((time.time() - start_time))
+            gas_station_latency.labels(strategy=self.strat.value, status="ok").observe(
+                (time.time() - start_time)
+            )
 
             self.logger.info(f"Gas: {gas}")
         except Exception as e:

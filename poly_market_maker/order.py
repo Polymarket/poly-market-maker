@@ -16,9 +16,7 @@ class Side(Enum):
 
 
 class Order:
-    def __init__(
-        self, size: float, price: float, side: Side, token_id: str, id=None
-    ):
+    def __init__(self, size: float, price: float, side: Side, token_id: str, id=None):
         assert isinstance(token_id, str)
 
         self.size = size

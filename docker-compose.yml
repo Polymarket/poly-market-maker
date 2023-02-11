@@ -1,0 +1,8 @@
+services:
+  keeper:
+    build: .
+    image: makerdao/market-maker-keeper
+    env_file:
+      - .env
+    command: >
+      ./run_keeper.sh

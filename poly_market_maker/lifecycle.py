@@ -47,9 +47,7 @@ class AsyncCallback:
             except Exception as e:
                 self.thread = None
 
-                logging.critical(
-                    f"Failed to start the async callback thread ({e})"
-                )
+                logging.critical(f"Failed to start the async callback thread ({e})")
             return True
         else:
             return False
@@ -97,9 +95,7 @@ class Lifecycle:
 
         # Initial delay
         if self.delay > 0:
-            self.logger.info(
-                f"Waiting for {self.delay} seconds of initial delay..."
-            )
+            self.logger.info(f"Waiting for {self.delay} seconds of initial delay...")
             time.sleep(self.delay)
 
         # Initial checks
@@ -219,9 +215,7 @@ class Lifecycle:
             frequency_in_seconds: Execution frequency (in seconds).
             callback: Function to be called by the timer.
         """
-        self.every_timers.append(
-            (frequency_in_seconds, AsyncCallback(callback))
-        )
+        self.every_timers.append((frequency_in_seconds, AsyncCallback(callback)))
 
     def _sigint_sigterm_handler(self, sig, frame):
         if self.terminated_externally:
@@ -254,9 +248,7 @@ class Lifecycle:
         if len(self.every_timers) > 0:
             self.logger.info(f"Started {len(self.every_timers)} timer(s)")
 
-    def _start_every_timer(
-        self, idx: int, frequency_in_seconds: int, callback
-    ):
+    def _start_every_timer(self, idx: int, frequency_in_seconds: int, callback):
         def setup_timer(delay):
             timer = threading.Timer(delay, func)
             timer.daemon = True
@@ -275,9 +267,7 @@ class Lifecycle:
                         self.logger.debug(f"Processing the timer #{idx}")
 
                     def on_finish():
-                        self.logger.debug(
-                            f"Finished processing the timer #{idx}"
-                        )
+                        self.logger.debug(f"Finished processing the timer #{idx}")
 
                     if not callback.trigger(on_start, on_finish):
                         self.logger.debug(

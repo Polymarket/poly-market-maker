@@ -85,9 +85,7 @@ class StrategyManager:
 
     def place_orders(self, orders_to_place):
         if len(orders_to_place) > 0:
-            self.logger.info(
-                f"About to place {len(orders_to_place)} new orders!"
-            )
+            self.logger.info(f"About to place {len(orders_to_place)} new orders!")
             self.order_book_manager.place_orders(orders_to_place)
 
         self.logger.debug("Synchronized orderbook!")

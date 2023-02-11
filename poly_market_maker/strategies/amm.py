@@ -51,9 +51,7 @@ class AMM:
         sizes = [
             # round down to avoid too large orders
             math_round_down(size, 2)
-            for size in self.diff(
-                [self.sell_size(x, p_t) for p_t in self.sell_prices]
-            )
+            for size in self.diff([self.sell_size(x, p_t) for p_t in self.sell_prices])
         ]
 
         orders = [
@@ -72,9 +70,7 @@ class AMM:
         sizes = [
             # round down to avoid too large orders
             math_round_down(size, 2)
-            for size in self.diff(
-                [self.buy_size(y, p_t) for p_t in self.buy_prices]
-            )
+            for size in self.diff([self.buy_size(y, p_t) for p_t in self.buy_prices])
         ]
 
         orders = [
@@ -114,9 +110,7 @@ class AMM:
 
     @staticmethod
     def diff(arr: list[float]) -> list[float]:
-        return [
-            arr[i] if i == 0 else arr[i] - arr[i - 1] for i in range(len(arr))
-        ]
+        return [arr[i] if i == 0 else arr[i] - arr[i - 1] for i in range(len(arr))]
 
 
 class AMMManager:
@@ -175,9 +169,7 @@ class AMMManager:
     ):
 
         y_a = (
-            first_sell_order_a.size
-            - first_sell_order_b.size
-            + y * self.amm_b.phi()
+            first_sell_order_a.size - first_sell_order_b.size + y * self.amm_b.phi()
         ) / (self.amm_a.phi() + self.amm_b.phi())
 
         if y_a < 0:
@@ -193,9 +185,7 @@ class AMMManager:
         return next(
             (
                 order.size
-                for order in sorted(
-                    orders, key=lambda o: o.price, reverse=False
-                )
+                for order in sorted(orders, key=lambda o: o.price, reverse=False)
             ),
             0,
         )

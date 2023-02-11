@@ -98,17 +98,13 @@ class TestBand(TestCase):
         ]
 
         # Expect none to be cancelled
-        self.assertEqual(
-            len(test_bands.cancellable_orders(orders, target_price)), 2
-        )
+        self.assertEqual(len(test_bands.cancellable_orders(orders, target_price)), 2)
 
         # Say price moves to 80c
         target_price = 0.80
 
         # All 4 orders are now cancellable
-        self.assertEqual(
-            len(test_bands.cancellable_orders(orders, target_price)), 4
-        )
+        self.assertEqual(len(test_bands.cancellable_orders(orders, target_price)), 4)
 
     def test_bands_new_orders_usdc_only(self):
         with open("./tests/bands.json") as fh:

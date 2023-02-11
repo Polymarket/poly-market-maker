@@ -26,7 +26,9 @@ class OrderType:
         return hash((self.price, self.side, self.token_id))
 
     def __repr__(self):
-        return f"OrderType[price={self.price}, side={self.side}, token_id={self.token_id}]"
+        return (
+            f"OrderType[price={self.price}, side={self.side}, token_id={self.token_id}]"
+        )
 
 
 class AMMStrategy(BaseStrategy):
@@ -55,9 +57,7 @@ class AMMStrategy(BaseStrategy):
         """
         self.logger.debug("Synchronizing AMM strategy...")
 
-        (orders_to_cancel, orders_to_place) = self.get_orders(
-            orderbook, token_prices
-        )
+        (orders_to_cancel, orders_to_place) = self.get_orders(orderbook, token_prices)
 
         self.cancel_orders(orders_to_cancel)
         self.place_orders(orders_to_place)
@@ -73,9 +73,7 @@ class AMMStrategy(BaseStrategy):
             target_prices[Token.A],
             target_prices[Token.B],
         )
-        expected_order_types = set(
-            OrderType(order) for order in expected_orders
-        )
+        expected_order_types = set(OrderType(order) for order in expected_orders)
 
         orders_to_cancel += list(
             filter(
@@ -86,9 +84,7 @@ class AMMStrategy(BaseStrategy):
 
         for order_type in expected_order_types:
             open_orders = [
-                order
-                for order in orderbook.orders
-                if OrderType(order) == order_type
+                order for order in orderbook.orders if OrderType(order) == order_type
             ]
             open_size = sum(order.size for order in open_orders)
             expected_size = sum(
@@ -113,9 +109,7 @@ class AMMStrategy(BaseStrategy):
         return (orders_to_cancel, orders_to_place)
 
     @staticmethod
-    def _new_order_from_order_type(
-        order_type: OrderType, size: float
-    ) -> Order:
+    def _new_order_from_order_type(order_type: OrderType, size: float) -> Order:
         return Order(
             price=order_type.price,
             size=size,

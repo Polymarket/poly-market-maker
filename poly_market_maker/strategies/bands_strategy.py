@@ -29,9 +29,7 @@ class BandsStrategy(BaseStrategy):
         """
         self.logger.debug("Synchronizing bands strategy...")
 
-        (orders_to_cancel, orders_to_place) = self.get_orders(
-            orderbook, token_prices
-        )
+        (orders_to_cancel, orders_to_place) = self.get_orders(orderbook, token_prices)
 
         self.cancel_orders(orders_to_cancel)
         self.place_orders(orders_to_place)
@@ -41,15 +39,11 @@ class BandsStrategy(BaseStrategy):
         orders_to_cancel = []
 
         for token in Token:
-            self.logger.debug(
-                f"{token.value} target price: {target_prices[token]}"
-            )
+            self.logger.debug(f"{token.value} target price: {target_prices[token]}")
 
         # cancel orders
         for token in Token:
-            orders = self._orders_by_corresponding_buy_token(
-                orderbook.orders, token
-            )
+            orders = self._orders_by_corresponding_buy_token(orderbook.orders, token)
             orders_to_cancel += self.bands.cancellable_orders(
                 orders, target_prices[token]
             )
@@ -57,26 +51,18 @@ class BandsStrategy(BaseStrategy):
         # remaining open orders
         open_orders = list(set(orders) - set(orders_to_cancel))
         balance_locked_by_open_buys = sum(
-            order.size * order.price
-            for order in open_orders
-            if order.side == Side.BUY
+            order.size * order.price for order in open_orders if order.side == Side.BUY
         )
-        self.logger.debug(
-            f"Collateral locked by buys: {balance_locked_by_open_buys}"
-        )
+        self.logger.debug(f"Collateral locked by buys: {balance_locked_by_open_buys}")
 
         free_collateral_balance = (
             orderbook.balances[Collateral] - balance_locked_by_open_buys
         )
-        self.logger.debug(
-            f"Free collateral balance: {free_collateral_balance}"
-        )
+        self.logger.debug(f"Free collateral balance: {free_collateral_balance}")
 
         # place orders
         for token in Token:
-            orders = self._orders_by_corresponding_buy_token(
-                orderbook.orders, token
-            )
+            orders = self._orders_by_corresponding_buy_token(orderbook.orders, token)
 
             balance_locked_by_open_sells = sum(
                 order.size for order in orders if order.side == Side.SELL
@@ -86,8 +72,7 @@ class BandsStrategy(BaseStrategy):
             )
 
             free_token_balance = (
-                orderbook.balances[token.complement()]
-                - balance_locked_by_open_sells
+                orderbook.balances[token.complement()] - balance_locked_by_open_sells
             )
             self.logger.debug(
                 f"Free {token.complement().value} balance: {free_token_balance}"
@@ -110,21 +95,15 @@ class BandsStrategy(BaseStrategy):
 
         return (orders_to_cancel, orders_to_place)
 
-    def _orders_by_corresponding_buy_token(
-        self, orders: list[Order], buy_token: Token
-    ):
+    def _orders_by_corresponding_buy_token(self, orders: list[Order], buy_token: Token):
         return list(
             filter(
-                lambda order: self._filter_by_corresponding_buy_token(
-                    order, buy_token
-                ),
+                lambda order: self._filter_by_corresponding_buy_token(order, buy_token),
                 orders,
             )
         )
 
-    def _filter_by_corresponding_buy_token(
-        self, order: Order, buy_token: Token
-    ):
+    def _filter_by_corresponding_buy_token(self, order: Order, buy_token: Token):
         order_token = self.market.token(order.token_id)
         return (order.side == Side.BUY and order_token == buy_token) or (
             order.side == Side.SELL and order_token != buy_token

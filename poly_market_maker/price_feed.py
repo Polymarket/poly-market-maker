@@ -35,9 +35,7 @@ class PriceFeedClob(PriceFeed):
         self.clob_api = clob_api
 
     def get_price(self, token_id) -> float:
-        self.logger.debug(
-            "Fetching target price using the clob midpoint price..."
-        )
+        self.logger.debug("Fetching target price using the clob midpoint price...")
         target_price = self.clob_api.get_price(token_id)
         self.logger.debug(f"target_price: {target_price}")
         return target_price
@@ -54,20 +52,12 @@ class PriceFeedOddsAPI(PriceFeed):
             raise Exception("odds_api parameter is mandatory")
 
         if not match_id or not len(match_id):
-            self.logger.fatal(
-                "match_id parameter is mandatory and can not be empty"
-            )
-            raise Exception(
-                "match_id parameter is mandatory and can not be empty"
-            )
+            self.logger.fatal("match_id parameter is mandatory and can not be empty")
+            raise Exception("match_id parameter is mandatory and can not be empty")
 
         if not team_name or not len(team_name):
-            self.logger.fatal(
-                "team_name parameter is mandatory and can not be empty"
-            )
-            raise Exception(
-                "team_name parameter is mandatory and can not be empty"
-            )
+            self.logger.fatal("team_name parameter is mandatory and can not be empty")
+            raise Exception("team_name parameter is mandatory and can not be empty")
 
         self.odds_api = odds_api
         self.match_id = match_id
@@ -106,18 +96,12 @@ class PriceFeedFPMM(PriceFeed):
             )
 
         if not fpmm_address or not len(fpmm_address):
-            self.logger.fatal(
-                "fpmm parameter is mandatory and can not be empty"
-            )
+            self.logger.fatal("fpmm parameter is mandatory and can not be empty")
             raise Exception("fpmm parameter is mandatory and can not be empty")
 
         if not token_id:
-            self.logger.fatal(
-                "token_id parameter is mandatory and can not be empty"
-            )
-            raise Exception(
-                "token_id parameter is mandatory and can not be empty"
-            )
+            self.logger.fatal("token_id parameter is mandatory and can not be empty")
+            raise Exception("token_id parameter is mandatory and can not be empty")
 
         if not token_id_complement:
             self.logger.fatal(

@@ -30,9 +30,7 @@ class Contracts:
 
         try:
             bal = erc20.functions.balanceOf(address).call()
-            chain_requests_counter.labels(
-                method="ERC20 balanceOf", status="ok"
-            ).inc()
+            chain_requests_counter.labels(method="ERC20 balanceOf", status="ok").inc()
         except Exception as e:
             self.logger.error(f"Error ERC20 balanceOf: {e}")
             chain_requests_counter.labels(
@@ -48,9 +46,7 @@ class Contracts:
 
         try:
             bal = erc1155.functions.balanceOf(address, int(token_id)).call()
-            chain_requests_counter.labels(
-                method="ERC1155 balanceOf", status="ok"
-            ).inc()
+            chain_requests_counter.labels(method="ERC1155 balanceOf", status="ok").inc()
         except Exception as e:
             self.logger.error(f"Error ERC1155 balanceOf: {e}")
             chain_requests_counter.labels(
@@ -65,14 +61,10 @@ class Contracts:
 
         try:
             allowance = erc20.functions.allowance(owner, spender).call()
-            chain_requests_counter.labels(
-                method="allowance", status="ok"
-            ).inc()
+            chain_requests_counter.labels(method="allowance", status="ok").inc()
         except Exception as e:
             self.logger.error(f"Error allowance: {e}")
-            chain_requests_counter.labels(
-                method="allowance", status="error"
-            ).inc()
+            chain_requests_counter.labels(method="allowance", status="error").inc()
             raise e
 
         return allowance > 0
@@ -81,12 +73,8 @@ class Contracts:
         erc1155 = self.w3.eth.contract(token, abi=erc1155_is_approved_for_all)
 
         try:
-            approved = erc1155.functions.isApprovedForAll(
-                owner, spender
-            ).call()
-            chain_requests_counter.labels(
-                method="isApprovedForAll", status="ok"
-            ).inc()
+            approved = erc1155.functions.isApprovedForAll(owner, spender).call()
+            chain_requests_counter.labels(method="isApprovedForAll", status="ok").inc()
         except Exception as e:
             self.logger.error(f"Error isApprovedForAll: {e}")
             chain_requests_counter.labels(
@@ -107,14 +95,10 @@ class Contracts:
                 txn_hash_bytes = erc20.functions.approve(
                     spender, int(web3.constants.MAX_INT, base=16)
                 ).transact({"gasPrice": self.gas_station.get_gas_price()})
-                chain_requests_counter.labels(
-                    method="approve", status="ok"
-                ).inc()
+                chain_requests_counter.labels(method="approve", status="ok").inc()
             except Exception as e:
                 self.logger.error(f"Error approve: {e}")
-                chain_requests_counter.labels(
-                    method="approve", status="error"
-                ).inc()
+                chain_requests_counter.labels(method="approve", status="error").inc()
                 raise e
 
             txn_hash_hex = self.w3.toHex(txn_hash_bytes)
@@ -143,9 +127,7 @@ class Contracts:
                 raise e
 
             txn_hash_hex = self.w3.toHex(txn_hash_bytes)
-            self.logger.info(
-                f"ERC1155 approve transaction hash: {txn_hash_hex}"
-            )
+            self.logger.info(f"ERC1155 approve transaction hash: {txn_hash_hex}")
             return txn_hash_hex
 
     def token_balance_of(self, token: str, address: str, token_id=None):
@@ -160,14 +142,10 @@ class Contracts:
 
         try:
             bal = self.w3.eth.get_balance(address)
-            chain_requests_counter.labels(
-                method="get_balance", status="ok"
-            ).inc()
+            chain_requests_counter.labels(method="get_balance", status="ok").inc()
         except Exception as e:
             self.logger.error(f"Error get_balance: {e}")
-            chain_requests_counter.labels(
-                method="get_balance", status="error"
-            ).inc()
+            chain_requests_counter.labels(method="get_balance", status="error").inc()
             raise e
 
         return self.w3.fromWei(bal, "ether")

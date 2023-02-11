@@ -92,9 +92,7 @@ class TestAMMStrategy(TestCase):
     def test_synchronize(self):
         price_feed = PriceFeed(0.6, 0.4, self.market)
         order_book_manager = OrderBookManager()
-        strategy = AMMStrategy(
-            price_feed, self.market, order_book_manager, self.config
-        )
+        strategy = AMMStrategy(price_feed, self.market, order_book_manager, self.config)
 
         strategy.synchronize()
         order_book = order_book_manager.get_order_book()
@@ -106,9 +104,7 @@ class TestAMMStrategy(TestCase):
     def test_get_orders_to_cancel(self):
         price_feed = PriceFeed(0.6, 0.4, self.market)
         order_book_manager = OrderBookManager()
-        strategy = AMMStrategy(
-            price_feed, self.market, order_book_manager, self.config
-        )
+        strategy = AMMStrategy(price_feed, self.market, order_book_manager, self.config)
 
         expected_orders = []
         orders_to_cancel = strategy.get_orders_to_cancel(
@@ -147,12 +143,7 @@ class TestAMMStrategy(TestCase):
         order_book_manager.update_orders()
 
         order_book_manager.place_orders(
-            10
-            * [
-                Order(
-                    token_id=self.token_id, price=0.1, size=15, side=Side.BUY
-                )
-            ]
+            10 * [Order(token_id=self.token_id, price=0.1, size=15, side=Side.BUY)]
         )
         order_book_manager.update_orders()
 

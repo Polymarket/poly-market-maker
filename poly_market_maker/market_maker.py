@@ -39,13 +39,9 @@ class ClobMarketMakerKeeper:
             "--private-key", type=str, required=True, help="Private key"
         )
 
-        parser.add_argument(
-            "--chain-id", type=int, required=True, help="Chain ID"
-        )
+        parser.add_argument("--chain-id", type=int, required=True, help="Chain ID")
 
-        parser.add_argument(
-            "--rpc-url", type=str, required=True, help="RPC URL"
-        )
+        parser.add_argument("--rpc-url", type=str, required=True, help="RPC URL")
 
         parser.add_argument(
             "--clob-api-url", type=str, required=True, help="CLOB API url"
@@ -127,9 +123,7 @@ class ClobMarketMakerKeeper:
             help="Gas strategy to be used['fixed', 'station', 'web3']",
         )
 
-        parser.add_argument(
-            "--gas-station-url", type=str, help="Gas station url"
-        )
+        parser.add_argument("--gas-station-url", type=str, help="Gas station url")
 
         parser.add_argument(
             "--fixed-gas-price",
@@ -334,9 +328,7 @@ class ClobMarketMakerKeeper:
                 5
             )  # 5 second initial delay so that bg threads fetch the orderbook
             lifecycle.on_startup(self.startup)
-            lifecycle.every(
-                self.sync_interval, self.synchronize
-            )  # Sync every 5s
+            lifecycle.every(self.sync_interval, self.synchronize)  # Sync every 5s
             lifecycle.on_shutdown(self.shutdown)
 
     def startup(self):

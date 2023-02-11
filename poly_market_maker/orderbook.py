@@ -122,18 +122,14 @@ class OrderBookManager:
 
     def start(self):
         """Start the background refresh of active keeper orders."""
-        threading.Thread(
-            target=self._thread_refresh_order_book, daemon=True
-        ).start()
+        threading.Thread(target=self._thread_refresh_order_book, daemon=True).start()
 
     def get_order_book(self) -> OrderBook:
         """
         Returns the current snapshot of the active keeper orders and balances.
         """
         while self._state is None:
-            self.logger.info(
-                "Waiting for the order book to become available..."
-            )
+            self.logger.info("Waiting for the order book to become available...")
             time.sleep(0.5)
 
         with self._lock:
@@ -161,16 +157,13 @@ class OrderBookManager:
             if self._state.get("orders") is not None:
                 orders = list(self._state["orders"])
                 for order in self._orders_placed:
-                    if order.id not in list(
-                        map(lambda order: order.id, orders)
-                    ):
+                    if order.id not in list(map(lambda order: order.id, orders)):
                         orders.append(order)
 
                 # Remove orders being cancelled and already cancelled.
                 orders = list(
                     filter(
-                        lambda order: order.id
-                        not in self._order_ids_cancelling
+                        lambda order: order.id not in self._order_ids_cancelling
                         and order.id not in self._order_ids_cancelled,
                         orders,
                     )
@@ -270,9 +263,7 @@ class OrderBookManager:
 
             # Cancel all orders
             result = self._executor.submit(
-                self._thread_cancel_all_orders(
-                    self.cancel_all_orders_function, orders
-                )
+                self._thread_cancel_all_orders(self.cancel_all_orders_function, orders)
             )
             wait([result])
             self.wait_for_stable_order_book()
@@ -295,9 +286,7 @@ class OrderBookManager:
             # TODO: not repeating the cancel_all since it could lead to an infinite recursion
             # self.logger.info(f"There are still {len(orders)} open orders! Repeating the cancel_all_orders function!")
             # return self.cancel_all_orders()
-            self.logger.info(
-                f"There are still {len(orders)} open keeper orders!"
-            )
+            self.logger.info(f"There are still {len(orders)} open keeper orders!")
             return
 
         self.logger.info("All orders successfully cancelled!")
@@ -353,18 +342,14 @@ class OrderBookManager:
             )
             return balances
         except Exception as e:
-            self.logger.error(
-                f"Exception fetching onchain balances! Error: {e}"
-            )
+            self.logger.error(f"Exception fetching onchain balances! Error: {e}")
             return None
 
     def _thread_refresh_order_book(self):
         while True:
             try:
                 with self._lock:
-                    orders_already_cancelled_before = set(
-                        self._order_ids_cancelled
-                    )
+                    orders_already_cancelled_before = set(self._order_ids_cancelled)
                     orders_already_placed_before = set(self._orders_placed)
 
                 # get orders
@@ -374,8 +359,7 @@ class OrderBookManager:
 
                 with self._lock:
                     self._order_ids_cancelled = (
-                        self._order_ids_cancelled
-                        - orders_already_cancelled_before
+                        self._order_ids_cancelled - orders_already_cancelled_before
                     )
                     for order in orders_already_placed_before:
                         self._orders_placed.remove(order)
@@ -406,9 +390,7 @@ class OrderBookManager:
                     f" sells: {len([order for order in orders if order.side == Side.SELL])})"
                 )
             except Exception as e:
-                self.logger.error(
-                    f"Failed to fetch the order book or balances ({e})!"
-                )
+                self.logger.error(f"Failed to fetch the order book or balances ({e})!")
 
             time.sleep(self.refresh_frequency)
 

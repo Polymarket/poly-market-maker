@@ -50,18 +50,16 @@ class ClobApi:
         start_time = time.time()
         try:
             resp = self.client.get_midpoint(token_id)
-            clob_requests_latency.labels(
-                method="get_midpoint", status="ok"
-            ).observe((time.time() - start_time))
+            clob_requests_latency.labels(method="get_midpoint", status="ok").observe(
+                (time.time() - start_time)
+            )
             if resp.get("mid") is not None:
                 return float(resp.get("mid"))
         except Exception as e:
-            self.logger.error(
-                f"Error fetching current price from the CLOB API: {e}"
+            self.logger.error(f"Error fetching current price from the CLOB API: {e}")
+            clob_requests_latency.labels(method="get_midpoint", status="error").observe(
+                (time.time() - start_time)
             )
-            clob_requests_latency.labels(
-                method="get_midpoint", status="error"
-            ).observe((time.time() - start_time))
 
         return self._rand_price()
 
@@ -80,23 +78,21 @@ class ClobApi:
         start_time = time.time()
         try:
             resp = self.client.get_orders(FilterParams(market=condition_id))
-            clob_requests_latency.labels(
-                method="get_orders", status="ok"
-            ).observe((time.time() - start_time))
+            clob_requests_latency.labels(method="get_orders", status="ok").observe(
+                (time.time() - start_time)
+            )
 
             return [self._get_order(order) for order in resp]
         except Exception as e:
             self.logger.error(
                 f"Error fetching keeper open orders from the CLOB API: {e}"
             )
-            clob_requests_latency.labels(
-                method="get_orders", status="error"
-            ).observe((time.time() - start_time))
+            clob_requests_latency.labels(method="get_orders", status="error").observe(
+                (time.time() - start_time)
+            )
         return []
 
-    def place_order(
-        self, price: float, size: float, side: Side, token_id: int
-    ):
+    def place_order(self, price: float, size: float, side: Side, token_id: int):
         """
         Places a new order
         """
@@ -106,9 +102,7 @@ class ClobApi:
         start_time = time.time()
         try:
             resp = self.client.create_and_post_order(
-                OrderArgs(
-                    price=price, size=size, side=side.value, token_id=token_id
-                )
+                OrderArgs(price=price, size=size, side=side.value, token_id=token_id)
             )
             clob_requests_latency.labels(
                 method="create_and_post_order", status="ok"
@@ -126,9 +120,7 @@ class ClobApi:
                 f"Could not place new order! CLOB returned error: {err_msg}"
             )
         except Exception as e:
-            self.logger.error(
-                f"Request exception: failed placing new order: {e}"
-            )
+            self.logger.error(f"Request exception: failed placing new order: {e}")
             clob_requests_latency.labels(
                 method="create_and_post_order", status="error"
             ).observe((time.time() - start_time))
@@ -149,9 +141,9 @@ class ClobApi:
             return resp == OK
         except Exception as e:
             self.logger.error(f"Error cancelling order: {order_id}: {e}")
-            clob_requests_latency.labels(
-                method="cancel", status="error"
-            ).observe((time.time() - start_time))
+            clob_requests_latency.labels(method="cancel", status="error").observe(
+                (time.time() - start_time)
+            )
         return False
 
     def cancel_all_orders(self):
@@ -159,15 +151,15 @@ class ClobApi:
         start_time = time.time()
         try:
             resp = self.client.cancel_all()
-            clob_requests_latency.labels(
-                method="cancel_all", status="ok"
-            ).observe((time.time() - start_time))
+            clob_requests_latency.labels(method="cancel_all", status="ok").observe(
+                (time.time() - start_time)
+            )
             return resp == OK
         except Exception as e:
             self.logger.error(f"Error cancelling all orders: {e}")
-            clob_requests_latency.labels(
-                method="cancel_all", status="error"
-            ).observe((time.time() - start_time))
+            clob_requests_latency.labels(method="cancel_all", status="error").observe(
+                (time.time() - start_time)
+            )
         return False
 
     def _init_client(
