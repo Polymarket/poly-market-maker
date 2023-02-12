@@ -1,5 +1,5 @@
 init:
-	pip install -r requirements.txt
+	./install-dev.sh
 
 test:
 	pytest -s

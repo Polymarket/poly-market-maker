@@ -1,10 +1,9 @@
 FROM python:3.10.10-slim-buster
 
-WORKDIR /opt/keeper
+WORKDIR /app
 
 RUN apt update -y && apt-get install -y python3-dev build-essential
 RUN groupadd -r keeper && useradd -r -g keeper keeper
-RUN chown -R keeper:keeper /opt/keeper
 
 COPY poly_market_maker poly_market_maker
 COPY requirements.txt .
