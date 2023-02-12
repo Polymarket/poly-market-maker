@@ -78,8 +78,8 @@ class PriceFeedFPMM(PriceFeed):
         fpmm: FPMM,
         conditional_token: str,
         fpmm_address: str,
-        token_id: str,
-        token_id_complement: int,
+        token_id_a: str,
+        token_id_b: int,
     ):
         super().__init__()
 
@@ -99,31 +99,31 @@ class PriceFeedFPMM(PriceFeed):
             self.logger.fatal("fpmm parameter is mandatory and can not be empty")
             raise Exception("fpmm parameter is mandatory and can not be empty")
 
-        if not token_id:
-            self.logger.fatal("token_id parameter is mandatory and can not be empty")
-            raise Exception("token_id parameter is mandatory and can not be empty")
+        if not token_id_a:
+            self.logger.fatal("token_id_a parameter is mandatory and can not be empty")
+            raise Exception("token_id_a parameter is mandatory and can not be empty")
 
-        if not token_id_complement:
+        if not token_id_b:
             self.logger.fatal(
-                "token_id_complement parameter is mandatory and can not be empty"
+                "token_id_b parameter is mandatory and can not be empty"
             )
             raise Exception(
-                "token_id_complement parameter is mandatory and can not be empty"
+                "token_id_b parameter is mandatory and can not be empty"
             )
 
         self.fpmm = fpmm
         self.conditional_token = conditional_token
         self.fpmm_address = fpmm_address
-        self.token_id = token_id
-        self.token_id_complement = token_id_complement
+        self.token_id_a = token_id_a
+        self.token_id_b = token_id_b
 
     def get_price(self) -> float:
         self.logger.debug("Fetching target price from the fpmm...")
         target_price = self.fpmm.get_price(
             self.conditional_token,
             self.fpmm_address,
-            self.token_id,
-            self.token_id_complement,
+            self.token_id_a,
+            self.token_id_b,
         )
         self.logger.debug(f"target_price: {target_price}")
         return target_price

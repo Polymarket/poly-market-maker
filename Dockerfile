@@ -1,8 +1,10 @@
 FROM python:3.10.10-slim-buster
 
-# RUN apt update -y && apt-get install -y python3-dev build-essential
+WORKDIR /opt/keeper
 
-WORKDIR /opt/polymarket
+RUN apt update -y && apt-get install -y python3-dev build-essential
+RUN groupadd -r keeper && useradd -r -g keeper keeper
+RUN chown -R keeper:keeper /opt/keeper
 
 COPY poly_market_maker poly_market_maker
 COPY requirements.txt .
@@ -14,7 +16,7 @@ COPY loose_large.json .
 COPY tight_small.json .
 COPY tight_large.json .
 COPY install.sh .
+COPY run_keeper.sh .
 
 RUN ./install.sh
-
-# CMD ["./run_keeper.sh"]
+USER keeper

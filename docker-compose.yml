@@ -1,7 +1,7 @@
 services:
   keeper:
     build: .
-    image: makerdao/market-maker-keeper
+    image: polymarket/poly-market-maker
     env_file:
       - .env
     command: >

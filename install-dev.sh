@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
-
-cd "$(dirname "$0")"
+echo "Installing dev dependencies and activating virtualenv..."
 
 set -e
 
 rm -rf .venv
-virtualenv .venv
+
+python3.10 -m venv .venv
+
 source .venv/bin/activate
 
-# The advantage of using this method, in contrary to just calling `pip install -r requirements.txt` several times,
-# is that it can detect different versions of the same dependency and fail with a "Double requirement given"
-# error message.
 pip install requirements.text
 
-# install development requirements
 pip install -r requirements-dev.txt
