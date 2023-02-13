@@ -8,4 +8,4 @@ services:
     volumes:
       - ./logs:/app/logs
     command: >
-      ./run_keeper.sh
+      ./run_bands_strategy

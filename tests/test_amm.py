@@ -1,17 +1,15 @@
-import json
-from re import M
-from unittest import TestCase, mock
-from web3 import Web3
-from poly_market_maker.market import Market, Token, Collateral
+from unittest import TestCase
+
+from poly_market_maker.token import Token
 from poly_market_maker.strategies.amm import AMM
 
 
 class TestAMM(TestCase):
-    token_id = "123"
+    token=Token.A
 
     def test_get_buy_orders(self):
         amm = AMM(
-            token_id=self.token_id,
+            token=self.token,
             p_min=0.05,
             p_max=0.95,
             delta=0.01,
@@ -34,7 +32,7 @@ class TestAMM(TestCase):
         spread = 0.02
 
         amm = AMM(
-            token_id=self.token_id,
+            token=self.token,
             p_min=0.05,
             p_max=p_max,
             delta=delta,
@@ -55,7 +53,7 @@ class TestAMM(TestCase):
         spread = 0.02
 
         amm = AMM(
-            token_id=self.token_id,
+            token=self.token,
             p_min=p_min,
             p_max=p_max,
             delta=delta,
@@ -76,7 +74,7 @@ class TestAMM(TestCase):
         spread = 0.02
 
         amm = AMM(
-            token_id=self.token_id,
+            token=self.token,
             p_min=p_min,
             p_max=p_max,
             delta=delta,

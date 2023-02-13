@@ -1,30 +1,27 @@
 import argparse
-
 import logging
 import sys
-
 from prometheus_client import start_http_server
+
 from poly_market_maker.odds_api import OddsAPI
 from poly_market_maker.fpmm import FPMM
-
 from poly_market_maker.price_feed import (
     PriceFeedClob,
     PriceFeedOddsAPI,
     PriceFeedSource,
     PriceFeedFPMM,
 )
-
-from .gas import GasStation, GasStrategy
-from .utils import setup_logging, setup_web3
-
-from .order import Order
-from .market import Market, Token, Collateral
-from .clob_api import ClobApi
-from .lifecycle import Lifecycle
-from .orderbook import OrderBookManager
-from .contracts import Contracts
-from .metrics import keeper_balance_amount
-from .strategies.strategy_manager import StrategyManager
+from poly_market_maker.gas import GasStation, GasStrategy
+from poly_market_maker.utils import setup_logging, setup_web3
+from poly_market_maker.order import Order, Side
+from poly_market_maker.market import Market
+from poly_market_maker.token import Token, Collateral
+from poly_market_maker.clob_api import ClobApi
+from poly_market_maker.lifecycle import Lifecycle
+from poly_market_maker.orderbook import OrderBookManager
+from poly_market_maker.contracts import Contracts
+from poly_market_maker.metrics import keeper_balance_amount
+from poly_market_maker.strategies.strategy_manager import StrategyManager
 
 
 class ClobMarketMakerKeeper:
@@ -97,13 +94,13 @@ class ClobMarketMakerKeeper:
         )
 
         parser.add_argument(
-            "--token-id-A",
+            "--token-id-a",
             type=str,
             required=True,
             help="Either of the two token ids of the market being made",
         )
         parser.add_argument(
-            "--token-id-B",
+            "--token-id-a",
             type=str,
             required=True,
             help="The other token id of the market being made",
@@ -220,21 +217,24 @@ class ClobMarketMakerKeeper:
 
         self.market = Market(
             args.condition_id,
-            args.token_id_A,
-            args.token_id_B,
+            self.clob_api.get_collateral_address(),
         )
 
         self.order_book_manager = OrderBookManager(
             args.refresh_frequency, max_workers=1
         )
         self.order_book_manager.get_orders_with(
-            lambda: self.clob_api.get_orders(self.market.condition_id)
+            self.get_orders
         )
-        self.order_book_manager.get_balances_with(self.get_balances)
+        self.order_book_manager.get_balances_with(
+            self.get_balances
+        )
         self.order_book_manager.cancel_orders_with(
             lambda order: self.clob_api.cancel_order(order.id)
         )
-        self.order_book_manager.place_orders_with(self.place_order)
+        self.order_book_manager.place_orders_with(
+            self.place_order
+        )
         self.order_book_manager.cancel_all_orders_with(
             lambda _: self.clob_api.cancel_all_orders()
         )
@@ -295,20 +295,30 @@ class ClobMarketMakerKeeper:
             Token.A: token_A_balance,
             Token.B: token_B_balance,
         }
+    
+    def get_orders(self, orders: dict):
+        orders = self.clob_api.get_orders(self.market.condition_id)
+        return [Order(
+            size=order_dict['size'],
+            price=order_dict['price'],
+            side=Side(order_dict['side']),
+            token_id=self.market.token(order_dict['token_id']),
+            id=order_dict['id']
+        ) for order_dict in orders]
 
     def place_order(self, new_order: Order):
         order_id = self.clob_api.place_order(
             price=new_order.price,
             size=new_order.size,
-            side=new_order.side,
-            token_id=new_order.token_id,
+            side=new_order.side.value,
+            token_id=self.market.token_id(new_order.token),
         )
         return Order(
             price=new_order.price,
             size=new_order.size,
             side=new_order.side,
             id=order_id,
-            token_id=new_order.token_id,
+            token=new_order.token,
         )
 
     def approve(self):

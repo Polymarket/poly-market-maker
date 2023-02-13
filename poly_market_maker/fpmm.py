@@ -1,8 +1,8 @@
 import logging
 from web3 import Web3
 
-from .contracts import Contracts
-from .gas import GasStation, GasStrategy
+from poly_market_maker.contracts import Contracts
+from poly_market_maker.gas import GasStation, GasStrategy
 
 
 class FPMM:

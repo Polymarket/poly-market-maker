@@ -1,16 +1,15 @@
 import json
 from unittest import TestCase
-import unittest
 
-from poly_market_maker.strategies.bands import Band, Bands
+from poly_market_maker.token import Token
 from poly_market_maker.order import Order, Side
 
+from poly_market_maker.strategies.bands import Band, Bands
 
 class TestBand(TestCase):
-    token_id = "123"
+    token = Token.A
 
     def test_create_band(self):
-
         test_band = Band(
             *list(
                 {
@@ -49,9 +48,9 @@ class TestBand(TestCase):
             )
         )
         orders = [
-            Order(size=10, price=0.48, side=Side.BUY, token_id=self.token_id),
-            Order(size=20, price=0.45, side=Side.BUY, token_id=self.token_id),
-            Order(size=30, price=0.42, side=Side.BUY, token_id=self.token_id),
+            Order(size=10, price=0.48, side=Side.BUY, token=self.token),
+            Order(size=20, price=0.45, side=Side.BUY, token=self.token),
+            Order(size=30, price=0.42, side=Side.BUY, token=self.token),
         ]
 
         # with a target_price of fifty cents
@@ -79,22 +78,26 @@ class TestBand(TestCase):
 
     def test_create_bands(self):
         with open("./tests/bands.json") as fh:
-            test_bands = Bands.read(json.load(fh))
+            config = json.load(fh)
+
+        test_bands = Bands(config.get('bands'))
 
         self.assertIsNotNone(test_bands)
         self.assertEqual(len(test_bands.bands), 2)
 
     def test_bands_cancellable_orders(self):
         with open("./tests/bands.json") as fh:
-            test_bands = Bands.read(json.load(fh))
+            config = json.load(fh)
+
+        test_bands = Bands(config.get('bands'))
 
         # Initialize buys and sells that fit in both bands
         target_price = 0.50
         orders = [
-            Order(size=20, price=0.47, side=Side.BUY, token_id=self.token_id),
-            Order(size=30, price=0.44, side=Side.BUY, token_id=self.token_id),
-            Order(size=20, price=0.53, side=Side.SELL, token_id=self.token_id),
-            Order(size=30, price=0.56, side=Side.SELL, token_id=self.token_id),
+            Order(size=20, price=0.47, side=Side.BUY, token=self.token),
+            Order(size=30, price=0.44, side=Side.BUY, token=self.token),
+            Order(size=20, price=0.53, side=Side.SELL, token=self.token),
+            Order(size=30, price=0.56, side=Side.SELL, token=self.token),
         ]
 
         # Expect none to be cancelled
@@ -108,7 +111,9 @@ class TestBand(TestCase):
 
     def test_bands_new_orders_usdc_only(self):
         with open("./tests/bands.json") as fh:
-            test_bands = Bands.read(json.load(fh))
+            config = json.load(fh)
+
+        test_bands = Bands(config.get('bands'))
 
         # Given the following balances:
         target_price = 0.5
@@ -117,7 +122,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
+            Order(size=5, price=0.48, side=Side.BUY, token=self.token),
         ]
 
         # place new orders
@@ -126,8 +131,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token_id,
-            "456",
+            self.token
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -146,7 +150,9 @@ class TestBand(TestCase):
 
     def test_bands_new_orders_token_only(self):
         with open("./tests/bands.json") as fh:
-            test_bands = Bands.read(json.load(fh))
+            config = json.load(fh)
+
+        test_bands = Bands(config.get('bands'))
 
         # Given the following balances:
         target_price = 0.5
@@ -155,7 +161,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
+            Order(size=5, price=0.48, side=Side.BUY, token=self.token),
         ]
 
         # place new orders
@@ -164,8 +170,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token_id,
-            "456",
+            self.token
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -184,7 +189,9 @@ class TestBand(TestCase):
 
     def test_bands_new_orders_mixed(self):
         with open("./tests/bands.json") as fh:
-            test_bands = Bands.read(json.load(fh))
+            config = json.load(fh)
+
+        test_bands = Bands(config.get('bands'))
 
         # Given the following balances:
         target_price = 0.5
@@ -193,7 +200,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
+            Order(size=5, price=0.48, side=Side.BUY, token=self.token),
         ]
 
         # place new orders
@@ -202,8 +209,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token_id,
-            "456",
+            self.token
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -222,7 +228,9 @@ class TestBand(TestCase):
 
     def test_bands_new_orders_mixed_and_limited(self):
         with open("./tests/bands.json") as fh:
-            test_bands = Bands.read(json.load(fh))
+            config = json.load(fh)
+
+        test_bands = Bands(config.get('bands'))
 
         # Given the following balances:
         target_price = 0.5
@@ -231,7 +239,7 @@ class TestBand(TestCase):
 
         # and the following existing orders:
         existing_orders = [
-            Order(size=5, price=0.48, side=Side.BUY, token_id=self.token_id),
+            Order(size=5, price=0.48, side=Side.BUY, token=self.token),
         ]
 
         # place new orders
@@ -240,8 +248,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token_id,
-            "456",
+            self.token
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -264,7 +271,9 @@ class TestBand(TestCase):
         # load bands with margins that are very close together
         # without adjustment all orders would be at same price
         with open("./tests/tight_bands.json") as fh:
-            test_bands = Bands.read(json.load(fh))
+            config = json.load(fh)
+
+        test_bands = Bands(config.get('bands'))
 
         target_price = 0.04
 

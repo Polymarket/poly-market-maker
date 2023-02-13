@@ -2,17 +2,15 @@ from enum import Enum
 import json
 import logging
 
-from ..market import Market
-from ..orderbook import OrderBookManager
-from ..price_feed import PriceFeed
+from poly_market_maker.orderbook import OrderBookManager
+from poly_market_maker.price_feed import PriceFeed
+from poly_market_maker.market import Market
+from poly_market_maker.token import Token, Collateral
+from poly_market_maker.constants import MAX_DECIMALS
 
-from .base_strategy import BaseStrategy
-from .amm_strategy import AMMStrategy
-from .bands_strategy import BandsStrategy
-
-from ..market import Token, Collateral
-from ..constants import MAX_DECIMALS
-
+from poly_market_maker.strategies.base_strategy import BaseStrategy
+from poly_market_maker.strategies.amm_strategy import AMMStrategy
+from poly_market_maker.strategies.bands_strategy import BandsStrategy
 
 class StrategyManager:
     def __init__(

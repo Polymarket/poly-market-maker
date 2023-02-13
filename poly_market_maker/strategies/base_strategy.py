@@ -1,7 +1,6 @@
 import logging
 
-from ..market import Market
-
+from poly_market_maker.market import Market
 
 class BaseStrategy:
     def __init__(

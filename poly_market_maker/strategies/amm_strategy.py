@@ -1,33 +1,34 @@
-from ..market import Token, Market, Collateral
-from ..orderbook import OrderBook
-from ..constants import MIN_SIZE
-from ..order import Order
+from poly_market_maker.market import Market
+from poly_market_maker.token import Token, Collateral
+from poly_market_maker.orderbook import OrderBook
+from poly_market_maker.constants import MIN_SIZE
+from poly_market_maker.order import Order
 
-from .amm import AMMManager
-from .base_strategy import BaseStrategy
+from poly_market_maker.strategies.amm import AMMManager
+from poly_market_maker.strategies.base_strategy import BaseStrategy
 
 
 class OrderType:
     def __init__(self, order: Order):
         self.price = order.price
         self.side = order.side
-        self.token_id = order.token_id
+        self.token = order.token
 
     def __eq__(self, other):
         if isinstance(other, OrderType):
             return (
                 self.price == other.price
                 and self.side == other.side
-                and int(self.token_id) == int(other.token_id)
+                and self.token == other.token
             )
         return False
 
     def __hash__(self):
-        return hash((self.price, self.side, self.token_id))
+        return hash((self.price, self.side, self.token))
 
     def __repr__(self):
         return (
-            f"OrderType[price={self.price}, side={self.side}, token_id={self.token_id}]"
+            f"OrderType[price={self.price}, side={self.side}, token={self.token}]"
         )
 
 
@@ -40,8 +41,6 @@ class AMMStrategy(BaseStrategy):
         assert isinstance(config, dict)
 
         self.amm_manager = AMMManager(
-            token_id_a=market.token_id(Token.A),
-            token_id_b=market.token_id(Token.B),
             p_min=config.get("p_min"),
             p_max=config.get("p_max"),
             delta=config.get("delta"),
@@ -114,5 +113,5 @@ class AMMStrategy(BaseStrategy):
             price=order_type.price,
             size=size,
             side=order_type.side,
-            token_id=order_type.token_id,
+            token=order_type.token,
         )

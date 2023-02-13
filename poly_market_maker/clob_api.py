@@ -1,18 +1,16 @@
 import logging
 import sys
 import time
-
-from .utils import randomize_default_price
-from .order import Order, Side
-from .constants import OK
-from .metrics import clob_requests_latency
-
 from py_clob_client.client import (
     ClobClient,
     ApiCreds,
     OrderArgs,
     FilterParams,
 )
+
+from poly_market_maker.utils import randomize_default_price
+from poly_market_maker.constants import OK
+from poly_market_maker.metrics import clob_requests_latency
 
 DEFAULT_PRICE = 0.5
 
@@ -92,7 +90,7 @@ class ClobApi:
             )
         return []
 
-    def place_order(self, price: float, size: float, side: Side, token_id: int):
+    def place_order(self, price: float, size: float, side: str, token_id: int):
         """
         Places a new order
         """
@@ -102,7 +100,7 @@ class ClobApi:
         start_time = time.time()
         try:
             resp = self.client.create_and_post_order(
-                OrderArgs(price=price, size=size, side=side.value, token_id=token_id)
+                OrderArgs(price=price, size=size, side=side, token_id=token_id)
             )
             clob_requests_latency.labels(
                 method="create_and_post_order", status="ok"
@@ -189,14 +187,14 @@ class ClobApi:
             order_dict.get("size_matched")
         )
         price = float(order_dict.get("price"))
-        side = Side(order_dict.get("side"))
+        side = order_dict.get("side")
         order_id = order_dict.get("id")
-        token_id = order_dict.get("asset_id")
+        token_id = int(order_dict.get("asset_id"))
 
-        return Order(
-            size=size,
-            price=price,
-            side=side,
-            token_id=token_id,
-            id=order_id,
-        )
+        return {
+            size: size,
+            price: price,
+            side: side,
+            token_id: token_id,
+            id: order_id,
+        }

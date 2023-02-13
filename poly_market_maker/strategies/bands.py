@@ -1,9 +1,9 @@
 import itertools
 import logging
 
-from ..constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
-from ..order import Order, Side
-
+from poly_market_maker.token import Token
+from poly_market_maker.constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
+from poly_market_maker.order import Order, Side
 
 class Band:
     def __init__(
@@ -43,11 +43,11 @@ class Band:
 
     def excessive_orders(
         self,
-        orders: list,
+        orders: list[Order],
         target_price: float,
         is_first_band: bool,
         is_last_band: bool,
-    ):
+    ) -> list[Order]:
         """Return orders which need to be cancelled to bring the total order amount in the band below maximum."""
         self.logger.debug("Running excessive orders.")
         # Get all orders which are currently present in the band.
@@ -222,13 +222,13 @@ class Bands:
         collateral_balance: float,
         token_balance: float,
         target_price: float,
-        buy_token_id: str,
-        sell_token_id: str,
+        buy_token: Token
     ) -> list[Order]:
         assert isinstance(orders, list)
         assert isinstance(collateral_balance, float)
         assert isinstance(target_price, float)
 
+        sell_token = buy_token.complement()
         new_orders = []
         for band in self._calculate_virtual_bands(target_price):
             band_amount = sum(
@@ -246,7 +246,7 @@ class Bands:
                     MAX_DECIMALS,
                 )
                 sell_order = self._new_order(
-                    sell_price, sell_size, Side.SELL, sell_token_id
+                    sell_price, sell_size, Side.SELL, sell_token
                 )
 
                 if sell_order is not None:
@@ -266,7 +266,7 @@ class Bands:
                         MAX_DECIMALS,
                     )
                     buy_order = self._new_order(
-                        buy_price, buy_size, Side.BUY, buy_token_id
+                        buy_price, buy_size, Side.BUY, buy_token
                     )
 
                     if buy_order is not None:
@@ -276,7 +276,7 @@ class Bands:
 
         return new_orders
 
-    def _new_order(self, price: float, size: float, side: str, token_id: str):
+    def _new_order(self, price: float, size: float, side: str, token: str):
         """
         Return sell orders which need to be placed to bring total amounts within all sell bands above minimums
         """
@@ -288,7 +288,7 @@ class Bands:
             f"Creating new {side} order with price {price} and size: {size}"
         )
 
-        return Order(price=price, size=size, side=side, token_id=token_id)
+        return Order(price=price, size=size, side=side, token=token)
 
     @staticmethod
     def _new_order_is_valid(price, size):

@@ -1,5 +1,3 @@
-import json
-from re import M
 from unittest import TestCase, mock
 from web3 import Web3
 

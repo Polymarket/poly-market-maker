@@ -1,26 +1,15 @@
-from enum import Enum
 
-Collateral = "collateral"
-
-
-class Token(Enum):
-    A = "TokenA"
-    B = "TokenB"
-
-    def complement(self):
-        return Token.B if self == Token.A else Token.A
-
+from poly_market_maker.ct_helpers import CTHelpers
+from poly_market_maker.token import Token
 
 class Market:
-    def __init__(self, condition_id: str, token_id_a: str, token_id_b: str):
+    def __init__(self, condition_id: str, collateral_address: str):
         assert isinstance(condition_id, str)
-        assert isinstance(token_id_a, str)
-        assert isinstance(token_id_b, str)
 
         self.condition_id = condition_id
         self.token_ids = {
-            Token.A: token_id_a,
-            Token.B: token_id_b
+            Token.A: CTHelpers.get_token_id(condition_id, collateral_address, 0),
+            Token.B: CTHelpers.get_token_id(condition_id, collateral_address, 1)
         }
 
 
@@ -31,4 +20,6 @@ class Market:
         return Token.A if token_id == self.token_ids[Token.A] else Token.B
 
     def __repr__(self):
-        return f"Market[condition_id={self.condition_id}, token_id_a={self.token_id_a}, token_id_b={self.token_id_b}]"
+        return f"Market[condition_id={self.condition_id}, token_id_a={self.token_ids[Token.A]}, token_id_b={self.token_ids[Token.B]}]"
+
+

@@ -2,7 +2,7 @@ import time
 import logging
 import requests
 
-from .metrics import odds_api_latency, odds_api_remaining_requests
+from poly_market_maker.metrics import odds_api_latency, odds_api_remaining_requests
 
 
 class OddsAPI:

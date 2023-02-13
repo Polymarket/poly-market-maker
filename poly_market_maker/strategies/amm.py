@@ -1,13 +1,14 @@
 import logging
 from math import sqrt
-from ..order import Order, Side
-from ..utils import math_round_down
 
+from poly_market_maker.token import Token
+from poly_market_maker.order import Order, Side
+from poly_market_maker.utils import math_round_down
 
 class AMM:
     def __init__(
         self,
-        token_id: str,
+        token: Token,
         p_min: float,
         p_max: float,
         delta: float,
@@ -16,14 +17,14 @@ class AMM:
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        assert isinstance(token_id, str)
+        assert isinstance(token, Token)
         assert isinstance(p_min, float)
         assert isinstance(p_max, float)
         assert isinstance(delta, float)
         assert isinstance(depth, float)
         assert isinstance(spread, float)
 
-        self.token_id = token_id
+        self.token = token
         self.p_min = p_min
         self.p_max = p_max
         self.delta = delta
@@ -58,7 +59,7 @@ class AMM:
             Order(
                 price=price,
                 side=Side.SELL,
-                token_id=self.token_id,
+                token=self.token,
                 size=size,
             )
             for (price, size) in zip(self.sell_prices, sizes)
@@ -77,7 +78,7 @@ class AMM:
             Order(
                 price=price,
                 side=Side.BUY,
-                token_id=self.token_id,
+                token=self.token,
                 size=size,
             )
             for (price, size) in zip(self.buy_prices, sizes)
@@ -116,8 +117,6 @@ class AMM:
 class AMMManager:
     def __init__(
         self,
-        token_id_a: str,
-        token_id_b: str,
         p_min: float,
         p_max: float,
         delta: float,
@@ -126,7 +125,7 @@ class AMMManager:
     ):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.amm_a = AMM(
-            token_id=token_id_a,
+            token=Token.A,
             p_min=p_min,
             p_max=p_max,
             delta=delta,
@@ -134,7 +133,7 @@ class AMMManager:
             depth=depth,
         )
         self.amm_b = AMM(
-            token_id=token_id_b,
+            token=Token.B,
             p_min=p_min,
             p_max=p_max,
             delta=delta,
@@ -151,10 +150,13 @@ class AMMManager:
         sell_orders_a = self.amm_a.get_sell_orders(x_a)
         sell_orders_b = self.amm_b.get_sell_orders(x_b)
 
+        best_sell_order_size_a = sell_orders_a[0].size if len(sell_orders_a) > 0 else 0
+        best_sell_order_size_b = sell_orders_b[0].size if len(sell_orders_b) > 0 else 0
+
         (y_a, y_b) = self.collateral_allocation(
             y,
-            sell_orders_a[0],
-            sell_orders_b[0],
+            best_sell_order_size_a,
+            best_sell_order_size_b,
         )
 
         buy_orders_a = self.amm_a.get_buy_orders(y_a)
@@ -165,11 +167,11 @@ class AMMManager:
         return orders
 
     def collateral_allocation(
-        self, y: float, first_sell_order_a: Order, first_sell_order_b: Order
+        self, y: float, best_sell_order_size_a: float, best_sell_order_size_b: float
     ):
 
         y_a = (
-            first_sell_order_a.size - first_sell_order_b.size + y * self.amm_b.phi()
+            best_sell_order_size_a - best_sell_order_size_b + y * self.amm_b.phi()
         ) / (self.amm_a.phi() + self.amm_b.phi())
 
         if y_a < 0:

@@ -5,8 +5,7 @@ import requests
 import logging
 import time
 
-from .metrics import gas_station_latency
-
+from poly_market_maker.metrics import gas_station_latency
 
 DEFAULT_FIXED_GAS_PRICE = 100000000000
 

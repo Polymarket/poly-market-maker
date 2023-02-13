@@ -1,9 +1,11 @@
-from .bands import Bands
-from ..market import Token, Market, Collateral
-from ..order import Order, Side
-from ..orderbook import OrderBook
-from ..constants import MAX_DECIMALS
-from .base_strategy import BaseStrategy
+from poly_market_maker.market import Market
+from poly_market_maker.token import Token, Collateral
+from poly_market_maker.order import Order, Side
+from poly_market_maker.orderbook import OrderBook
+from poly_market_maker.constants import MAX_DECIMALS
+
+from poly_market_maker.strategies.bands import Bands
+from poly_market_maker.strategies.base_strategy import BaseStrategy
 
 
 class BandsStrategy(BaseStrategy):

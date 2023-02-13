@@ -2,8 +2,8 @@ import logging
 import web3
 import web3.constants
 
-from .gas import GasStation
-from .metrics import chain_requests_counter
+from poly_market_maker.gas import GasStation
+from poly_market_maker.metrics import chain_requests_counter
 
 
 erc20_balance_of = """[{"constant": true,"inputs": [{"name": "_owner","type": "address"}],"name": "balanceOf","outputs": [{"name": "balance","type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"}]"""

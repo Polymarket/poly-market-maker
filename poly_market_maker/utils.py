@@ -12,7 +12,6 @@ from web3.middleware import (
     latest_block_based_cache_middleware,
     simple_cache_middleware,
 )
-
 from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 

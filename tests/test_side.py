@@ -1,9 +1,8 @@
-import json
 from unittest import TestCase
-import unittest
+from py_clob_client.order_builder.constants import BUY, SELL
 
 from poly_market_maker.order import Side
-from py_clob_client.order_builder.constants import BUY, SELL
+
 
 
 class TestSide(TestCase):

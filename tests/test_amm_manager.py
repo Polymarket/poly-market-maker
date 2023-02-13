@@ -1,16 +1,11 @@
-import json
-from re import M
-from unittest import TestCase, mock
-from web3 import Web3
-from poly_market_maker.market import Market, Token, Collateral
+from unittest import TestCase
+
 from poly_market_maker.strategies.amm import AMMManager
-from poly_market_maker.order import Order, Side
+from poly_market_maker.order import Side
+from poly_market_maker.token import Token
 
 
 class TestAMM(TestCase):
-    token_id_a = "123"
-    token_id_b = "456"
-
     def test_get_expected_order_prices(self):
         p = 0.5
         depth = 0.05
@@ -20,8 +15,6 @@ class TestAMM(TestCase):
         spread = 0.02
 
         amm_manager = AMMManager(
-            token_id_a=self.token_id_a,
-            token_id_b=self.token_id_b,
             p_min=p_min,
             p_max=p_max,
             delta=delta,
@@ -36,16 +29,16 @@ class TestAMM(TestCase):
         buy_orders = [order for order in orders if order.side == Side.BUY]
 
         sell_orders_a = [
-            order for order in sell_orders if order.token_id == self.token_id_a
+            order for order in sell_orders if order.token == Token.A
         ]
         sell_orders_b = [
-            order for order in sell_orders if order.token_id == self.token_id_b
+            order for order in sell_orders if order.token == Token.B
         ]
         buy_orders_a = [
-            order for order in buy_orders if order.token_id == self.token_id_a
+            order for order in buy_orders if order.token == Token.A
         ]
         buy_orders_b = [
-            order for order in buy_orders if order.token_id == self.token_id_b
+            order for order in buy_orders if order.token == Token.B
         ]
 
         sell_prices_a = [order.price for order in sell_orders_a]
@@ -67,8 +60,6 @@ class TestAMM(TestCase):
         spread = 0.01
 
         amm_manager = AMMManager(
-            token_id_a=self.token_id_a,
-            token_id_b=self.token_id_b,
             p_min=p_min,
             p_max=p_max,
             delta=delta,
@@ -86,16 +77,16 @@ class TestAMM(TestCase):
         buy_orders = [order for order in orders if order.side == Side.BUY]
 
         sell_orders_a = [
-            order for order in sell_orders if order.token_id == self.token_id_a
+            order for order in sell_orders if order.token == Token.A
         ]
         sell_orders_b = [
-            order for order in sell_orders if order.token_id == self.token_id_b
+            order for order in sell_orders if order.token == Token.B
         ]
         buy_orders_a = [
-            order for order in buy_orders if order.token_id == self.token_id_a
+            order for order in buy_orders if order.token == Token.A
         ]
         buy_orders_b = [
-            order for order in buy_orders if order.token_id == self.token_id_b
+            order for order in buy_orders if order.token == Token.B
         ]
 
         sell_sizes_a = [order.size for order in sell_orders_a]
@@ -133,8 +124,6 @@ class TestAMM(TestCase):
         spread = 0.01
 
         amm_manager = AMMManager(
-            token_id_a=self.token_id_a,
-            token_id_b=self.token_id_b,
             p_min=p_min,
             p_max=p_max,
             delta=delta,

@@ -1,11 +1,9 @@
 import logging
 import threading
-
 import time
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from .order import Order, Side
-from .market import Token, Collateral
+from poly_market_maker.order import Order, Side
 
 
 class OrderBook:

@@ -6,16 +6,14 @@ RUN apt update -y && apt-get install -y python3-dev build-essential
 RUN groupadd -r keeper && useradd -r -g keeper keeper
 
 COPY poly_market_maker poly_market_maker
-COPY requirements.txt .
-COPY logging.yaml .
+COPY bin bin
+COPY config config
 
-COPY bands.json .
-COPY loose_small.json .
-COPY loose_large.json .
-COPY tight_small.json .
-COPY tight_large.json .
+COPY logging.yaml .
+COPY requirements.txt .
 COPY install.sh .
-COPY run_keeper.sh .
 
 RUN ./install.sh
+
+WORKDIR /app/bin
 USER keeper

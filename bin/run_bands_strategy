@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+dir="$(dirname "$0")"/..
+cd "$dir" || exit
+# source $dir/_virtualenv/bin/activate || exit
+# export PYTHONPATH=$PYTHONPATH:$dir
+
 echo "Running poly-market-maker-keeper..."
 
 if [ -f .env ]; then
