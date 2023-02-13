@@ -20,3 +20,4 @@ class TestMarket(TestCase):
         self.assertEqual(self.market.token(token_id_0), Token.A)
         self.assertEqual(self.market.token(token_id_1), Token.B)
 
+        self.assertRaises(ValueError, self.market.token, 0)
