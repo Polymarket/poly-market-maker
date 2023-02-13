@@ -25,8 +25,6 @@ exec python3 -m poly_market_maker.market_maker \
     --clob-api-secret "$CLOB_SECRET" \
     --clob-api-passphrase "$CLOB_PASS_PHRASE" \
     --condition-id "$CONDITION_ID" \
-    --token-id-A "$TOKEN_ID_A" \
-    --token-id-B "$TOKEN_ID_B" \
     --strategy "bands" \
     --strategy-config "$BANDS_CONFIG_FILE"
 

@@ -94,19 +94,6 @@ class ClobMarketMakerKeeper:
         )
 
         parser.add_argument(
-            "--token-id-a",
-            type=str,
-            required=True,
-            help="Either of the two token ids of the market being made",
-        )
-        parser.add_argument(
-            "--token-id-a",
-            type=str,
-            required=True,
-            help="The other token id of the market being made",
-        )
-
-        parser.add_argument(
             "--refresh-frequency",
             type=int,
             default=5,
