@@ -6,6 +6,7 @@ from poly_market_maker.token import Token
 class Market:
     def __init__(self, condition_id: str, collateral_address: str):
         assert isinstance(condition_id, str)
+        assert isinstance(collateral_address, str)
 
         self.condition_id = condition_id
         self.token_ids = {
