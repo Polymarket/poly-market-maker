@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          make init
+          ./install.sh
 
       - name: Run Tests
         run: make test
