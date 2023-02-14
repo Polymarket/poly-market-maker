@@ -1,8 +1,8 @@
-version: "3.9"
 services:
   app:
-    build: .
-    image: polymarket/poly-market-maker
+    extends:
+      file: docker-compose.build.yml
+      service: app
     environment:
       - CONDITION_ID=${CONDITION_ID:?err}
       - STRATEGY=${STRATEGY:?err}
@@ -10,5 +10,5 @@ services:
     env_file:
       - .env
     volumes:
-      - ./logs:/app/logs
+      - ./config:/app/config
     command: ./run

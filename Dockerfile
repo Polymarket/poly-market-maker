@@ -11,7 +11,6 @@ RUN ./install.sh
 
 COPY poly_market_maker poly_market_maker
 COPY bin bin
-COPY config config
 COPY logging.yaml .
 
 WORKDIR /app/bin

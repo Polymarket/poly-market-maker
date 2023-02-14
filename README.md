@@ -1,4 +1,4 @@
-## poly-market-maker
+# poly-market-maker
 
 Market maker keeper for the Polymarket CLOB
 
@@ -7,7 +7,7 @@ Requires:
 - Python 3.10.10
 - virtualenv
 
-### Usage
+## Usage
 
 - Start and activate a virtualenv: `python -m venv .venv && source .venv/bin/activate`
 

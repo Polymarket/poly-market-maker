@@ -243,7 +243,8 @@ class App:
 
     def get_orders(self) -> list[Order]:
         orders = self.clob_api.get_orders(self.market.condition_id)
-        return [Order(
+        return [
+            Order(
                 size=order_dict["size"],
                 price=order_dict["price"],
                 side=Side(order_dict["side"]),
@@ -252,6 +253,7 @@ class App:
             )
             for order_dict in orders
         ]
+
     def place_order(self, new_order: Order) -> Order:
         order_id = self.clob_api.place_order(
             price=new_order.price,

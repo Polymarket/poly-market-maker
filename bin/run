@@ -2,8 +2,6 @@
 
 dir="$(dirname "$0")"/..
 cd "$dir" || exit
-# source $dir/_virtualenv/bin/activate || exit
-# export PYTHONPATH=$PYTHONPATH:$dir
 
 echo "Running poly-market-maker..."
 
@@ -11,7 +9,7 @@ if [ -f .env ]; then
     echo "Sourcing env variables from dot env file..."
     source .env
 else
-    echo "Fetching env variables.."
+    echo "Fetching env variables..."
 fi
 
 source .venv/bin/activate

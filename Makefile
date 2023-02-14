@@ -1,8 +1,8 @@
-init:
+install:
 	./install-dev.sh
 
 test:
-	pytest -s
+	pytest
 
 fmt:
-	black ./.
+	black .

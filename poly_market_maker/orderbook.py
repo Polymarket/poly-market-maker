@@ -353,7 +353,7 @@ class OrderBookManager:
 
                 # get orders
                 orders = self._run_get_orders()
-  
+
                 # get balances
                 balances = self._run_get_balances()
 
