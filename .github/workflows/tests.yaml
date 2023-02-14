@@ -26,4 +26,4 @@ jobs:
           ./install.sh
 
       - name: Run Tests
-        run: make test
+        run: pytest
