@@ -20,14 +20,13 @@ class Side(Enum):
 class Order:
     def __init__(self, size: float, price: float, side: Side, token: Token, id=None):
         if isinstance(size, int):
-            size=float(size)
+            size = float(size)
 
         assert isinstance(size, float)
         assert isinstance(price, float)
         assert isinstance(side, Side)
         assert isinstance(token, Token)
         if id != None:
-            print(type(id))
             assert isinstance(id, str)
 
         self.size = size

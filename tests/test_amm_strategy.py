@@ -13,11 +13,7 @@ class OrderBook:
         self.orders = []
         self.orders_being_placed = []
         self.orders_being_cancelled = []
-        self.balances = {
-            Token.A: 100,
-            Token.B: 200,
-            Collateral: 1000
-        }
+        self.balances = {Token.A: 100, Token.B: 200, Collateral: 1000}
 
 
 class OrderBookManager:
@@ -58,7 +54,7 @@ class OrderBookManager:
 
 
 class TestAMMStrategy(TestCase):
-    usdc_address = '0x2E8DCfE708D44ae2e406a1c02DFE2Fa13012f961'
+    usdc_address = "0x2E8DCfE708D44ae2e406a1c02DFE2Fa13012f961"
     condition_id = "0xbd31dc8a20211944f6b70f31557f1001557b59905b7738480ca09bd4532f84af"
     market = Market(condition_id, usdc_address)
     config = {
@@ -87,39 +83,30 @@ class TestAMMStrategy(TestCase):
         strategy = AMMStrategy(self.market, self.config)
 
         expected_orders = []
-        target_prices = {
-            Token.A: .6,
-            Token.B: .4
-        }
-        (orders_to_cancel,_) = strategy.get_orders(
+        target_prices = {Token.A: 0.6, Token.B: 0.4}
+        (orders_to_cancel, _) = strategy.get_orders(
             order_book_manager.get_order_book(), target_prices
         )
- 
-        self.assertEqual(orders_to_cancel,[])
 
-        open_orders = [
-            Order(token=Token.A, price=0.1, size=100, side=Side.BUY)
-        ]
+        self.assertEqual(orders_to_cancel, [])
+
+        open_orders = [Order(token=Token.A, price=0.1, size=100, side=Side.BUY)]
         order_book_manager.place_orders(open_orders)
         order_book_manager.update_orders()
 
-        (orders_to_cancel,_) = strategy.get_orders(
+        (orders_to_cancel, _) = strategy.get_orders(
             order_book_manager.get_order_book(), target_prices
         )
         self.assertEqual(len(orders_to_cancel), len(open_orders))
 
-        expected_orders = [
-            Order(token=Token.A, price=0.1, size=100, side=Side.BUY)
-        ]
-        (orders_to_cancel,_) = strategy.get_orders(
+        expected_orders = [Order(token=Token.A, price=0.1, size=100, side=Side.BUY)]
+        (orders_to_cancel, _) = strategy.get_orders(
             order_book_manager.get_order_book(), target_prices
         )
         self.assertEqual(len(orders_to_cancel), 0)
 
-        expected_orders = [
-            Order(token=Token.A, price=0.1, size=50, side=Side.BUY)
-        ]
-        (orders_to_cancel,_) = strategy.get_orders(
+        expected_orders = [Order(token=Token.A, price=0.1, size=50, side=Side.BUY)]
+        (orders_to_cancel, _) = strategy.get_orders(
             order_book_manager.get_order_book(), target_prices
         )
         self.assertEqual(len(orders_to_cancel), len(open_orders))
@@ -132,7 +119,7 @@ class TestAMMStrategy(TestCase):
         )
         order_book_manager.update_orders()
 
-        (orders_to_cancel,_) = strategy.get_orders(
+        (orders_to_cancel, _) = strategy.get_orders(
             order_book_manager.get_order_book(), target_prices
         )
 

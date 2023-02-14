@@ -6,6 +6,7 @@ from poly_market_maker.order import Order, Side
 
 from poly_market_maker.strategies.bands import Band, Bands
 
+
 class TestBand(TestCase):
     token = Token.A
 
@@ -80,7 +81,7 @@ class TestBand(TestCase):
         with open("./tests/bands.json") as fh:
             config = json.load(fh)
 
-        test_bands = Bands(config.get('bands'))
+        test_bands = Bands(config.get("bands"))
 
         self.assertIsNotNone(test_bands)
         self.assertEqual(len(test_bands.bands), 2)
@@ -89,7 +90,7 @@ class TestBand(TestCase):
         with open("./tests/bands.json") as fh:
             config = json.load(fh)
 
-        test_bands = Bands(config.get('bands'))
+        test_bands = Bands(config.get("bands"))
 
         # Initialize buys and sells that fit in both bands
         target_price = 0.50
@@ -113,7 +114,7 @@ class TestBand(TestCase):
         with open("./tests/bands.json") as fh:
             config = json.load(fh)
 
-        test_bands = Bands(config.get('bands'))
+        test_bands = Bands(config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -131,7 +132,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token
+            self.token,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -152,7 +153,7 @@ class TestBand(TestCase):
         with open("./tests/bands.json") as fh:
             config = json.load(fh)
 
-        test_bands = Bands(config.get('bands'))
+        test_bands = Bands(config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -170,7 +171,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token
+            self.token,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -191,7 +192,7 @@ class TestBand(TestCase):
         with open("./tests/bands.json") as fh:
             config = json.load(fh)
 
-        test_bands = Bands(config.get('bands'))
+        test_bands = Bands(config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -209,7 +210,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token
+            self.token,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -230,7 +231,7 @@ class TestBand(TestCase):
         with open("./tests/bands.json") as fh:
             config = json.load(fh)
 
-        test_bands = Bands(config.get('bands'))
+        test_bands = Bands(config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -248,7 +249,7 @@ class TestBand(TestCase):
             keeper_usdc_balance,
             keeper_token_balance,
             target_price,
-            self.token
+            self.token,
         )
 
         new_buys = [o for o in new_orders if o.side == Side.BUY]
@@ -273,7 +274,7 @@ class TestBand(TestCase):
         with open("./tests/tight_bands.json") as fh:
             config = json.load(fh)
 
-        test_bands = Bands(config.get('bands'))
+        test_bands = Bands(config.get("bands"))
 
         target_price = 0.04
 

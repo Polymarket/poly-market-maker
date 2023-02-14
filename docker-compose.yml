@@ -1,11 +1,15 @@
 version: "3.9"
 services:
-  keeper:
+  app:
     build: .
     image: polymarket/poly-market-maker
+    environment:
+      - CONDITION_ID=${CONDITION_ID:?err}
+      - STRATEGY=${STRATEGY:?err}
+      - CONFIG=${CONFIG:?err}
     env_file:
       - .env
     volumes:
       - ./logs:/app/logs
     command: >
-      ./run_bands_strategy
+      ./run_strategy

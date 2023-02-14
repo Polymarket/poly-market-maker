@@ -5,6 +5,7 @@ from poly_market_maker.token import Token
 from poly_market_maker.order import Order, Side
 from poly_market_maker.utils import math_round_down
 
+
 class AMM:
     def __init__(
         self,
@@ -169,7 +170,6 @@ class AMMManager:
     def collateral_allocation(
         self, y: float, best_sell_order_size_a: float, best_sell_order_size_b: float
     ):
-
         y_a = (
             best_sell_order_size_a - best_sell_order_size_b + y * self.amm_b.phi()
         ) / (self.amm_a.phi() + self.amm_b.phi())

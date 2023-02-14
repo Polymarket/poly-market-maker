@@ -5,7 +5,7 @@ from poly_market_maker.strategies.amm import AMM
 
 
 class TestAMM(TestCase):
-    token=Token.A
+    token = Token.A
 
     def test_get_buy_orders(self):
         amm = AMM(

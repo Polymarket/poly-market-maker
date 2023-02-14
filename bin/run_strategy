@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-echo "Running poly-market-maker-keeper..."
+dir="$(dirname "$0")"/..
+cd "$dir" || exit
+# source $dir/_virtualenv/bin/activate || exit
+# export PYTHONPATH=$PYTHONPATH:$dir
+
+echo "Running poly-market-maker..."
 
 if [ -f .env ]; then
     echo "Sourcing env variables from dot env file..."
@@ -11,7 +16,7 @@ fi
 
 source .venv/bin/activate
 
-exec python3 -m poly_market_maker.market_maker \
+exec python3 -m poly_market_maker.app \
     --chain-id "$CHAIN_ID" \
     --private-key "$PRIVATE_KEY" \
     --rpc-url "$RPC_URL" \
@@ -20,5 +25,5 @@ exec python3 -m poly_market_maker.market_maker \
     --clob-api-secret "$CLOB_SECRET" \
     --clob-api-passphrase "$CLOB_PASS_PHRASE" \
     --condition-id "$CONDITION_ID" \
-    --strategy "amm" \
-    --strategy-config "$AMM_STRATEGY_CONFIG_FILE"
+    --strategy "$STRATEGY" \
+    --strategy-config "$CONFIG"

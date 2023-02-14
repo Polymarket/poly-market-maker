@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from poly_market_maker.order import Order, Side
@@ -63,7 +64,7 @@ class OrderBookManager:
         self._order_ids_cancelling = set()
         self._order_ids_cancelled = set()
 
-    def get_orders_with(self, get_orders_function):
+    def get_orders_with(self, get_orders_function: Callable[[], list[Order]]):
         """
         Configures the function used to fetch active keeper orders.
         """
@@ -71,7 +72,7 @@ class OrderBookManager:
 
         self.get_orders_function = get_orders_function
 
-    def get_balances_with(self, get_balances_function):
+    def get_balances_with(self, get_balances_function: Callable):
         """
         Configures the (optional) function used to fetch current keeper balances.
         Args:
@@ -83,7 +84,7 @@ class OrderBookManager:
 
         self.get_balances_function = get_balances_function
 
-    def place_orders_with(self, place_order_function):
+    def place_orders_with(self, place_order_function: Callable):
         """
         Configures the function used to place orders.
         Args:
@@ -93,7 +94,7 @@ class OrderBookManager:
 
         self.place_order_function = place_order_function
 
-    def cancel_orders_with(self, cancel_order_function):
+    def cancel_orders_with(self, cancel_order_function: Callable):
         """
         Configures the function used to cancel orders.
         Args:
@@ -103,7 +104,7 @@ class OrderBookManager:
 
         self.cancel_order_function = cancel_order_function
 
-    def cancel_all_orders_with(self, cancel_all_orders_function):
+    def cancel_all_orders_with(self, cancel_all_orders_function: Callable):
         """
         Configures the function used to cancel all keeper orders.
         Args:
@@ -113,7 +114,7 @@ class OrderBookManager:
 
         self.cancel_all_orders_function = cancel_all_orders_function
 
-    def on_update(self, on_update_function):
+    def on_update(self, on_update_function: Callable):
         assert callable(on_update_function)
 
         self.on_update_function = on_update_function
@@ -178,7 +179,7 @@ class OrderBookManager:
             orders_being_cancelled=len(self._order_ids_cancelling) > 0,
         )
 
-    def place_order(self, place_order_function, order):
+    def place_order(self, place_order_function: Callable[[Order], Order], order: Order):
         """Places new order. Order placement will happen in a background thread.
 
         Args:
@@ -196,7 +197,7 @@ class OrderBookManager:
         )
         wait([result])
 
-    def place_orders(self, orders: list):
+    def place_orders(self, orders: list[Order]):
         """Places new orders. Order placement will happen in a background thread.
 
         Args:
@@ -218,7 +219,7 @@ class OrderBookManager:
         ]
         wait(results)
 
-    def cancel_orders(self, orders: list):
+    def cancel_orders(self, orders: list[Order]):
         """
         Cancels existing orders. Order cancellation will happen in a background thread.
 
@@ -352,6 +353,7 @@ class OrderBookManager:
 
                 # get orders
                 orders = self._run_get_orders()
+  
                 # get balances
                 balances = self._run_get_balances()
 
@@ -387,12 +389,14 @@ class OrderBookManager:
                     f" buys: {len([order for order in orders if order.side == Side.BUY])}, "
                     f" sells: {len([order for order in orders if order.side == Side.SELL])})"
                 )
-            except Exception as e:
+            except ValueError as e:
                 self.logger.error(f"Failed to fetch the order book or balances ({e})!")
 
             time.sleep(self.refresh_frequency)
 
-    def _thread_place_order(self, place_order_function, order):
+    def _thread_place_order(
+        self, place_order_function: Callable[[Order], Order], order: Order
+    ):
         assert callable(place_order_function)
 
         def func():
@@ -411,7 +415,9 @@ class OrderBookManager:
 
         return func
 
-    def _thread_cancel_order(self, cancel_order_function, order):
+    def _thread_cancel_order(
+        self, cancel_order_function: Callable[[Order], None], order: Order
+    ):
         assert callable(cancel_order_function)
 
         def func():
@@ -434,7 +440,11 @@ class OrderBookManager:
 
         return func
 
-    def _thread_cancel_all_orders(self, cancel_all_orders_function, orders):
+    def _thread_cancel_all_orders(
+        self,
+        cancel_all_orders_function: Callable[[list[Order]], bool],
+        orders: list[Order],
+    ):
         assert callable(cancel_all_orders_function)
 
         def func():

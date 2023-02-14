@@ -12,6 +12,7 @@ from poly_market_maker.strategies.base_strategy import BaseStrategy
 from poly_market_maker.strategies.amm_strategy import AMMStrategy
 from poly_market_maker.strategies.bands_strategy import BandsStrategy
 
+
 class StrategyManager:
     def __init__(
         self,

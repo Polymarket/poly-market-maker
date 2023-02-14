@@ -5,6 +5,7 @@ from poly_market_maker.token import Token
 from poly_market_maker.constants import MIN_TICK, MIN_SIZE, MAX_DECIMALS
 from poly_market_maker.order import Order, Side
 
+
 class Band:
     def __init__(
         self,
@@ -95,7 +96,7 @@ class Band:
 
         return orders_for_cancellation
 
-    def includes(self, order, target_price: float) -> bool:
+    def includes(self, order: Order, target_price: float) -> bool:
         if order.side == Side.BUY:
             price = order.price
         else:
@@ -130,7 +131,7 @@ class Band:
 
 
 class Bands:
-    def __init__(self, bands_from_config: list):
+    def __init__(self, bands_from_config: list[dict]):
         self.logger = logging.getLogger(self.__class__.__name__)
         assert isinstance(bands_from_config, list)
 
@@ -148,7 +149,7 @@ class Bands:
             self.logger.error("Bands in the config overlap!")
             raise Exception("Bands in the config overlap!")
 
-    def _calculate_virtual_bands(self, target_price: float) -> list:
+    def _calculate_virtual_bands(self, target_price: float) -> list[Band]:
         if target_price <= 0.0:
             return []
 
@@ -162,7 +163,9 @@ class Bands:
                 virtual_bands.append(band)
         return virtual_bands
 
-    def _excessive_orders(self, orders: list, bands: list, target_price: float):
+    def _excessive_orders(
+        self, orders: list[Order], bands: list[Band], target_price: float
+    ) -> list[Order]:
         """Return orders which need to be cancelled to bring total amounts within all bands below maximums."""
         assert isinstance(orders, list)
         assert isinstance(bands, list)
@@ -177,7 +180,9 @@ class Bands:
             ):
                 yield order
 
-    def _outside_any_band_orders(self, orders: list, bands: list, target_price: float):
+    def _outside_any_band_orders(
+        self, orders: list[Order], bands: list[Band], target_price: float
+    ) -> list[Order]:
         """Return buy or sell orders which need to be cancelled as they do not fall into any buy or sell band."""
         assert isinstance(orders, list)
         assert isinstance(bands, list)
@@ -222,7 +227,7 @@ class Bands:
         collateral_balance: float,
         token_balance: float,
         target_price: float,
-        buy_token: Token
+        buy_token: Token,
     ) -> list[Order]:
         assert isinstance(orders, list)
         assert isinstance(collateral_balance, float)
@@ -276,7 +281,7 @@ class Bands:
 
         return new_orders
 
-    def _new_order(self, price: float, size: float, side: str, token: str):
+    def _new_order(self, price: float, size: float, side: Side, token: Token) -> Order:
         """
         Return sell orders which need to be placed to bring total amounts within all sell bands above minimums
         """
@@ -295,8 +300,8 @@ class Bands:
         return (price > float(0)) and (price < float(1.0)) and (size >= MIN_SIZE)
 
     @staticmethod
-    def _bands_overlap(bands: list):
-        def two_bands_overlap(band1, band2):
+    def _bands_overlap(bands: list[Band]):
+        def two_bands_overlap(band1: Band, band2: Band):
             return (
                 band1.min_margin < band2.max_margin
                 and band2.min_margin < band1.max_margin

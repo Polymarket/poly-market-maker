@@ -2,6 +2,7 @@ import logging
 
 from poly_market_maker.market import Market
 
+
 class BaseStrategy:
     def __init__(
         self,

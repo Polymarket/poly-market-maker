@@ -9,4 +9,3 @@ class Token(Enum):
 
     def complement(self):
         return Token.B if self == Token.A else Token.A
-

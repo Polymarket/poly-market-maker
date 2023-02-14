@@ -27,9 +27,7 @@ class OrderType:
         return hash((self.price, self.side, self.token))
 
     def __repr__(self):
-        return (
-            f"OrderType[price={self.price}, side={self.side}, token={self.token}]"
-        )
+        return f"OrderType[price={self.price}, side={self.side}, token={self.token}]"
 
 
 class AMMStrategy(BaseStrategy):

@@ -28,18 +28,10 @@ class TestAMM(TestCase):
         sell_orders = [order for order in orders if order.side == Side.SELL]
         buy_orders = [order for order in orders if order.side == Side.BUY]
 
-        sell_orders_a = [
-            order for order in sell_orders if order.token == Token.A
-        ]
-        sell_orders_b = [
-            order for order in sell_orders if order.token == Token.B
-        ]
-        buy_orders_a = [
-            order for order in buy_orders if order.token == Token.A
-        ]
-        buy_orders_b = [
-            order for order in buy_orders if order.token == Token.B
-        ]
+        sell_orders_a = [order for order in sell_orders if order.token == Token.A]
+        sell_orders_b = [order for order in sell_orders if order.token == Token.B]
+        buy_orders_a = [order for order in buy_orders if order.token == Token.A]
+        buy_orders_b = [order for order in buy_orders if order.token == Token.B]
 
         sell_prices_a = [order.price for order in sell_orders_a]
         self.assertEqual(sell_prices_a, [0.52, 0.53, 0.54, 0.55, 0.56, 0.57])
@@ -76,18 +68,10 @@ class TestAMM(TestCase):
         sell_orders = [order for order in orders if order.side == Side.SELL]
         buy_orders = [order for order in orders if order.side == Side.BUY]
 
-        sell_orders_a = [
-            order for order in sell_orders if order.token == Token.A
-        ]
-        sell_orders_b = [
-            order for order in sell_orders if order.token == Token.B
-        ]
-        buy_orders_a = [
-            order for order in buy_orders if order.token == Token.A
-        ]
-        buy_orders_b = [
-            order for order in buy_orders if order.token == Token.B
-        ]
+        sell_orders_a = [order for order in sell_orders if order.token == Token.A]
+        sell_orders_b = [order for order in sell_orders if order.token == Token.B]
+        buy_orders_a = [order for order in buy_orders if order.token == Token.A]
+        buy_orders_b = [order for order in buy_orders if order.token == Token.B]
 
         sell_sizes_a = [order.size for order in sell_orders_a]
         for i in range(len(sell_sizes_a) - 1):

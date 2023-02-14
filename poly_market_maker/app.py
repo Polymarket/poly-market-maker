@@ -3,13 +3,10 @@ import logging
 import sys
 from prometheus_client import start_http_server
 
-from poly_market_maker.odds_api import OddsAPI
-from poly_market_maker.fpmm import FPMM
+
 from poly_market_maker.price_feed import (
     PriceFeedClob,
-    PriceFeedOddsAPI,
     PriceFeedSource,
-    PriceFeedFPMM,
 )
 from poly_market_maker.gas import GasStation, GasStrategy
 from poly_market_maker.utils import setup_logging, setup_web3
@@ -21,10 +18,10 @@ from poly_market_maker.lifecycle import Lifecycle
 from poly_market_maker.orderbook import OrderBookManager
 from poly_market_maker.contracts import Contracts
 from poly_market_maker.metrics import keeper_balance_amount
-from poly_market_maker.strategies.strategy_manager import StrategyManager
+from poly_market_maker.strategies.strategy_manager import StrategyManager, Strategy
 
 
-class ClobMarketMakerKeeper:
+class App:
     """Market maker keeper on Polymarket CLOB"""
 
     logger = logging.getLogger(__name__)
@@ -122,16 +119,6 @@ class ClobMarketMakerKeeper:
             help="source of the mid price of the market",
         )
 
-        parser.add_argument("--odds-api-url", type=str, required=False)
-        parser.add_argument("--odds-api-key", type=str, required=False)
-        parser.add_argument("--odds-api-sport", type=str, required=False)
-        parser.add_argument("--odds-api-region", type=str, required=False)
-        parser.add_argument("--odds-api-market", type=str, required=False)
-        parser.add_argument("--odds-api-match-id", type=str, required=False)
-        parser.add_argument("--odds-api-team-name", type=str, required=False)
-
-        parser.add_argument("--fpmm-address", type=str, required=False)
-
         parser.add_argument(
             "--metrics-server-port",
             type=int,
@@ -140,17 +127,17 @@ class ClobMarketMakerKeeper:
         )
 
         parser.add_argument(
+            "--strategy",
+            type=Strategy,
+            required=True,
+            help="Market making strategy",
+        )
+
+        parser.add_argument(
             "--strategy-config",
             type=str,
             required=True,
             help="Strategy configuration file path",
-        )
-
-        parser.add_argument(
-            "--strategy",
-            type=str,
-            required=True,
-            help="Market making strategy",
         )
 
         args = parser.parse_args(args)
@@ -177,30 +164,7 @@ class ClobMarketMakerKeeper:
         )
         self.contracts = Contracts(self.web3, self.gas_station)
 
-        match args.price_feed_source:
-            case PriceFeedSource.CLOB:
-                self.price_feed = PriceFeedClob(self.clob_api)
-            case PriceFeedSource.ODDS_API:
-                odds_api = OddsAPI(
-                    api_key=args.odds_api_key,
-                    sport=args.odds_api_sport,
-                    region=args.odds_api_region,
-                    market=args.odds_api_market,
-                )
-                self.price_feed = PriceFeedOddsAPI(
-                    odds_api=odds_api,
-                    match_id=args.odds_api_match_id,
-                    team_name=args.odds_api_team_name,
-                )
-            case PriceFeedSource.FPMM:
-                fpmm = FPMM(self.contracts)
-                self.price_feed = PriceFeedFPMM(
-                    fpmm=fpmm,
-                    conditional_token=self.clob_api.get_conditional_address(),
-                    fpmm_address=self.args.fpmm_address,
-                    token_id=self.token_id,
-                    token_id_complement=self.args.complement_id,
-                )
+        self.price_feed = PriceFeedClob(self.clob_api)
 
         self.market = Market(
             args.condition_id,
@@ -210,18 +174,12 @@ class ClobMarketMakerKeeper:
         self.order_book_manager = OrderBookManager(
             args.refresh_frequency, max_workers=1
         )
-        self.order_book_manager.get_orders_with(
-            self.get_orders
-        )
-        self.order_book_manager.get_balances_with(
-            self.get_balances
-        )
+        self.order_book_manager.get_orders_with(self.get_orders)
+        self.order_book_manager.get_balances_with(self.get_balances)
         self.order_book_manager.cancel_orders_with(
             lambda order: self.clob_api.cancel_order(order.id)
         )
-        self.order_book_manager.place_orders_with(
-            self.place_order
-        )
+        self.order_book_manager.place_orders_with(self.place_order)
         self.order_book_manager.cancel_all_orders_with(
             lambda _: self.clob_api.cancel_all_orders()
         )
@@ -235,7 +193,7 @@ class ClobMarketMakerKeeper:
             self.market,
         )
 
-    def get_balances(self):
+    def get_balances(self) -> dict:
         """
         Fetch the onchain balances of collateral and conditional tokens for the keeper
         """
@@ -282,18 +240,19 @@ class ClobMarketMakerKeeper:
             Token.A: token_A_balance,
             Token.B: token_B_balance,
         }
-    
-    def get_orders(self, orders: dict):
+
+    def get_orders(self) -> list[Order]:
         orders = self.clob_api.get_orders(self.market.condition_id)
         return [Order(
-            size=order_dict['size'],
-            price=order_dict['price'],
-            side=Side(order_dict['side']),
-            token_id=self.market.token(order_dict['token_id']),
-            id=order_dict['id']
-        ) for order_dict in orders]
-
-    def place_order(self, new_order: Order):
+                size=order_dict["size"],
+                price=order_dict["price"],
+                side=Side(order_dict["side"]),
+                token=self.market.token(order_dict["token_id"]),
+                id=order_dict["id"],
+            )
+            for order_dict in orders
+        ]
+    def place_order(self, new_order: Order) -> Order:
         order_id = self.clob_api.place_order(
             price=new_order.price,
             size=new_order.size,
@@ -352,4 +311,4 @@ class ClobMarketMakerKeeper:
 
 if __name__ == "__main__":
     setup_logging()
-    ClobMarketMakerKeeper(sys.argv[1:]).main()
+    App(sys.argv[1:]).main()

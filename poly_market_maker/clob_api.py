@@ -90,12 +90,12 @@ class ClobApi:
             )
         return []
 
-    def place_order(self, price: float, size: float, side: str, token_id: int):
+    def place_order(self, price: float, size: float, side: str, token_id: int) -> str:
         """
         Places a new order
         """
         self.logger.info(
-            f"Placing a new order: Order[price={price},size={size},side={side.value},token_id={token_id}]"
+            f"Placing a new order: Order[price={price},size={size},side={side},token_id={token_id}]"
         )
         start_time = time.time()
         try:
@@ -109,7 +109,7 @@ class ClobApi:
             if resp and resp.get("success") and resp.get("orderID"):
                 order_id = resp.get("orderID")
                 self.logger.info(
-                    f"Succesfully placed new order: Order[id={order_id},price={price},size={size},side={side.value},tokenID={token_id}]!"
+                    f"Succesfully placed new order: Order[id={order_id},price={price},size={size},side={side},tokenID={token_id}]!"
                 )
                 return order_id
 
@@ -124,7 +124,7 @@ class ClobApi:
             ).observe((time.time() - start_time))
         return None
 
-    def cancel_order(self, order_id):
+    def cancel_order(self, order_id) -> bool:
         self.logger.info(f"Cancelling order {order_id}...")
         if order_id is None:
             self.logger.debug("Invalid order_id")
@@ -144,7 +144,7 @@ class ClobApi:
             )
         return False
 
-    def cancel_all_orders(self):
+    def cancel_all_orders(self) -> bool:
         self.logger.info("Cancelling all open keeper orders..")
         start_time = time.time()
         try:
@@ -182,7 +182,7 @@ class ClobApi:
             self.logger.error("Unable to connect to CLOB API, shutting down!")
             sys.exit(1)
 
-    def _get_order(self, order_dict: dict):
+    def _get_order(self, order_dict: dict) -> dict:
         size = float(order_dict.get("original_size")) - float(
             order_dict.get("size_matched")
         )
@@ -192,9 +192,9 @@ class ClobApi:
         token_id = int(order_dict.get("asset_id"))
 
         return {
-            size: size,
-            price: price,
-            side: side,
-            token_id: token_id,
-            id: order_id,
+            "size": size,
+            "price": price,
+            "side": side,
+            "token_id": token_id,
+            "id": order_id,
         }

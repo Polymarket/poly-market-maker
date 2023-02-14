@@ -40,12 +40,18 @@ class Contracts:
 
         return bal
 
-    def balance_of_erc1155(self, token: str, address: str, token_id: str):
-        erc1155 = self.w3.eth.contract(token, abi=erc1155_balance_of)
+    def balance_of_erc1155(
+        self, erc1155_address: str, holder_address: str, token_id: int
+    ):
+        assert isinstance(erc1155_address, str)
+        assert isinstance(holder_address, str)
+        assert isinstance(token_id, int)
+
+        erc1155 = self.w3.eth.contract(erc1155_address, abi=erc1155_balance_of)
         bal = None
 
         try:
-            bal = erc1155.functions.balanceOf(address, int(token_id)).call()
+            bal = erc1155.functions.balanceOf(holder_address, token_id).call()
             chain_requests_counter.labels(method="ERC1155 balanceOf", status="ok").inc()
         except Exception as e:
             self.logger.error(f"Error ERC1155 balanceOf: {e}")

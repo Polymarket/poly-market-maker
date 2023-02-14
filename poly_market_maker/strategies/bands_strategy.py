@@ -85,8 +85,7 @@ class BandsStrategy(BaseStrategy):
                 free_collateral_balance,
                 free_token_balance,
                 target_prices[token],
-                self.market.token_id(token),
-                self.market.token_id(token.complement()),
+                token,
             )
             free_collateral_balance -= sum(
                 order.size * order.price

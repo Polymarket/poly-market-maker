@@ -4,7 +4,6 @@ from py_clob_client.order_builder.constants import BUY, SELL
 from poly_market_maker.order import Side
 
 
-
 class TestSide(TestCase):
     def test_side(self):
         self.assertEqual(Side.BUY.value, BUY)

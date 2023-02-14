@@ -55,7 +55,8 @@ class AsyncCallback:
     def wait(self):
         """Waits for the currently running callback to finish.
 
-        If the callback isn't running or hasn't even been invoked once, returns instantly."""
+        If the callback isn't running or hasn't even been invoked once, returns instantly.
+        """
         if self.thread is not None:
             self.thread.join()
 
