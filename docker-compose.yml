@@ -11,4 +11,5 @@ services:
       - .env
     volumes:
       - ./config:/app/config
+      - ./logs:/app/logs
     command: ./run

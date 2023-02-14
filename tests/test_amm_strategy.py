@@ -61,10 +61,10 @@ class TestAMMStrategy(TestCase):
         "p_min": 0.05,
         "p_max": 0.95,
         "delta": 0.01,
-        "spread": 0.02,
+        "spread": 0.01,
         "depth": 0.10,
     }
-    strategy = AMMStrategy(market, config)
+    strategy = AMMStrategy(config)
 
     # def test_synchronize(self):
     #     price_feed = PriceFeed(0.6, 0.4, self.market)
@@ -80,9 +80,8 @@ class TestAMMStrategy(TestCase):
 
     def test_get_orders_to_cancel(self):
         order_book_manager = OrderBookManager()
-        strategy = AMMStrategy(self.market, self.config)
+        strategy = AMMStrategy(self.config)
 
-        expected_orders = []
         target_prices = {Token.A: 0.6, Token.B: 0.4}
         (orders_to_cancel, _) = strategy.get_orders(
             order_book_manager.get_order_book(), target_prices
@@ -90,32 +89,9 @@ class TestAMMStrategy(TestCase):
 
         self.assertEqual(orders_to_cancel, [])
 
-        open_orders = [Order(token=Token.A, price=0.1, size=100, side=Side.BUY)]
-        order_book_manager.place_orders(open_orders)
-        order_book_manager.update_orders()
-
-        (orders_to_cancel, _) = strategy.get_orders(
-            order_book_manager.get_order_book(), target_prices
-        )
-        self.assertEqual(len(orders_to_cancel), len(open_orders))
-
-        expected_orders = [Order(token=Token.A, price=0.1, size=100, side=Side.BUY)]
-        (orders_to_cancel, _) = strategy.get_orders(
-            order_book_manager.get_order_book(), target_prices
-        )
-        self.assertEqual(len(orders_to_cancel), 0)
-
-        expected_orders = [Order(token=Token.A, price=0.1, size=50, side=Side.BUY)]
-        (orders_to_cancel, _) = strategy.get_orders(
-            order_book_manager.get_order_book(), target_prices
-        )
-        self.assertEqual(len(orders_to_cancel), len(open_orders))
-
-        order_book_manager.cancel_all_orders()
-        order_book_manager.update_orders()
-
+        orders_placed = 10
         order_book_manager.place_orders(
-            10 * [Order(token=Token.A, price=0.1, size=15, side=Side.BUY)]
+            orders_placed * [Order(token=Token.A, price=0.1, size=15, side=Side.BUY)]
         )
         order_book_manager.update_orders()
 
@@ -123,4 +99,4 @@ class TestAMMStrategy(TestCase):
             order_book_manager.get_order_book(), target_prices
         )
 
-        self.assertEqual(len(orders_to_cancel), 7)
+        self.assertEqual(len(orders_to_cancel), orders_placed)

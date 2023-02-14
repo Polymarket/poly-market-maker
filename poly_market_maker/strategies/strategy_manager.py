@@ -4,13 +4,25 @@ import logging
 
 from poly_market_maker.orderbook import OrderBookManager
 from poly_market_maker.price_feed import PriceFeed
-from poly_market_maker.market import Market
 from poly_market_maker.token import Token, Collateral
 from poly_market_maker.constants import MAX_DECIMALS
 
 from poly_market_maker.strategies.base_strategy import BaseStrategy
 from poly_market_maker.strategies.amm_strategy import AMMStrategy
 from poly_market_maker.strategies.bands_strategy import BandsStrategy
+
+
+class Strategy(Enum):
+    AMM = "amm"
+    BANDS = "bands"
+
+    @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            for strategy in Strategy:
+                if value.lower() == strategy.value.lower():
+                    return strategy
+        return super()._missing_(value)
 
 
 class StrategyManager:
@@ -20,7 +32,6 @@ class StrategyManager:
         config_path: str,
         price_feed: PriceFeed,
         order_book_manager: OrderBookManager,
-        market: Market,
     ) -> BaseStrategy:
         self.logger = logging.getLogger(self.__class__.__name__)
 
@@ -29,13 +40,12 @@ class StrategyManager:
 
         self.price_feed = price_feed
         self.order_book_manager = order_book_manager
-        self.market = market
 
         match Strategy(strategy):
             case Strategy.AMM:
-                self.strategy = AMMStrategy(market, config)
+                self.strategy = AMMStrategy(config)
             case Strategy.BANDS:
-                self.strategy = BandsStrategy(market, config)
+                self.strategy = BandsStrategy(config)
             case _:
                 raise Exception("Invalid strategy")
 
@@ -68,7 +78,7 @@ class StrategyManager:
     def get_token_prices(self):
         # get target prices
         price_a = round(
-            self.price_feed.get_price(self.market.token_id(Token.A)),
+            self.price_feed.get_price(Token.A),
             MAX_DECIMALS,
         )
         price_b = round(1 - price_a, MAX_DECIMALS)
@@ -88,16 +98,3 @@ class StrategyManager:
             self.order_book_manager.place_orders(orders_to_place)
 
         self.logger.debug("Synchronized orderbook!")
-
-
-class Strategy(Enum):
-    AMM = "amm"
-    BANDS = "bands"
-
-    @classmethod
-    def _missing_(cls, value):
-        if isinstance(value, str):
-            for strategy in Strategy:
-                if value.lower() == strategy.value.lower():
-                    return strategy
-        return super()._missing_(value)

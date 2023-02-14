@@ -1,8 +1,6 @@
-from poly_market_maker.market import Market
 from poly_market_maker.token import Token, Collateral
 from poly_market_maker.order import Order, Side
 from poly_market_maker.orderbook import OrderBook
-from poly_market_maker.constants import MAX_DECIMALS
 
 from poly_market_maker.strategies.bands import Bands
 from poly_market_maker.strategies.base_strategy import BaseStrategy
@@ -11,10 +9,11 @@ from poly_market_maker.strategies.base_strategy import BaseStrategy
 class BandsStrategy(BaseStrategy):
     def __init__(
         self,
-        market: Market,
         config: dict,
     ):
         assert isinstance(config, dict)
+
+        BaseStrategy.__init__(self)
 
         try:
             self.bands = Bands(config.get("bands"))
@@ -22,8 +21,6 @@ class BandsStrategy(BaseStrategy):
             self.logger.exception(
                 f"Config is invalid ({e}). Treating the config as if it has no bands."
             )
-
-        BaseStrategy.__init__(self, market)
 
     def synchronize(self, orderbook, token_prices):
         """
@@ -105,7 +102,6 @@ class BandsStrategy(BaseStrategy):
         )
 
     def _filter_by_corresponding_buy_token(self, order: Order, buy_token: Token):
-        order_token = self.market.token(order.token_id)
-        return (order.side == Side.BUY and order_token == buy_token) or (
-            order.side == Side.SELL and order_token != buy_token
+        return (order.side == Side.BUY and order.token == buy_token) or (
+            order.side == Side.SELL and order.token != buy_token
         )

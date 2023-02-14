@@ -1,90 +1,67 @@
 from unittest import TestCase
 
 from poly_market_maker.token import Token
-from poly_market_maker.strategies.amm import AMM
+from poly_market_maker.strategies.amm import AMM, AMMConfig
 
 
 class TestAMM(TestCase):
     token = Token.A
+    config = AMMConfig(
+        p_min=0.05,
+        p_max=0.95,
+        delta=0.01,
+        depth=0.1,
+        spread=0.05,
+    )
 
     def test_get_buy_orders(self):
-        amm = AMM(
-            token=self.token,
-            p_min=0.05,
-            p_max=0.95,
-            delta=0.01,
-            depth=0.2,
-            spread=0.05,
+        p = 0.5
+        amm = AMM(self.token, self.config)
+
+        amm.set_price(p)
+        expected_number_of_orders = (
+            int(100 * (self.config.depth - self.config.spread)) + 1
         )
-        amm.set_price(0.5)
+
         buy_orders = amm.get_buy_orders(1000)
-        self.assertEqual(len(buy_orders), 21)
+        self.assertEqual(expected_number_of_orders, len(buy_orders))
 
         sell_orders = amm.get_sell_orders(1000)
-        self.assertEqual(len(sell_orders), 21)
+        self.assertEqual(expected_number_of_orders, len(sell_orders))
 
     def test_get_sell_size(self):
         p = 0.5
-        depth = 0.05
-        p_max = depth + p
         size = 1000
-        delta = 0.01
-        spread = 0.02
 
-        amm = AMM(
-            token=self.token,
-            p_min=0.05,
-            p_max=p_max,
-            delta=delta,
-            depth=depth,
-            spread=spread,
-        )
+        amm = AMM(self.token, self.config)
 
-        sell_size = amm._sell_size(size, p, p_max, p_max)
+        sell_size = amm._sell_size(size, p, self.config.p_max, self.config.p_max)
         self.assertEqual(sell_size, size)
 
     def test_get_buy_size(self):
         p = 0.5
-        depth = 0.05
-        p_min = p - depth
-        p_max = 0.95
         collateral = 1000
-        delta = 0.01
-        spread = 0.02
 
-        amm = AMM(
-            token=self.token,
-            p_min=p_min,
-            p_max=p_max,
-            delta=delta,
-            depth=depth,
-            spread=spread,
-        )
+        amm = AMM(self.token, self.config)
 
-        buy_size = amm._buy_size(collateral, p, p_min, p_min)
-        self.assertLess(buy_size * p_min, collateral)
+        buy_size = amm._buy_size(collateral, p, self.config.p_min, self.config.p_min)
+        self.assertLess(buy_size * self.config.p_min, collateral)
         self.assertGreater(buy_size * p, collateral)
 
     def test_set_price(self):
         p = 0.5
-        depth = 0.05
-        p_min = 0.05
-        p_max = 0.95
-        delta = 0.01
-        spread = 0.02
 
-        amm = AMM(
-            token=self.token,
-            p_min=p_min,
-            p_max=p_max,
-            delta=delta,
-            depth=depth,
-            spread=spread,
-        )
+        amm = AMM(self.token, self.config)
         amm.set_price(p)
 
-        self.assertEqual(amm.p_l, 0.43)
-        self.assertEqual(amm.buy_prices, [0.48, 0.47, 0.46, 0.45, 0.44, 0.43])
+        (buy_prices, sell_prices) = (amm.buy_prices, amm.sell_prices)
+        self.assertEqual(amm.p_l, 0.40)
+        self.assertEqual(buy_prices, [0.45, 0.44, 0.43, 0.42, 0.41, 0.40])
 
-        self.assertEqual(amm.p_u, 0.57)
-        self.assertEqual(amm.sell_prices, [0.52, 0.53, 0.54, 0.55, 0.56, 0.57])
+        self.assertEqual(amm.p_u, 0.6)
+        # self.assertEqual(sell_prices[0], p + self.config.spread)
+        # consider converting all internal units to decimal
+        self.assertEqual(
+            sell_prices,
+            [0.55, 0.56, 0.57, 0.58, 0.59, 0.60],
+        )

@@ -3,5 +3,3 @@ services:
   app:
     build: .
     image: polymarket/poly-market-maker
-    volumes:
-      - ./logs:/app/logs

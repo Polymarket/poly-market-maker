@@ -1,41 +1,48 @@
 import logging
 from math import sqrt
 
-from poly_market_maker.token import Token
+from poly_market_maker.token import Token, Collateral
 from poly_market_maker.order import Order, Side
 from poly_market_maker.utils import math_round_down
 
 
-class AMM:
+class AMMConfig:
     def __init__(
-        self,
-        token: Token,
-        p_min: float,
-        p_max: float,
-        delta: float,
-        depth: float,
-        spread: float,
+        self, p_min: float, p_max: float, delta: float, depth: float, spread: float
     ):
-        self.logger = logging.getLogger(self.__class__.__name__)
-
-        assert isinstance(token, Token)
         assert isinstance(p_min, float)
         assert isinstance(p_max, float)
         assert isinstance(delta, float)
         assert isinstance(depth, float)
         assert isinstance(spread, float)
 
-        self.token = token
         self.p_min = p_min
         self.p_max = p_max
         self.delta = delta
-        self.spread = spread
         self.depth = depth
+        self.spread = spread
+
+
+class AMM:
+    def __init__(self, token: Token, config: AMMConfig):
+        self.logger = logging.getLogger(self.__class__.__name__)
+
+        assert isinstance(token, Token)
+
+        if config.spread >= config.depth:
+            raise Exception("Depth does not exceed spread.")
+
+        self.token = token
+        self.p_min = config.p_min
+        self.p_max = config.p_max
+        self.delta = config.delta
+        self.spread = config.spread
+        self.depth = config.depth
 
     def set_price(self, p_i: float):
         self.p_i = p_i
-        self.p_u = round(min(p_i + self.spread + self.depth, self.p_max), 2)
-        self.p_l = round(max(p_i - self.spread - self.depth, self.p_min), 2)
+        self.p_u = round(min(p_i + self.depth, self.p_max), 2)
+        self.p_l = round(max(p_i - self.depth, self.p_min), 2)
 
         self.buy_prices = []
         price = round(self.p_i - self.spread, 2)
@@ -116,78 +123,57 @@ class AMM:
 
 
 class AMMManager:
-    def __init__(
-        self,
-        p_min: float,
-        p_max: float,
-        delta: float,
-        spread=0.02,
-        depth=1.0,
-    ):
+    def __init__(self, amm_config: AMMConfig):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.amm_a = AMM(
-            token=Token.A,
-            p_min=p_min,
-            p_max=p_max,
-            delta=delta,
-            spread=spread,
-            depth=depth,
-        )
-        self.amm_b = AMM(
-            token=Token.B,
-            p_min=p_min,
-            p_max=p_max,
-            delta=delta,
-            spread=spread,
-            depth=depth,
-        )
+        self.amm_a = AMM(token=Token.A, config=amm_config)
+        self.amm_b = AMM(token=Token.B, config=amm_config)
 
     def get_expected_orders(
-        self, x_a: float, x_b: float, y: float, p_a: float, p_b: float
+        self,
+        target_prices,
+        balances,
     ):
-        self.amm_a.set_price(p_a)
-        self.amm_b.set_price(p_b)
+        self.amm_a.set_price(target_prices[Token.A])
+        self.amm_b.set_price(target_prices[Token.B])
 
-        sell_orders_a = self.amm_a.get_sell_orders(x_a)
-        sell_orders_b = self.amm_b.get_sell_orders(x_b)
+        sell_orders_a = self.amm_a.get_sell_orders(balances[Token.A])
+        sell_orders_b = self.amm_b.get_sell_orders(balances[Token.B])
 
         best_sell_order_size_a = sell_orders_a[0].size if len(sell_orders_a) > 0 else 0
         best_sell_order_size_b = sell_orders_b[0].size if len(sell_orders_b) > 0 else 0
 
-        (y_a, y_b) = self.collateral_allocation(
-            y,
+        (collateral_allocation_a, collateral_allocation_b) = self.collateral_allocation(
+            balances[Collateral],
             best_sell_order_size_a,
             best_sell_order_size_b,
         )
 
-        buy_orders_a = self.amm_a.get_buy_orders(y_a)
-        buy_orders_b = self.amm_b.get_buy_orders(y_b)
+        buy_orders_a = self.amm_a.get_buy_orders(collateral_allocation_a)
+        buy_orders_b = self.amm_b.get_buy_orders(collateral_allocation_b)
 
         orders = sell_orders_a + sell_orders_b + buy_orders_a + buy_orders_b
 
         return orders
 
     def collateral_allocation(
-        self, y: float, best_sell_order_size_a: float, best_sell_order_size_b: float
+        self,
+        collateral_balance: float,
+        best_sell_order_size_a: float,
+        best_sell_order_size_b: float,
     ):
-        y_a = (
-            best_sell_order_size_a - best_sell_order_size_b + y * self.amm_b.phi()
+        collateral_allocation_a = (
+            best_sell_order_size_a
+            - best_sell_order_size_b
+            + collateral_balance * self.amm_b.phi()
         ) / (self.amm_a.phi() + self.amm_b.phi())
 
-        if y_a < 0:
-            y_a = 0
-        elif y_a > y:
-            y_a = y
-        y_b = y - y_a
+        if collateral_allocation_a < 0:
+            collateral_allocation_a = 0
+        elif collateral_allocation_a > collateral_balance:
+            collateral_allocation_a = collateral_balance
+        collateral_allocation_b = collateral_balance - collateral_allocation_a
 
-        return (math_round_down(y_a, 2), math_round_down(y_b, 2))
-
-    @staticmethod
-    def _get_best_ask_size(orders):
-        return next(
-            (
-                order.size
-                for order in sorted(orders, key=lambda o: o.price, reverse=False)
-            ),
-            0,
+        return (
+            math_round_down(collateral_allocation_a, 2),
+            math_round_down(collateral_allocation_b, 2),
         )

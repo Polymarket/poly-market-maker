@@ -1,10 +1,9 @@
 from poly_market_maker.market import Market
-from poly_market_maker.token import Token, Collateral
 from poly_market_maker.orderbook import OrderBook
 from poly_market_maker.constants import MIN_SIZE
 from poly_market_maker.order import Order
 
-from poly_market_maker.strategies.amm import AMMManager
+from poly_market_maker.strategies.amm import AMMManager, AMMConfig
 from poly_market_maker.strategies.base_strategy import BaseStrategy
 
 
@@ -33,20 +32,22 @@ class OrderType:
 class AMMStrategy(BaseStrategy):
     def __init__(
         self,
-        market: Market,
-        config: dict,
+        config_dict: dict,
     ):
-        assert isinstance(config, dict)
+        assert isinstance(config_dict, dict)
 
-        self.amm_manager = AMMManager(
+        BaseStrategy.__init__(self)
+        self.amm_manager = AMMManager(self._get_config(config_dict))
+
+    @staticmethod
+    def _get_config(config: dict):
+        return AMMConfig(
             p_min=config.get("p_min"),
             p_max=config.get("p_max"),
             delta=config.get("delta"),
             spread=config.get("spread"),
             depth=config.get("depth"),
         )
-
-        BaseStrategy.__init__(self, market)
 
     def synchronize(self, orderbook, token_prices):
         """
@@ -64,11 +65,8 @@ class AMMStrategy(BaseStrategy):
         orders_to_place = []
 
         expected_orders = self.amm_manager.get_expected_orders(
-            orderbook.balances[Token.A],
-            orderbook.balances[Token.B],
-            orderbook.balances[Collateral],
-            target_prices[Token.A],
-            target_prices[Token.B],
+            target_prices,
+            orderbook.balances,
         )
         expected_order_types = set(OrderType(order) for order in expected_orders)
 

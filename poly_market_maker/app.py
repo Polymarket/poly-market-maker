@@ -164,12 +164,12 @@ class App:
         )
         self.contracts = Contracts(self.web3, self.gas_station)
 
-        self.price_feed = PriceFeedClob(self.clob_api)
-
         self.market = Market(
             args.condition_id,
             self.clob_api.get_collateral_address(),
         )
+
+        self.price_feed = PriceFeedClob(self.market, self.clob_api)
 
         self.order_book_manager = OrderBookManager(
             args.refresh_frequency, max_workers=1

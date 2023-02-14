@@ -1,14 +1,8 @@
 import logging
 
-from poly_market_maker.market import Market
-
 
 class BaseStrategy:
-    def __init__(
-        self,
-        market: Market,
-    ):
-        self.market = market
+    def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.place_orders = None
         self.cancel_orders = None
