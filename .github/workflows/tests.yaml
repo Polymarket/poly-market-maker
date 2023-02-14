@@ -24,9 +24,9 @@ jobs:
         run: |
           make install-dev
 
-      - name: Format code with black
-        run: |
-          make fmt
+      # - name: Format code with black
+      #   run: |
+      #     make fmt
 
       - name: Run Tests
         run: |
