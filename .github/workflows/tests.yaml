@@ -19,15 +19,13 @@ jobs:
         run: |
           pip install --upgrade pip
           make install-dev
-      - name: Activate Virtualenv
+      - name: Activate virtualenv
         run: |
-          . .venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
-
-      # - name: Format code with black
-      #   run: |
-      #     make fmt
-
+          source .venv/bin/activate
+          echo "PATH=$PATH" >> $GITHUB_ENV
+      - name: Format code with Black
+        run: |
+          make fmt
       - name: Run Tests
         run: |
           make test
