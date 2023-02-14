@@ -22,14 +22,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          ./install.sh
+          make install-dev
 
       - name: Format code with black
         run: |
-          pip install black
-          black .
+          make fmt
 
       - name: Run Tests
         run: |
-          pip install pytest
-          pytest
+          make test
