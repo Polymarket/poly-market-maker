@@ -11,5 +11,4 @@ services:
       - .env
     volumes:
       - ./logs:/app/logs
-    command: >
-      ./run_strategy
+    command: ./run
