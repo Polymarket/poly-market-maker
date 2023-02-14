@@ -25,5 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           ./install-dev.sh
 
+      - name: Format code with black
+        run: |
+          black .
+
       - name: Run Tests
-        run: pytest
+        run: |
+          pytest
