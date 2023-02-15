@@ -26,7 +26,7 @@ class Order:
         assert isinstance(price, float)
         assert isinstance(side, Side)
         assert isinstance(token, Token)
-        if id != None:
+        if id is not None:
             assert isinstance(id, str)
 
         self.size = size
