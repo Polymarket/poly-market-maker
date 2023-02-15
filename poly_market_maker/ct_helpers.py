@@ -16,19 +16,11 @@ class CTHelpers:
     def get_collection_id(cls, condition_id: str, index_set: int) -> str:
         assert isinstance(condition_id, str)
         assert isinstance(index_set, int)
-        a = (
-            int.from_bytes(
-                Web3.keccak(
-                    bytes.fromhex(condition_id[2:])
-                    + index_set.to_bytes(32, byteorder="big")
-                ),
-                byteorder="big",
-            )
-            % cls.P
-        )
 
+        x1 = cls.get_x1(condition_id, index_set)
         # check the parity of the first msb
-        odd = (a >> 255) == 1
+        odd = (x1 >> 255) == 1
+        a = x1 % cls.P
 
         while True:
             a += 1
@@ -44,6 +36,16 @@ class CTHelpers:
 
         # pad to 64 hex chars + '0x'
         return "{0:#0{1}x}".format(a, 66)
+
+    @staticmethod
+    def get_x1(condition_id: str, index_set: int):
+        return int.from_bytes(
+            Web3.keccak(
+                bytes.fromhex(condition_id[2:])
+                + index_set.to_bytes(32, byteorder="big")
+            ),
+            byteorder="big",
+        )
 
     @staticmethod
     def get_position_id(collateral_address: str, collection_id: str) -> int:
