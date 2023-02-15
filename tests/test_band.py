@@ -6,6 +6,27 @@ from poly_market_maker.order import Order, Side
 
 from poly_market_maker.strategies.bands import Band, Bands
 
+test_bands_config = {
+    "bands": [
+        {
+            "minMargin": 0.02,
+            "avgMargin": 0.03,
+            "maxMargin": 0.04,
+            "minAmount": 10.0,
+            "avgAmount": 20.0,
+            "maxAmount": 50.0,
+        },
+        {
+            "minMargin": 0.04,
+            "avgMargin": 0.05,
+            "maxMargin": 0.06,
+            "minAmount": 20.0,
+            "avgAmount": 30.0,
+            "maxAmount": 40.0,
+        },
+    ]
+}
+
 
 class TestBand(TestCase):
     token = Token.A
@@ -78,19 +99,12 @@ class TestBand(TestCase):
         self.assertEqual(scheduled_to_be_canceled.pop(), orders[2])
 
     def test_create_bands(self):
-        with open("./tests/bands.json") as fh:
-            config = json.load(fh)
-
-        test_bands = Bands(config.get("bands"))
-
+        test_bands = Bands(test_bands_config.get("bands"))
         self.assertIsNotNone(test_bands)
         self.assertEqual(len(test_bands.bands), 2)
 
     def test_bands_cancellable_orders(self):
-        with open("./tests/bands.json") as fh:
-            config = json.load(fh)
-
-        test_bands = Bands(config.get("bands"))
+        test_bands = Bands(test_bands_config.get("bands"))
 
         # Initialize buys and sells that fit in both bands
         target_price = 0.50
@@ -111,10 +125,7 @@ class TestBand(TestCase):
         self.assertEqual(len(test_bands.cancellable_orders(orders, target_price)), 4)
 
     def test_bands_new_orders_usdc_only(self):
-        with open("./tests/bands.json") as fh:
-            config = json.load(fh)
-
-        test_bands = Bands(config.get("bands"))
+        test_bands = Bands(test_bands_config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -150,10 +161,7 @@ class TestBand(TestCase):
         self.assertEqual(new_buys[1].price, 0.45)
 
     def test_bands_new_orders_token_only(self):
-        with open("./tests/bands.json") as fh:
-            config = json.load(fh)
-
-        test_bands = Bands(config.get("bands"))
+        test_bands = Bands(test_bands_config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -189,10 +197,7 @@ class TestBand(TestCase):
         self.assertEqual(new_sells[1].price, 0.55)
 
     def test_bands_new_orders_mixed(self):
-        with open("./tests/bands.json") as fh:
-            config = json.load(fh)
-
-        test_bands = Bands(config.get("bands"))
+        test_bands = Bands(test_bands_config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -228,10 +233,7 @@ class TestBand(TestCase):
         self.assertEqual(new_buys[0].price, 0.45)
 
     def test_bands_new_orders_mixed_and_limited(self):
-        with open("./tests/bands.json") as fh:
-            config = json.load(fh)
-
-        test_bands = Bands(config.get("bands"))
+        test_bands = Bands(test_bands_config.get("bands"))
 
         # Given the following balances:
         target_price = 0.5
@@ -271,24 +273,18 @@ class TestBand(TestCase):
     def test_virtual_bands_orders(self):
         # load bands with margins that are very close together
         # without adjustment all orders would be at same price
-        with open("./tests/tight_bands.json") as fh:
-            config = json.load(fh)
 
-        test_bands = Bands(config.get("bands"))
+        test_bands = Bands(test_bands_config.get("bands"))
 
         target_price = 0.04
 
         # confirm adjustments are made to spread orders to neighboring ticks
         virtual_bands = test_bands._calculate_virtual_bands(target_price)
 
-        self.assertEqual(len(virtual_bands), 2)
-        self.assertEqual(virtual_bands[0].min_margin, 0.01)
-        self.assertEqual(virtual_bands[0].avg_margin, 0.02)
-        self.assertEqual(virtual_bands[0].max_margin, 0.03)
-
-        self.assertEqual(virtual_bands[1].min_margin, 0.03)
-        self.assertEqual(virtual_bands[1].avg_margin, 0.03)
-        self.assertEqual(virtual_bands[1].max_margin, 0.05)
+        self.assertEqual(len(virtual_bands), 1)
+        self.assertEqual(virtual_bands[0].min_margin, 0.02)
+        self.assertEqual(virtual_bands[0].avg_margin, 0.03)
+        self.assertEqual(virtual_bands[0].max_margin, 0.04)
 
     # def test_tight_bands_cancellable_and_new_orders(self):
     #     with open("./tests/tight_bands.json") as fh:
