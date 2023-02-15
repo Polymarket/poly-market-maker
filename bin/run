@@ -14,7 +14,7 @@ fi
 
 source .venv/bin/activate
 
-exec python3 -m poly_market_maker.app \
+exec python3 -m poly_market_maker \
     --chain-id "$CHAIN_ID" \
     --private-key "$PRIVATE_KEY" \
     --rpc-url "$RPC_URL" \

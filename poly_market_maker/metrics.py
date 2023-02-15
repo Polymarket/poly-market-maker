@@ -24,14 +24,3 @@ gas_station_latency = Histogram(
     labelnames=["strategy", "status"],
     namespace="market_maker",
 )
-odds_api_latency = Histogram(
-    "odds_api_latency",
-    "Latency of odds api",
-    labelnames=["method", "status"],
-    namespace="market_maker",
-)
-odds_api_remaining_requests = Gauge(
-    "odds_api_remaining_requests",
-    "Remaining requests for our odds api key",
-    namespace="market_maker",
-)

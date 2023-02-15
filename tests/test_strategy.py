@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from poly_market_maker.strategies.strategy_manager import Strategy
+from poly_market_maker.strategy import Strategy
 
 
 class TestStrategy(TestCase):

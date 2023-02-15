@@ -36,7 +36,7 @@ class AMMStrategy(BaseStrategy):
     ):
         assert isinstance(config_dict, dict)
 
-        BaseStrategy.__init__(self)
+        super().__init__()
         self.amm_manager = AMMManager(self._get_config(config_dict))
 
     @staticmethod

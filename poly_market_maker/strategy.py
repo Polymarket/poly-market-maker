@@ -76,7 +76,6 @@ class StrategyManager:
         return orderbook
 
     def get_token_prices(self):
-        # get target prices
         price_a = round(
             self.price_feed.get_price(Token.A),
             MAX_DECIMALS,
@@ -90,11 +89,8 @@ class StrategyManager:
                 f"About to cancel {len(orders_to_cancel)} existing orders!"
             )
             self.order_book_manager.cancel_orders(orders_to_cancel)
-            return
 
     def place_orders(self, orders_to_place):
         if len(orders_to_place) > 0:
             self.logger.info(f"About to place {len(orders_to_place)} new orders!")
             self.order_book_manager.place_orders(orders_to_place)
-
-        self.logger.debug("Synchronized orderbook!")

@@ -1,13 +1,8 @@
-import argparse
 import logging
-import sys
 from prometheus_client import start_http_server
 
-
-from poly_market_maker.price_feed import (
-    PriceFeedClob,
-    PriceFeedSource,
-)
+from poly_market_maker.args import get_args
+from poly_market_maker.price_feed import PriceFeedClob
 from poly_market_maker.gas import GasStation, GasStrategy
 from poly_market_maker.utils import setup_logging, setup_web3
 from poly_market_maker.order import Order, Side
@@ -18,138 +13,25 @@ from poly_market_maker.lifecycle import Lifecycle
 from poly_market_maker.orderbook import OrderBookManager
 from poly_market_maker.contracts import Contracts
 from poly_market_maker.metrics import keeper_balance_amount
-from poly_market_maker.strategies.strategy_manager import StrategyManager, Strategy
+from poly_market_maker.strategy import StrategyManager
 
 
 class App:
     """Market maker keeper on Polymarket CLOB"""
 
-    logger = logging.getLogger(__name__)
+    def __init__(self, args: list):
+        setup_logging()
+        self.logger = logging.getLogger(__name__)
 
-    def __init__(self, args: list, **kwargs):
-        parser = argparse.ArgumentParser(prog="poly-market-maker")
-
-        parser.add_argument(
-            "--private-key", type=str, required=True, help="Private key"
-        )
-
-        parser.add_argument("--chain-id", type=int, required=True, help="Chain ID")
-
-        parser.add_argument("--rpc-url", type=str, required=True, help="RPC URL")
-
-        parser.add_argument(
-            "--clob-api-url", type=str, required=True, help="CLOB API url"
-        )
-
-        parser.add_argument(
-            "--clob-api-key", type=str, required=True, help="CLOB API Key"
-        )
-
-        parser.add_argument(
-            "--clob-api-secret",
-            type=str,
-            required=True,
-            help="CLOB API secret",
-        )
-
-        parser.add_argument(
-            "--clob-api-passphrase",
-            type=str,
-            required=True,
-            help="CLOB API passphrase",
-        )
-
-        parser.add_argument(
-            "--sync-interval",
-            type=int,
-            required=False,
-            default=30,
-            help="The number of seconds in between synchronizations",
-        )
-
-        parser.add_argument(
-            "--min-size",
-            type=float,
-            required=False,
-            default=15,
-            help="The minimum size of a newly placed order",
-        )
-
-        parser.add_argument(
-            "--min-tick",
-            type=float,
-            required=False,
-            default=0.01,
-            help="The distance between two successive prices",
-        )
-
-        parser.add_argument(
-            "--condition-id",
-            type=str,
-            required=True,
-            help="The condition id of the market being made",
-        )
-
-        parser.add_argument(
-            "--refresh-frequency",
-            type=int,
-            default=5,
-            help="Order book refresh frequency (in seconds, default: 5)",
-        )
-
-        parser.add_argument(
-            "--gas-strategy",
-            type=str,
-            default="fixed",
-            help="Gas strategy to be used['fixed', 'station', 'web3']",
-        )
-
-        parser.add_argument("--gas-station-url", type=str, help="Gas station url")
-
-        parser.add_argument(
-            "--fixed-gas-price",
-            type=int,
-            help="Fixed gas price(gwei) to be used",
-        )
-
-        parser.add_argument(
-            "--price-feed-source",
-            type=PriceFeedSource,
-            default="clob",
-            help="source of the mid price of the market",
-        )
-
-        parser.add_argument(
-            "--metrics-server-port",
-            type=int,
-            default=9008,
-            help="The port where the process must start the metrics server",
-        )
-
-        parser.add_argument(
-            "--strategy",
-            type=Strategy,
-            required=True,
-            help="Market making strategy",
-        )
-
-        parser.add_argument(
-            "--strategy-config",
-            type=str,
-            required=True,
-            help="Strategy configuration file path",
-        )
-
-        args = parser.parse_args(args)
-
+        args = get_args(args)
         self.sync_interval = args.sync_interval
 
-        self.min_tick = args.min_tick
-        self.min_size = args.min_size
+        # self.min_tick = args.min_tick
+        # self.min_size = args.min_size
 
         # server to expose the metrics.
-        self.metrics_server_port = args.metrics_server_port
-        start_http_server(self.metrics_server_port)
+        # self.metrics_server_port = args.metrics_server_port
+        start_http_server(args.metrics_server_port)
 
         self.web3 = setup_web3(args)
         self.address = self.web3.eth.account.from_key(args.private_key).address
@@ -190,8 +72,49 @@ class App:
             args.strategy_config,
             self.price_feed,
             self.order_book_manager,
-            self.market,
         )
+
+    """
+    main
+    """
+
+    def main(self):
+        with Lifecycle() as lifecycle:
+            lifecycle.initial_delay(
+                5
+            )  # 5 second initial delay so that bg threads fetch the orderbook
+            lifecycle.on_startup(self.startup)
+            lifecycle.every(self.sync_interval, self.synchronize)  # Sync every 5s
+            lifecycle.on_shutdown(self.shutdown)
+
+    """
+    lifecycle
+    """
+
+    def startup(self):
+        self.logger.info("Running startup callback...")
+        self.approve()
+        self.logger.info("Startup complete!")
+
+    def synchronize(self):
+        """
+        Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
+        """
+        self.logger.debug("Synchronizing orderbook...")
+        self.strategy_manager.synchronize()
+        self.logger.debug("Synchronized orderbook!")
+
+    def shutdown(self):
+        """
+        Shut down the keeper
+        """
+        self.logger.info("Keeper shutting down...")
+        self.order_book_manager.cancel_all_orders()
+        self.logger.info("Keeper is shut down!")
+
+    """
+    handlers
+    """
 
     def get_balances(self) -> dict:
         """
@@ -279,38 +202,3 @@ class App:
 
         self.contracts.max_approve_erc20(collateral, self.address, exchange)
         self.contracts.max_approve_erc1155(conditional, self.address, exchange)
-
-    def main(self):
-        with Lifecycle() as lifecycle:
-            lifecycle.initial_delay(
-                5
-            )  # 5 second initial delay so that bg threads fetch the orderbook
-            lifecycle.on_startup(self.startup)
-            lifecycle.every(self.sync_interval, self.synchronize)  # Sync every 5s
-            lifecycle.on_shutdown(self.shutdown)
-
-    def startup(self):
-        self.logger.info("Running startup callback...")
-        self.approve()
-        self.logger.info("Startup complete!")
-
-    def synchronize(self):
-        """
-        Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
-        """
-        self.logger.debug("Synchronizing orderbook...")
-        self.strategy_manager.synchronize()
-        self.logger.debug("Synchronized orderbook!")
-
-    def shutdown(self):
-        """
-        Shut down the keeper
-        """
-        self.logger.info("Keeper shutting down...")
-        self.order_book_manager.cancel_all_orders()
-        self.logger.info("Keeper is shut down!")
-
-
-if __name__ == "__main__":
-    setup_logging()
-    App(sys.argv[1:]).main()

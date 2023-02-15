@@ -13,8 +13,7 @@ class BandsStrategy(BaseStrategy):
     ):
         assert isinstance(config, dict)
 
-        BaseStrategy.__init__(self)
-
+        super().__init__()
         try:
             self.bands = Bands(config.get("bands"))
         except Exception as e:

@@ -2,6 +2,8 @@ import logging
 
 
 class BaseStrategy:
+    """Base market making strategy"""
+
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.place_orders = None

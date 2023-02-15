@@ -16,8 +16,8 @@ from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 
 def setup_logging(
-    default_path="logging.yaml",
-    default_level=logging.INFO,
+    log_path="logging.yaml",
+    log_level=logging.INFO,
     env_key="LOGGING_CONFIG_FILE",
 ):
     """
@@ -26,7 +26,6 @@ def setup_logging(
     :param env_key:
     :return:
     """
-    log_path = default_path
     log_value = os.getenv(env_key, None)
     if log_value:
         log_path = log_value
@@ -37,7 +36,7 @@ def setup_logging(
     else:
         logging.basicConfig(
             format="%(asctime)-15s %(levelname)-4s %(threadName)s %(message)s",
-            level=(default_level),
+            level=log_level,
         )
         logging.getLogger(__name__).info("Logging configured with default attributes!")
     # Suppress requests and web3 verbose logs

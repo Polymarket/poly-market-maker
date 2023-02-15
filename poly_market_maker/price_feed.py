@@ -24,7 +24,7 @@ class PriceFeedClob(PriceFeed):
     """Resolves the prices from the clob"""
 
     def __init__(self, market: Market, clob_api: ClobApi):
-        PriceFeed().__init__()
+        super().__init__()
 
         assert isinstance(market, Market)
         assert isinstance(clob_api, ClobApi)
