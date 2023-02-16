@@ -19,10 +19,8 @@ jobs:
         run: |
           pip install --upgrade pip
           make install-dev
-      - name: Activate virtualenv
-        run: |
-          source .venv/bin/activate
-          echo "PATH=$PATH" >> $GITHUB_ENV
+        env:
+          SKIP_VIRTUAL_ENV: 1
       - name: Format code with Black
         run: |
           make fmt
