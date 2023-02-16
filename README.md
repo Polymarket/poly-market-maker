@@ -1,32 +1,25 @@
-## poly-market-maker
+# poly-market-maker
 
-[![Tests](https://github.com/Polymarket/poly-market-maker/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/Polymarket/poly-market-maker/actions/workflows/tests.yaml)
+Market maker keeper for the Polymarket CLOB.
 
+## Requirements
 
-Market maker keeper for the Polymarket CLOB
+- Python 3.10
 
-Requires:
-- Python 3.9.10
-- virtualenv
+## Setup
 
-### Usage
+- Run `./install.sh` to set up the virtual environment and install depedencies.
 
-- Start and activate a virtualenv: `python -m venv .venv && source .venv/bin/activate`
+- Create a `.env` file. See `.env.example`.
 
-- Install dependencies: `make init`
+- Modify the entries in `config.env`.
 
-- Create a `.env` file. See `.env.example`
+- Modify the corresponding strategy config in `./config`, if desired.
 
-- Create a `bands.json` configuration file. See the existing `bands.json`
+## Usage
 
-- Start the keeper with `./run_keeper.sh`
+- Start the keeper with `run-local`.
 
-### NBA Games
+## Usage with Docker
 
-- [Readme](market_maker_nba_game.md)
-
-- [How to run a new bot for a game](https://www.notion.so/polymarket/Run-a-market-maker-bot-for-an-NBA-game-d6e4ac0cffe943a886d2e3b57d6c6d40)
-
-- [Logs](https://metrics-clob-staging.polymarket.com/d/LTmCw4w7k/logs?orgId=1&var-app=mmk-nba-game-271cf1e73a4e2caa33331ef15ace8bc1)
-
-- [Bot metrics](https://metrics-clob-staging.polymarket.com/d/Eac_1eNmmk/market-maker?orgId=1&from=now-15m&to=now)
+- To start the keeper with docker, run `docker compose up`.

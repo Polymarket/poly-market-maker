@@ -1,23 +1,17 @@
-FROM python:3.9.10-slim-buster
+FROM python:3.10.10-slim-buster
+
+WORKDIR /app
 
 RUN apt update -y && apt-get install -y python3-dev build-essential
+RUN groupadd -r keeper && useradd -r -g keeper keeper
 
-WORKDIR /opt/polymarket
-
-RUN cd /opt/polymarket
-
-COPY poly_market_maker poly_market_maker
-COPY Makefile .
 COPY requirements.txt .
-COPY logging.yaml .
-COPY run_keeper.sh .
-COPY bands.json .
-COPY loose_small.json .
-COPY loose_large.json .
-COPY tight_small.json .
-COPY tight_large.json .
 COPY install.sh .
-
 RUN ./install.sh
 
-CMD ["./run_keeper.sh"]
+COPY poly_market_maker poly_market_maker
+COPY bin bin
+COPY logging.yaml .
+
+WORKDIR /app/bin
+USER keeper

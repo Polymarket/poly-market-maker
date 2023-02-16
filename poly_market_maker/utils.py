@@ -12,13 +12,12 @@ from web3.middleware import (
     latest_block_based_cache_middleware,
     simple_cache_middleware,
 )
-
 from web3.gas_strategies.time_based import fast_gas_price_strategy
 
 
 def setup_logging(
-    default_path="logging.yaml",
-    default_level=logging.INFO,
+    log_path="logging.yaml",
+    log_level=logging.INFO,
     env_key="LOGGING_CONFIG_FILE",
 ):
     """
@@ -27,7 +26,6 @@ def setup_logging(
     :param env_key:
     :return:
     """
-    log_path = default_path
     log_value = os.getenv(env_key, None)
     if log_value:
         log_path = log_value
@@ -38,7 +36,7 @@ def setup_logging(
     else:
         logging.basicConfig(
             format="%(asctime)-15s %(levelname)-4s %(threadName)s %(message)s",
-            level=(default_level),
+            level=log_level,
         )
         logging.getLogger(__name__).info("Logging configured with default attributes!")
     # Suppress requests and web3 verbose logs
@@ -51,8 +49,8 @@ def setup_web3(args):
 
     # Middleware to sign transactions from a private key
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    w3.middleware_onion.add(construct_sign_and_send_raw_middleware(args.eth_key))
-    w3.eth.default_account = w3.eth.account.from_key(args.eth_key).address
+    w3.middleware_onion.add(construct_sign_and_send_raw_middleware(args.private_key))
+    w3.eth.default_account = w3.eth.account.from_key(args.private_key).address
 
     # Gas Middleware
     w3.eth.set_gas_price_strategy(fast_gas_price_strategy)

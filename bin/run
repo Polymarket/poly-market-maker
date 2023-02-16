@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+dir="$(dirname "$0")"/..
+cd "$dir" || exit
+
+echo "Running poly-market-maker..."
+
+if [ -f .env ]; then
+    echo "Sourcing env variables from dot env file..."
+    source .env
+else
+    echo "Fetching env variables..."
+fi
+
+source .venv/bin/activate
+
+echo $CONDITION_ID
+exec python3 -m poly_market_maker \
+    --chain-id "$CHAIN_ID" \
+    --private-key "$PRIVATE_KEY" \
+    --rpc-url "$RPC_URL" \
+    --clob-api-url "$CLOB_API_URL" \
+    --clob-api-key "$CLOB_API_KEY" \
+    --clob-api-secret "$CLOB_SECRET" \
+    --clob-api-passphrase "$CLOB_PASS_PHRASE" \
+    --condition-id "$CONDITION_ID" \
+    --strategy "$STRATEGY" \
+    --strategy-config "$CONFIG"

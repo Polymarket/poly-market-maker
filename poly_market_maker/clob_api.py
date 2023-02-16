@@ -1,23 +1,26 @@
 import logging
 import sys
 import time
+from py_clob_client.client import (
+    ClobClient,
+    ApiCreds,
+    OrderArgs,
+    FilterParams,
+)
 
-from .utils import randomize_default_price
-from .order import Order
-from .constants import OK
-from .metrics import clob_requests_latency
-
-from py_clob_client.client import ClobClient, ApiCreds, LimitOrderArgs, FilterParams
+from poly_market_maker.utils import randomize_default_price
+from poly_market_maker.constants import OK
+from poly_market_maker.metrics import clob_requests_latency
 
 DEFAULT_PRICE = 0.5
 
 
 class ClobApi:
-    def __init__(self, token_id: str, args):
+    def __init__(self, args):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.token_id = token_id
+
         self.client: ClobClient = self._init_client(
-            args.eth_key,
+            args.private_key,
             args.chain_id,
             args.clob_api_url,
             args.clob_api_key,
@@ -37,17 +40,14 @@ class ClobApi:
     def get_exchange(self):
         return self.client.get_exchange_address()
 
-    def get_executor(self):
-        return self.client.get_executor_address()
-
-    def get_price(self):
+    def get_price(self, token_id: int) -> float:
         """
         Get the current price on the orderbook
         """
         self.logger.debug("Fetching midpoint price from the API...")
         start_time = time.time()
         try:
-            resp = self.client.get_midpoint(self.token_id)
+            resp = self.client.get_midpoint(token_id)
             clob_requests_latency.labels(method="get_midpoint", status="ok").observe(
                 (time.time() - start_time)
             )
@@ -68,50 +68,48 @@ class ClobApi:
         )
         return price
 
-    def get_orders(self):
+    def get_orders(self, condition_id: str):
         """
         Get open keeper orders on the orderbook
         """
         self.logger.debug("Fetching open keeper orders from the API...")
         start_time = time.time()
         try:
-            resp = self.client.get_open_orders(FilterParams(market=self.token_id))
-            clob_requests_latency.labels(method="get_open_orders", status="ok").observe(
+            resp = self.client.get_orders(FilterParams(market=condition_id))
+            clob_requests_latency.labels(method="get_orders", status="ok").observe(
                 (time.time() - start_time)
             )
-            if resp.get("orders") is not None:
-                return [self._get_order(o) for o in resp.get("orders")]
+
+            return [self._get_order(order) for order in resp]
         except Exception as e:
             self.logger.error(
                 f"Error fetching keeper open orders from the CLOB API: {e}"
             )
-            clob_requests_latency.labels(
-                method="get_open_orders", status="error"
-            ).observe((time.time() - start_time))
+            clob_requests_latency.labels(method="get_orders", status="error").observe(
+                (time.time() - start_time)
+            )
         return []
 
-    def place_order(self, price, size, side):
+    def place_order(self, price: float, size: float, side: str, token_id: int) -> str:
         """
         Places a new order
         """
         self.logger.info(
-            f"Placing a new order: Order[price={price},size={size},side={side}]"
+            f"Placing a new order: Order[price={price},size={size},side={side},token_id={token_id}]"
         )
         start_time = time.time()
         try:
-            resp = self.client.create_and_post_limit_order(
-                LimitOrderArgs(
-                    price=price, size=size, side=side, token_id=self.token_id
-                )
+            resp = self.client.create_and_post_order(
+                OrderArgs(price=price, size=size, side=side, token_id=token_id)
             )
             clob_requests_latency.labels(
-                method="create_and_post_limit_order", status="ok"
+                method="create_and_post_order", status="ok"
             ).observe((time.time() - start_time))
             order_id = None
             if resp and resp.get("success") and resp.get("orderID"):
                 order_id = resp.get("orderID")
                 self.logger.info(
-                    f"Succesfully placed new order: Order[id={order_id},price={price},size={size},side={side}]!"
+                    f"Succesfully placed new order: Order[id={order_id},price={price},size={size},side={side},tokenID={token_id}]!"
                 )
                 return order_id
 
@@ -122,11 +120,11 @@ class ClobApi:
         except Exception as e:
             self.logger.error(f"Request exception: failed placing new order: {e}")
             clob_requests_latency.labels(
-                method="create_and_post_limit_order", status="error"
+                method="create_and_post_order", status="error"
             ).observe((time.time() - start_time))
         return None
 
-    def cancel_order(self, order_id):
+    def cancel_order(self, order_id) -> bool:
         self.logger.info(f"Cancelling order {order_id}...")
         if order_id is None:
             self.logger.debug("Invalid order_id")
@@ -146,7 +144,7 @@ class ClobApi:
             )
         return False
 
-    def cancel_all_orders(self):
+    def cancel_all_orders(self) -> bool:
         self.logger.info("Cancelling all open keeper orders..")
         start_time = time.time()
         try:
@@ -184,9 +182,19 @@ class ClobApi:
             self.logger.error("Unable to connect to CLOB API, shutting down!")
             sys.exit(1)
 
-    def _get_order(self, order_dict: dict):
-        size = order_dict.get("available_size")
+    def _get_order(self, order_dict: dict) -> dict:
+        size = float(order_dict.get("original_size")) - float(
+            order_dict.get("size_matched")
+        )
+        price = float(order_dict.get("price"))
         side = order_dict.get("side")
-        price = order_dict.get("price")
-        order_id = order_dict.get("orderID")
-        return Order(size=float(size), price=float(price), side=side, id=order_id)
+        order_id = order_dict.get("id")
+        token_id = int(order_dict.get("asset_id"))
+
+        return {
+            "size": size,
+            "price": price,
+            "side": side,
+            "token_id": token_id,
+            "id": order_id,
+        }

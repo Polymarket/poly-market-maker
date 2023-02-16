@@ -55,7 +55,8 @@ class AsyncCallback:
     def wait(self):
         """Waits for the currently running callback to finish.
 
-        If the callback isn't running or hasn't even been invoked once, returns instantly."""
+        If the callback isn't running or hasn't even been invoked once, returns instantly.
+        """
         if self.thread is not None:
             self.thread.join()
 
@@ -91,7 +92,7 @@ class Lifecycle:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Initialization phase
-        self.logger.info(f"Initializing keeper lifecycle")
+        self.logger.info("Initializing keeper lifecycle")
 
         # Initial delay
         if self.delay > 0:

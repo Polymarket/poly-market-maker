@@ -1,8 +1,11 @@
-init:
-	pip install -r requirements.txt
+install:
+	./install.sh
+
+install-dev:
+	./install-dev.sh
 
 test:
-	pytest -s
+	pytest
 
 fmt:
-	black ./.
+	black .

@@ -2,8 +2,8 @@ import logging
 import web3
 import web3.constants
 
-from .gas import GasStation
-from .metrics import chain_requests_counter
+from poly_market_maker.gas import GasStation
+from poly_market_maker.metrics import chain_requests_counter
 
 
 erc20_balance_of = """[{"constant": true,"inputs": [{"name": "_owner","type": "address"}],"name": "balanceOf","outputs": [{"name": "balance","type": "uint256"}],"payable": false,"stateMutability": "view","type": "function"}]"""
@@ -40,12 +40,18 @@ class Contracts:
 
         return bal
 
-    def balance_of_erc1155(self, token: str, address: str, token_id: int):
-        erc1155 = self.w3.eth.contract(token, abi=erc1155_balance_of)
+    def balance_of_erc1155(
+        self, erc1155_address: str, holder_address: str, token_id: int
+    ):
+        assert isinstance(erc1155_address, str)
+        assert isinstance(holder_address, str)
+        assert isinstance(token_id, int)
+
+        erc1155 = self.w3.eth.contract(erc1155_address, abi=erc1155_balance_of)
         bal = None
 
         try:
-            bal = erc1155.functions.balanceOf(address, token_id).call()
+            bal = erc1155.functions.balanceOf(holder_address, token_id).call()
             chain_requests_counter.labels(method="ERC1155 balanceOf", status="ok").inc()
         except Exception as e:
             self.logger.error(f"Error ERC1155 balanceOf: {e}")

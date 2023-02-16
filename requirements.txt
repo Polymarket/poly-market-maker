@@ -1,7 +1,6 @@
 aiohttp==3.8.1
 aiosignal==1.2.0
 async-timeout==4.0.2
-attrs==21.4.0
 base58==2.1.1
 bitarray==1.2.2
 certifi==2021.10.8
@@ -31,14 +30,12 @@ parsimonious==0.8.1
 pluggy==1.0.0
 protobuf==3.19.4
 py==1.11.0
-py-clob-client>=0.0.22
+py-clob-client>=0.1.10
 py-order-utils>=0.0.21
 pycryptodome==3.14.1
 pyparsing==3.0.7
 pyrsistent==0.18.1
 pysha3==1.0.2
-pytest==7.0.1
-python-dotenv==0.19.2
 PyYAML==6.0
 requests==2.27.1
 rlp==2.0.1
@@ -51,4 +48,3 @@ web3==5.28.0
 websockets==9.1
 yarl==1.7.2
 prometheus_client==0.14.1
-black==22.1.0
