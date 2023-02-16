@@ -14,6 +14,7 @@ fi
 
 source .venv/bin/activate
 
+echo $CONDITION_ID
 exec python3 -m poly_market_maker \
     --chain-id "$CHAIN_ID" \
     --private-key "$PRIVATE_KEY" \

@@ -2,19 +2,24 @@
 
 Market maker keeper for the Polymarket CLOB
 
-Requires:
+## Requirements
 
-- Python 3.10.10
-- virtualenv
+- Python 3.10
+
+## Setup
+
+- Run `./install.sh` to set up the virtual environment and install depedencies.
+
+- Create a `.env` file. See `.env.example`.
+
+- Modify the entries in `config.env`.
+
+- Modify the corresponding strategy config in `./config`, if desired.
 
 ## Usage
 
-- Start and activate a virtualenv: `python -m venv .venv && source .venv/bin/activate`
+- Start the keeper with `run-local`.
 
-- Install dependencies: `make init`
+## Usage with Docker
 
-- Create a `.env` file. See `.env.example`
-
-- Create a `bands.json` configuration file. See the existing `bands.json`
-
-- Start the keeper with `./run_keeper.sh`
+- To start the keeper with docker, run `docker compose up`.
