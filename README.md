@@ -20,7 +20,7 @@ Market maker keeper for the Polymarket CLOB.
 
 - Start the keeper with `./run-local.sh`.
 
-## Usage with Docker
+### Usage with Docker
 
 - To start the keeper with docker, run `docker compose up`.
 
@@ -28,9 +28,9 @@ Market maker keeper for the Polymarket CLOB.
 
 The `config.env` file defines 3 environment variables:
 
-- CONDITION_ID, the condition id of the market in hex string format.
-- STRATEGY, the strategy to use, either "Bands" or "AMM" (case insensitive)
-- CONFIG, the path to the strategy config file.
+- `CONDITION_ID`, the condition id of the market in hex string format.
+- `STRATEGY`, the strategy to use, either "Bands" or "AMM" (case insensitive)
+- `CONFIG`, the path to the strategy config file.
 
 ## Strategies
 
