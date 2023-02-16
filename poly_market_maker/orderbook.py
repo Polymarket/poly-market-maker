@@ -169,7 +169,7 @@ class OrderBookManager:
                 )
 
                 self.logger.debug(
-                    f"Open keeper orders: {[str(order) for order in orders]}"
+                    f"Open keeper orders: {[order.id for order in orders]}"
                 )
 
         return OrderBook(
