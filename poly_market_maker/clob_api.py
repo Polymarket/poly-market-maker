@@ -12,28 +12,27 @@ DEFAULT_PRICE = 0.5
 
 
 class ClobApi:
-    def __init__(self, args):
+    def __init__(self, host, chain_id, private_key):
         self.logger = logging.getLogger(self.__class__.__name__)
 
         self.client = self._init_client_L1(
-            host=args.clob_api_url,
-            chain_id=args.chain_id,
-            private_key=args.private_key,
+            host=host,
+            chain_id=chain_id,
+            private_key=private_key,
         )
 
         try:
             api_creds = self.client.derive_api_key()
             self.logger.debug(f"Api key found: {api_creds.api_key}")
-
         except PolyApiException:
             self.logger.debug("Api key not found. Creating a new one...")
             api_creds = self.client.create_api_key()
             self.logger.debug(f"Api key created: {api_creds.api_key}.")
 
         self.client = self._init_client_L2(
-            host=args.clob_api_url,
-            chain_id=args.chain_id,
-            private_key=args.private_key,
+            host=host,
+            chain_id=chain_id,
+            private_key=private_key,
             creds=api_creds,
         )
 
