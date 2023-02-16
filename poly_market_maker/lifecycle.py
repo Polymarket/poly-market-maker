@@ -92,7 +92,7 @@ class Lifecycle:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Initialization phase
-        self.logger.info("Initializing keeper lifecycle")
+        self.logger.info("Initializing keeper lifecycle...")
 
         # Initial delay
         if self.delay > 0:
@@ -129,7 +129,7 @@ class Lifecycle:
 
         # Startup phase
         if self.startup_function:
-            self.logger.info("Executing keeper startup logic")
+            self.logger.info("Executing keeper startup logic...")
             self.startup_function()
 
         # Bind `on_block`, bind `every`

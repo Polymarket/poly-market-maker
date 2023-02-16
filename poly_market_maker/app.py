@@ -34,10 +34,14 @@ class App:
         # self.metrics_server_port = args.metrics_server_port
         start_http_server(args.metrics_server_port)
 
-        self.web3 = setup_web3(args)
+        self.web3 = setup_web3(args.rpc_url, args.private_key)
         self.address = self.web3.eth.account.from_key(args.private_key).address
 
-        self.clob_api = ClobApi(args)
+        self.clob_api = ClobApi(
+            host=args.clob_api_url,
+            chain_id=self.web3.eth.chain_id,
+            private_key=args.private_key,
+        )
 
         self.gas_station = GasStation(
             strat=GasStrategy(args.gas_strategy),
