@@ -261,7 +261,6 @@ class Bands:
 
                 if band_amount < band.avg_amount:
                     # buy
-                    print(band_amount)
                     buy_price = band.buy_price(target_price)
                     buy_size = round(
                         min(

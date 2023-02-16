@@ -1,5 +1,6 @@
 import logging
 from prometheus_client import start_http_server
+import time
 
 from poly_market_maker.args import get_args
 from poly_market_maker.price_feed import PriceFeedClob
@@ -65,7 +66,6 @@ class App:
         self.order_book_manager.cancel_all_orders_with(
             lambda _: self.clob_api.cancel_all_orders()
         )
-        self.order_book_manager.start()
 
         self.strategy_manager = StrategyManager(
             args.strategy,
@@ -80,9 +80,6 @@ class App:
 
     def main(self):
         with Lifecycle() as lifecycle:
-            lifecycle.initial_delay(
-                5
-            )  # 5 second initial delay so that bg threads fetch the orderbook
             lifecycle.on_startup(self.startup)
             lifecycle.every(self.sync_interval, self.synchronize)  # Sync every 5s
             lifecycle.on_shutdown(self.shutdown)
@@ -93,7 +90,9 @@ class App:
 
     def startup(self):
         self.logger.info("Running startup callback...")
+        self.order_book_manager.start()
         self.approve()
+        time.sleep(5)  # 5 second initial delay so that bg threads fetch the orderbook
         self.logger.info("Startup complete!")
 
     def synchronize(self):
