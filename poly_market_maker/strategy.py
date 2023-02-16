@@ -49,29 +49,34 @@ class StrategyManager:
             case _:
                 raise Exception("Invalid strategy")
 
-        self.strategy.cancel_orders_with(self.cancel_orders)
-        self.strategy.place_orders_with(self.place_orders)
-
     def synchronize(self):
+        self.logger.debug("Synchronizing strategy...")
+
         try:
             orderbook = self.get_order_book()
         except Exception:
             return
         token_prices = self.get_token_prices()
 
-        self.strategy.synchronize(orderbook, token_prices)
-        self.logger.debug("Synchronized orderbook!")
+        (orders_to_cancel, orders_to_place) = self.strategy.get_orders(
+            orderbook, token_prices
+        )
+
+        self.cancel_orders(orders_to_cancel)
+        self.place_orders(orders_to_place)
+
+        self.logger.debug("Synchronized strategy!")
 
     def get_order_book(self):
         orderbook = self.order_book_manager.get_order_book()
 
-        if (
-            orderbook.balances[Collateral] is None
-            or orderbook.balances[Token.A] is None
-            or orderbook.balances[Token.B] is None
-        ):
+        if None in orderbook.balances.values():
             self.logger.debug("Balances invalid/non-existent")
             raise Exception("Balances invalid/non-existent")
+
+        if sum(orderbook.balances.values()) == 0:
+            self.logger.debug("Wallet has no balances for this market")
+            raise Exception("Zero Balances")
 
         return orderbook
 
