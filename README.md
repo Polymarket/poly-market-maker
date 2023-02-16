@@ -1,6 +1,6 @@
 # poly-market-maker
 
-Market maker keeper for the Polymarket CLOB
+Market maker keeper for the Polymarket CLOB.
 
 ## Requirements
 
