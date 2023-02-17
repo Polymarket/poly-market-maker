@@ -21,18 +21,10 @@ class BandsStrategy(BaseStrategy):
                 f"Config is invalid ({e}). Treating the config as if it has no bands."
             )
 
-    def synchronize(self, orderbook, token_prices):
+    def get_orders(self, orderbook: OrderBook, target_prices):
         """
         Synchronize the orderbook by cancelling orders out of bands and placing new orders if necessary
         """
-        self.logger.debug("Synchronizing bands strategy...")
-
-        (orders_to_cancel, orders_to_place) = self.get_orders(orderbook, token_prices)
-
-        self.cancel_orders(orders_to_cancel)
-        self.place_orders(orders_to_place)
-
-    def get_orders(self, orderbook: OrderBook, target_prices):
         orders_to_place = []
         orders_to_cancel = []
 

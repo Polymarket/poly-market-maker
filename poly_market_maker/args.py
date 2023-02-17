@@ -8,27 +8,9 @@ def get_args(args) -> dict:
 
     parser.add_argument("--private-key", type=str, required=True, help="Private key")
 
-    parser.add_argument("--chain-id", type=int, required=True, help="Chain ID")
-
     parser.add_argument("--rpc-url", type=str, required=True, help="RPC URL")
 
     parser.add_argument("--clob-api-url", type=str, required=True, help="CLOB API url")
-
-    parser.add_argument("--clob-api-key", type=str, required=True, help="CLOB API Key")
-
-    parser.add_argument(
-        "--clob-api-secret",
-        type=str,
-        required=True,
-        help="CLOB API secret",
-    )
-
-    parser.add_argument(
-        "--clob-api-passphrase",
-        type=str,
-        required=True,
-        help="CLOB API passphrase",
-    )
 
     parser.add_argument(
         "--sync-interval",
@@ -52,13 +34,6 @@ def get_args(args) -> dict:
         required=False,
         default=0.01,
         help="The distance between two successive prices",
-    )
-
-    parser.add_argument(
-        "--condition-id",
-        type=str,
-        required=True,
-        help="The condition id of the market being made",
     )
 
     parser.add_argument(
@@ -88,6 +63,13 @@ def get_args(args) -> dict:
         type=int,
         default=9008,
         help="The port where the process must start the metrics server",
+    )
+
+    parser.add_argument(
+        "--condition-id",
+        type=str,
+        required=True,
+        help="The condition id of the market being made",
     )
 
     parser.add_argument(

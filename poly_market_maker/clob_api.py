@@ -1,12 +1,8 @@
 import logging
 import sys
 import time
-from py_clob_client.client import (
-    ClobClient,
-    ApiCreds,
-    OrderArgs,
-    FilterParams,
-)
+from py_clob_client.client import ClobClient, ApiCreds, OrderArgs, FilterParams
+from py_clob_client.exceptions import PolyApiException
 
 from poly_market_maker.utils import randomize_default_price
 from poly_market_maker.constants import OK
@@ -16,16 +12,28 @@ DEFAULT_PRICE = 0.5
 
 
 class ClobApi:
-    def __init__(self, args):
+    def __init__(self, host, chain_id, private_key):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.client: ClobClient = self._init_client(
-            args.private_key,
-            args.chain_id,
-            args.clob_api_url,
-            args.clob_api_key,
-            args.clob_api_secret,
-            args.clob_api_passphrase,
+        self.client = self._init_client_L1(
+            host=host,
+            chain_id=chain_id,
+            private_key=private_key,
+        )
+
+        try:
+            api_creds = self.client.derive_api_key()
+            self.logger.debug(f"Api key found: {api_creds.api_key}")
+        except PolyApiException:
+            self.logger.debug("Api key not found. Creating a new one...")
+            api_creds = self.client.create_api_key()
+            self.logger.debug(f"Api key created: {api_creds.api_key}.")
+
+        self.client = self._init_client_L2(
+            host=host,
+            chain_id=chain_id,
+            private_key=private_key,
+            creds=api_creds,
         )
 
     def get_address(self):
@@ -160,17 +168,28 @@ class ClobApi:
             )
         return False
 
-    def _init_client(
+    def _init_client_L1(
         self,
-        private_key,
+        host,
         chain_id,
-        clob_url,
-        clob_api_key,
-        clob_api_secret,
-        clob_api_passphrase,
-    ):
-        creds = ApiCreds(clob_api_key, clob_api_secret, clob_api_passphrase)
-        clob_client = ClobClient(clob_url, chain_id, private_key, creds)
+        private_key,
+    ) -> ClobClient:
+        clob_client = ClobClient(host, chain_id, private_key)
+        try:
+            if clob_client.get_ok() == OK:
+                self.logger.info("Connected to CLOB API!")
+                self.logger.info(
+                    "CLOB Keeper address: {}".format(clob_client.get_address())
+                )
+                return clob_client
+        except:
+            self.logger.error("Unable to connect to CLOB API, shutting down!")
+            sys.exit(1)
+
+    def _init_client_L2(
+        self, host, chain_id, private_key, creds: ApiCreds
+    ) -> ClobClient:
+        clob_client = ClobClient(host, chain_id, private_key, creds)
         try:
             if clob_client.get_ok() == OK:
                 self.logger.info("Connected to CLOB API!")

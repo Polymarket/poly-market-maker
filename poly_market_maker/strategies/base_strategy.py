@@ -1,4 +1,8 @@
 import logging
+from typing import Tuple
+
+from poly_market_maker.orderbook import OrderBook
+from poly_market_maker.order import Order
 
 
 class BaseStrategy:
@@ -9,11 +13,7 @@ class BaseStrategy:
         self.place_orders = None
         self.cancel_orders = None
 
-    def synchronize(self, orderbook, token_prices):
+    def get_orders(
+        self, orderbook: OrderBook, token_prices
+    ) -> Tuple[list[Order], list[Order]]:
         pass
-
-    def place_orders_with(self, place_orders_function):
-        self.place_orders = place_orders_function
-
-    def cancel_orders_with(self, cancel_orders_function):
-        self.cancel_orders = cancel_orders_function

@@ -1,5 +1,6 @@
 import logging
 from prometheus_client import start_http_server
+import time
 
 from poly_market_maker.args import get_args
 from poly_market_maker.price_feed import PriceFeedClob
@@ -33,10 +34,14 @@ class App:
         # self.metrics_server_port = args.metrics_server_port
         start_http_server(args.metrics_server_port)
 
-        self.web3 = setup_web3(args)
+        self.web3 = setup_web3(args.rpc_url, args.private_key)
         self.address = self.web3.eth.account.from_key(args.private_key).address
 
-        self.clob_api = ClobApi(args)
+        self.clob_api = ClobApi(
+            host=args.clob_api_url,
+            chain_id=self.web3.eth.chain_id,
+            private_key=args.private_key,
+        )
 
         self.gas_station = GasStation(
             strat=GasStrategy(args.gas_strategy),
@@ -65,7 +70,6 @@ class App:
         self.order_book_manager.cancel_all_orders_with(
             lambda _: self.clob_api.cancel_all_orders()
         )
-        self.order_book_manager.start()
 
         self.strategy_manager = StrategyManager(
             args.strategy,
@@ -80,9 +84,6 @@ class App:
 
     def main(self):
         with Lifecycle() as lifecycle:
-            lifecycle.initial_delay(
-                5
-            )  # 5 second initial delay so that bg threads fetch the orderbook
             lifecycle.on_startup(self.startup)
             lifecycle.every(self.sync_interval, self.synchronize)  # Sync every 5s
             lifecycle.on_shutdown(self.shutdown)
@@ -93,7 +94,9 @@ class App:
 
     def startup(self):
         self.logger.info("Running startup callback...")
+        self.order_book_manager.start()
         self.approve()
+        time.sleep(5)  # 5 second initial delay so that bg threads fetch the orderbook
         self.logger.info("Startup complete!")
 
     def synchronize(self):

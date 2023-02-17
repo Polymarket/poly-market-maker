@@ -1,4 +1,3 @@
-from poly_market_maker.market import Market
 from poly_market_maker.orderbook import OrderBook
 from poly_market_maker.constants import MIN_SIZE
 from poly_market_maker.order import Order
@@ -48,17 +47,6 @@ class AMMStrategy(BaseStrategy):
             spread=config.get("spread"),
             depth=config.get("depth"),
         )
-
-    def synchronize(self, orderbook, token_prices):
-        """
-        Synchronize the orderbook by cancelling all orders and placing new orders
-        """
-        self.logger.debug("Synchronizing AMM strategy...")
-
-        (orders_to_cancel, orders_to_place) = self.get_orders(orderbook, token_prices)
-
-        self.cancel_orders(orders_to_cancel)
-        self.place_orders(orders_to_place)
 
     def get_orders(self, orderbook: OrderBook, target_prices):
         orders_to_cancel = []
