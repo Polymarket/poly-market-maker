@@ -41,7 +41,7 @@ $$
 \begin{align*}
 P_1 &= P - \text{spread}, \\
 P_k &= P - \text{depth}, \text{ and} \\
-P_{i+1} &= P_i + \text{delta} \text{ for } i \in [0, k-1].
+P_{i+1} &= P_i - \text{delta} \text{ for } i \in [0, k-1].
 \end{align*}
 $$
 
@@ -59,7 +59,7 @@ $$
 
 where, for each $i$, $O_i$ has size $S_i$ and price $P_i$.
 
-To determine the size $S_i$ for a buy order $O_i$, we compute the size, _i.e._ the $\text{Token}$ amount, $S'_i$ required to move the marginal price of $\text{Pool}$ from $P$ to $P_i$. In other words, if $S'_i$ tokens are swapped into $\text{Pool}$, the resulting marginal price would be $P_i$. Then for each $i$ in $[1,k]$, let $S'_i = S_{\text{Pool}}(O_{P_i})$.
+To determine the size $S_i$ for a buy order $O_i$, we compute the size, _i.e._ the $\text{Token}$ amount, $S'_i$ required to move the marginal price of $\text{Pool}$ from $P$ to $P_i$. In other words, if $S_i'$ tokens are swapped into $\text{Pool}$, the resulting marginal price would be $P_i$.
 Finally define the $S_i$ as follows:
 
 $$
@@ -70,3 +70,21 @@ S'_i - S'_{i-1} & \text{for } i \geq 2.
 $$
 
 The sizes are chosen such that if these were the only orders on the order book, a trader would sell $S_i$ tokens to fill up every order down to and including $O_i$.
+
+### Sell Orders
+
+The same process is used to determine the sizes of sell orders, except that we define $\text{Prices}$ as follows:
+
+$$
+\text{Prices} = \{P_1, P_2, \dots, P_k\},
+$$
+
+where
+
+$$
+\begin{align*}
+P_1 &= P + \text{spread}, \\
+P_k &= P + \text{depth}, \text{ and} \\
+P_{i+1} &= P_i + \text{delta} \text{ for } i \in [0, k-1].
+\end{align*}
+$$
