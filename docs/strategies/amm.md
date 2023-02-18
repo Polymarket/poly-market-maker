@@ -16,9 +16,7 @@ The AMM strategy seeks to emulate the liquidity available in a concentrated liqu
 
 ## Pool Setup
 
-The strategy emulates liquidity available in the following set up:
-
-Let $\text{Price}_A$, $\text{Price}_B$ be the current midpoint price of the two tokens, and let $\text{Pool}_A$ and $\text{Pool}_B$ be two concentrated liquidity pools, $\text{Pool}_A$ for the $\text{Token}_A:\text{Collateral}$ pair and $\text{Pool}_B$ for the $\text{Token}_B:\text{Collateral}$ pair.
+Let $\text{Price}_A$, $\text{Price}_B$ be the midpoint prices of the two tokens, and let $\text{Pool}_A$ and $\text{Pool}_B$ be two concentrated liquidity pools: $\text{Pool}_A$ for the $\text{Token}_A:\text{Collateral}$ pair and $\text{Pool}_B$ for the $\text{Token}_B:\text{Collateral}$ pair.
 
 For each $\text{Pool}$, we consider two liquidity bands, the first, $\text{L}$, the "left" band, in the range $[\text{price} - \text{delta}, \text{price}]$, and the second, $\text{R}$, the "right" band, in the range $[\text{price}, \text{price} + \text{delta}]$.
 Since $\text{L}$ consists only of prices _less than or equal_ to $\text{price}$, any liquidity provided to $\text{L}$ will consist _only of_ $\text{Collateral}$. Likewise, since $\text{R}$ consists only of prices _greater than or equal_ to $\text{price}$, any liquidity provided to $\text{R}$ will consist _only of_ $\text{Token}$.
@@ -47,25 +45,25 @@ P_{i+1} &= P_i + \text{delta} \text{ for } i \in [0, k-1].
 \end{align*}
 $$
 
-For each $P$ in $\text{Prices}$, assign a corresponding order
+To $\text{Prices}$, we assign corresponding sizes
+
+$$
+\text{Sizes} = \{S_1, S_2, \dots, S_k\},
+$$
+
+and orders,
 
 $$
 \text{Orders} = \{O_1, O_2, \dots, O_k\},
 $$
 
-For each $i$, $O_i$ has size $S_i$ and price $P_i$.
+where, for each $i$, $O_i$ has size $S_i$ and price $P_i$.
 
-To determine the size $S_i$ for a buy order $O_i$, we compute the size, _i.e._ the $\text{Token}$ amount, $S'_i$ required to move the marginal price of $\text{Pool}$ from $P$ to $P_i$. In other words, if $S(P_i)$ tokens are swapped into $\text{Pool}$, the resulting marginal price would be $O_P$. Then for each $i$ in $[1,k]$, let $S'_i = S_{\text{Pool}}(O_{P_i})$.
-Finally define
-
-$$
-\text{Sizes} = \{ S_1, S_2, \dots, S_m\}
-$$
-
-where
+To determine the size $S_i$ for a buy order $O_i$, we compute the size, _i.e._ the $\text{Token}$ amount, $S'_i$ required to move the marginal price of $\text{Pool}$ from $P$ to $P_i$. In other words, if $S'_i$ tokens are swapped into $\text{Pool}$, the resulting marginal price would be $P_i$. Then for each $i$ in $[1,k]$, let $S'_i = S_{\text{Pool}}(O_{P_i})$.
+Finally define the $S_i$ as follows:
 
 $$
-S_1 = \begin{cases}
+S_i = \begin{cases}
 S'_1, & \text{if }\; i = 1, \text{ and}\\
 S'_i - S'_{i-1} & \text{for } i \geq 2.
 \end{cases}

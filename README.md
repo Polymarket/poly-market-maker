@@ -36,3 +36,16 @@ The `config.env` file defines 3 environment variables:
 
 - [AMM](./docs/strategies/amm.md)
 - [BANDS](./docs/strategies/bands.md)
+
+### Strategy Lifecycle
+
+Every `sync_interval` (the default is 30s), the strategies do the following:
+
+1. Fetch the current midpoint price from the CLOB
+2. Compute expected orders.
+3. Compare expected orders to open orders.
+4. Compute open orders to cancel and new orders to place to achieve or approximate the expected orders.
+5. Cancel orders.
+6. Place new orders.
+
+When the app receives a SIGTERM, all orders are cancelled and the app exits gracefully.
