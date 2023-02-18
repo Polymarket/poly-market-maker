@@ -2,6 +2,16 @@
 
 Market maker keeper for the Polymarket CLOB.
 
+## NOTE
+
+This software is experimental and in active development.
+Use at your own risk.
+
+## Description
+
+The keeper is an automated market maker for CLOB markets.
+Places and cancels orders to keep open orders near the midpoint price according to one of two strategies.
+
 ## Requirements
 
 - Python 3.10
