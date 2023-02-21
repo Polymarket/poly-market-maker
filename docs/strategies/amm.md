@@ -6,12 +6,12 @@ The AMM strategy seeks to emulate the liquidity available in a concentrated liqu
 
 ```[python]
 {
-    minPrice,
-    maxPrice,
+    p_min,
+    p_max,
     spread,
     delta,
     depth,
-    maxCollateral
+    max_collateral
 }
 ```
 
