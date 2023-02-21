@@ -10,7 +10,8 @@ The AMM strategy seeks to emulate the liquidity available in a concentrated liqu
     maxPrice,
     spread,
     delta,
-    depth
+    depth,
+    maxCollateral
 }
 ```
 

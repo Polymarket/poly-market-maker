@@ -8,19 +8,27 @@ from poly_market_maker.utils import math_round_down
 
 class AMMConfig:
     def __init__(
-        self, p_min: float, p_max: float, delta: float, depth: float, spread: float
+        self,
+        p_min: float,
+        p_max: float,
+        spread: float,
+        delta: float,
+        depth: float,
+        max_collateral: float,
     ):
         assert isinstance(p_min, float)
         assert isinstance(p_max, float)
         assert isinstance(delta, float)
         assert isinstance(depth, float)
         assert isinstance(spread, float)
+        assert isinstance(max_collateral, float)
 
         self.p_min = p_min
         self.p_max = p_max
         self.delta = delta
-        self.depth = depth
         self.spread = spread
+        self.depth = depth
+        self.max_collateral = max_collateral
 
 
 class AMM:
@@ -38,6 +46,7 @@ class AMM:
         self.delta = config.delta
         self.spread = config.spread
         self.depth = config.depth
+        self.max_collateral = config.max_collateral
 
     def set_price(self, p_i: float):
         self.p_i = p_i
@@ -123,10 +132,11 @@ class AMM:
 
 
 class AMMManager:
-    def __init__(self, amm_config: AMMConfig):
+    def __init__(self, config: AMMConfig):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.amm_a = AMM(token=Token.A, config=amm_config)
-        self.amm_b = AMM(token=Token.B, config=amm_config)
+        self.amm_a = AMM(token=Token.A, config=config)
+        self.amm_b = AMM(token=Token.B, config=config)
+        self.max_collateral = config.max_collateral
 
     def get_expected_orders(
         self,
@@ -142,8 +152,10 @@ class AMMManager:
         best_sell_order_size_a = sell_orders_a[0].size if len(sell_orders_a) > 0 else 0
         best_sell_order_size_b = sell_orders_b[0].size if len(sell_orders_b) > 0 else 0
 
+        total_collateral_allocation = min(balances[Collateral], self.max_collateral)
+
         (collateral_allocation_a, collateral_allocation_b) = self.collateral_allocation(
-            balances[Collateral],
+            total_collateral_allocation,
             best_sell_order_size_a,
             best_sell_order_size_b,
         )

@@ -13,6 +13,7 @@ class TestAMMManager(TestCase):
         delta=0.01,
         spread=0.01,
         depth=0.05,
+        max_collateral=200.0,
     )
 
     def test_get_expected_order_prices(self):

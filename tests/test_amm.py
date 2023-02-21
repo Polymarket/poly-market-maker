@@ -7,11 +7,7 @@ from poly_market_maker.strategies.amm import AMM, AMMConfig
 class TestAMM(TestCase):
     token = Token.A
     config = AMMConfig(
-        p_min=0.05,
-        p_max=0.95,
-        delta=0.01,
-        depth=0.1,
-        spread=0.05,
+        p_min=0.05, p_max=0.95, delta=0.01, depth=0.1, spread=0.05, max_collateral=200.0
     )
 
     def test_get_buy_orders(self):
