@@ -44,8 +44,8 @@ The `config.env` file defines 3 environment variables:
 
 ## Strategies
 
-- [AMM](./docs/strategies/amm.md)
-- [BANDS](./docs/strategies/bands.md)
+- [Amm](./docs/strategies/amm.md)
+- [Bands](./docs/strategies/bands.md)
 
 ### Strategy Lifecycle
 

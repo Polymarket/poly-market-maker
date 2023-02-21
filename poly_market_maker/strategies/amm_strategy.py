@@ -43,9 +43,10 @@ class AMMStrategy(BaseStrategy):
         return AMMConfig(
             p_min=config.get("p_min"),
             p_max=config.get("p_max"),
-            delta=config.get("delta"),
             spread=config.get("spread"),
+            delta=config.get("delta"),
             depth=config.get("depth"),
+            max_collateral=config.get("max_collateral"),
         )
 
     def get_orders(self, orderbook: OrderBook, target_prices):

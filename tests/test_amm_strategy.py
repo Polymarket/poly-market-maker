@@ -63,6 +63,7 @@ class TestAMMStrategy(TestCase):
         "delta": 0.01,
         "spread": 0.01,
         "depth": 0.10,
+        "max_collateral": 200.0,
     }
     strategy = AMMStrategy(config)
 
