@@ -339,6 +339,7 @@ class OrderBookManager:
                 if self.get_balances_function is not None
                 else None
             )
+            self.logger.debug(f"Balances: {balances}")
             return balances
         except Exception as e:
             self.logger.error(f"Exception fetching onchain balances! Error: {e}")

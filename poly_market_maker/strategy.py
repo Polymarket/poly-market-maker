@@ -54,13 +54,18 @@ class StrategyManager:
 
         try:
             orderbook = self.get_order_book()
-        except Exception:
+        except Exception as e:
+            self.logger.error(f"{e}")
             return
-        token_prices = self.get_token_prices()
 
+        token_prices = self.get_token_prices()
+        self.logger.debug(f"{token_prices}")
         (orders_to_cancel, orders_to_place) = self.strategy.get_orders(
             orderbook, token_prices
         )
+
+        self.logger.debug(f"order to cancel: {len(orders_to_cancel)}")
+        self.logger.debug(f"order to place: {len(orders_to_place)}")
 
         self.cancel_orders(orders_to_cancel)
         self.place_orders(orders_to_place)
