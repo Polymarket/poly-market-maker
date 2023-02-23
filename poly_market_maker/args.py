@@ -46,7 +46,7 @@ def get_args(args) -> dict:
     parser.add_argument(
         "--gas-strategy",
         type=str,
-        default="fixed",
+        default="web3",
         help="Gas strategy to be used['fixed', 'station', 'web3']",
     )
 

@@ -31,8 +31,8 @@ class App:
         # self.min_size = args.min_size
 
         # server to expose the metrics.
-        # self.metrics_server_port = args.metrics_server_port
-        start_http_server(args.metrics_server_port)
+        self.metrics_server_port = args.metrics_server_port
+        start_http_server(self.metrics_server_port)
 
         self.web3 = setup_web3(args.rpc_url, args.private_key)
         self.address = self.web3.eth.account.from_key(args.private_key).address
@@ -70,6 +70,7 @@ class App:
         self.order_book_manager.cancel_all_orders_with(
             lambda _: self.clob_api.cancel_all_orders()
         )
+        self.order_book_manager.start()
 
         self.strategy_manager = StrategyManager(
             args.strategy,
@@ -83,6 +84,7 @@ class App:
     """
 
     def main(self):
+        self.logger.debug(self.sync_interval)
         with Lifecycle() as lifecycle:
             lifecycle.on_startup(self.startup)
             lifecycle.every(self.sync_interval, self.synchronize)  # Sync every 5s
@@ -94,7 +96,6 @@ class App:
 
     def startup(self):
         self.logger.info("Running startup callback...")
-        self.order_book_manager.start()
         self.approve()
         time.sleep(5)  # 5 second initial delay so that bg threads fetch the orderbook
         self.logger.info("Startup complete!")
