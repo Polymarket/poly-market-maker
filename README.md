@@ -16,6 +16,12 @@ Places and cancels orders to keep open orders near the midpoint price according 
 
 - Python 3.10
 
+- Install the necessary build tools by running the following command in your terminal (Ubuntu):  
+`sudo apt-get install build-essential`
+
+- Install the necessary development libraries by running the following command (Ubuntu):    
+`sudo apt-get install python3-dev`
+
 ## Setup
 
 - Run `./install.sh` to set up the virtual environment and install depedencies.
