@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 echo "Installing dependencies and activating virtualenv..."
 
 set -e

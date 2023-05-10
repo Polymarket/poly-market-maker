@@ -7,7 +7,7 @@ RUN groupadd -r keeper && useradd -r -g keeper keeper
 
 COPY requirements.txt .
 COPY install.sh .
-RUN ./install.sh
+RUN /bin/bash -c './install.sh'
 
 COPY poly_market_maker poly_market_maker
 COPY bin bin
