@@ -1,6 +1,8 @@
 # AMM
 
 The AMM strategy seeks to emulate the liquidity available in a concentrated liquidity AMM.
+Note that `max_collateral` only bounds the amount of capital used as liquidity _at any given time_.
+The only way to bound your total losses is to limit the amount of collateral in your account.
 
 ## Config
 
