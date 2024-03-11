@@ -45,8 +45,8 @@ class ClobApi:
     def get_conditional_address(self):
         return self.client.get_conditional_address()
 
-    def get_exchange(self):
-        return self.client.get_exchange_address()
+    def get_exchange(self, neg_risk = False):
+        return self.client.get_exchange_address(neg_risk)
 
     def get_price(self, token_id: int) -> float:
         """
