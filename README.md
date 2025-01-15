@@ -1,61 +1,111 @@
 # poly-market-maker
 
-Market maker keeper for the Polymarket CLOB.
+Automated market maker keeper for the Polymarket CLOB (Centralized Limit Order Book).
 
-## NOTE
+## Overview
+
+This keeper is designed to automate market making strategies on Polymarket's CLOB markets. It continuously monitors market conditions and manages orders to maintain liquidity near the midpoint price using sophisticated trading strategies.
+
+## ⚠️ Disclaimer
 
 This software is experimental and in active development.
-Use at your own risk.
+Use at your own risk. Please ensure you understand the trading strategies and risks involved before deployment.
 
-## Description
+## Features
 
-The keeper is an automated market maker for CLOB markets.
-Places and cancels orders to keep open orders near the midpoint price according to one of two strategies.
+- Automated order placement and cancellation
+- Multiple trading strategies support (Bands and AMM)
+- Real-time market monitoring
+- Graceful shutdown with order cancellation
+- Docker support for easy deployment
 
-## Requirements
+## Technical Requirements
 
-- Python 3.10
+- Python 3.10 or higher
+- Docker (optional, for containerized deployment)
+- Active Polymarket account with API access
 
-## Setup
+## Installation
 
-- Run `./install.sh` to set up the virtual environment and install depedencies.
+### Standard Setup
 
-- Create a `.env` file. See `.env.example`.
+1. Clone the repository:
+```bash
+git clone https://github.com/username/poly-market-maker.git
+cd poly-market-maker
+```
 
-- Modify the entries in `config.env`.
+2. Run the installation script:
+```bash
+./install.sh
+```
 
-- Modify the corresponding strategy config in `./config`, if desired.
+3. Configure your environment:
+   - Copy `.env.example` to `.env`
+   - Update the variables in `.env`
+   - Modify `config.env` with your settings
 
-## Usage
+### Docker Setup
 
-- Start the keeper with `./run-local.sh`.
+1. Ensure Docker and Docker Compose are installed
+2. Configure environment files as mentioned above
+3. Build and run using Docker Compose
 
-### Usage with Docker
+## Configuration
 
-- To start the keeper with docker, run `docker compose up`.
+### Environment Variables
 
-## Config
+Required variables in `config.env`:
 
-The `config.env` file defines 3 environment variables:
+- `CONDITION_ID`: Hex string format market condition identifier
+- `STRATEGY`: Trading strategy selection ("Bands" or "AMM")
+- `CONFIG`: Path to strategy configuration file
 
-- `CONDITION_ID`, the condition id of the market in hex string format.
-- `STRATEGY`, the strategy to use, either "Bands" or "AMM" (case insensitive)
-- `CONFIG`, the path to the strategy config file.
+## Available Strategies
 
-## Strategies
+### AMM Strategy
+- Automated Market Making with dynamic pricing
+- [Detailed AMM Documentation](./docs/strategies/amm.md)
 
-- [Amm](./docs/strategies/amm.md)
-- [Bands](./docs/strategies/bands.md)
+### Bands Strategy
+- Price band-based market making
+- [Detailed Bands Documentation](./docs/strategies/bands.md)
 
-### Strategy Lifecycle
+## Operation
 
-Every `sync_interval` (the default is 30s), the strategies do the following:
+### Starting the Keeper
 
-1. Fetch the current midpoint price from the CLOB
-2. Compute expected orders.
-3. Compare expected orders to open orders.
-4. Compute open orders to cancel and new orders to place to achieve or approximate the expected orders.
-5. Cancel orders.
-6. Place new orders.
+Standard mode:
+```bash
+./run-local.sh
+```
 
-When the app receives a SIGTERM, all orders are cancelled and the app exits gracefully.
+Docker mode:
+```bash
+docker compose up
+```
+
+### Strategy Operation Cycle
+
+The keeper operates on a configurable cycle (default: 30 seconds) with the following steps:
+
+1. Market price discovery
+2. Order calculation
+3. Current position analysis
+4. Order optimization
+5. Order cancellation
+6. New order placement
+
+### Monitoring and Maintenance
+
+- The keeper logs important events and trading activities
+- Graceful shutdown is triggered by SIGTERM
+- All open orders are automatically cancelled on shutdown
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
