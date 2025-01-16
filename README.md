@@ -21,9 +21,11 @@ Use at your own risk. Please ensure you understand the trading strategies and ri
 
 ## Technical Requirements
 
-- Python 3.10 or higher
-- Docker (optional, for containerized deployment)
+- Python ≤ 3.10 (versions up to 3.10 due to dependency constraints)
 - Active Polymarket account with API access
+
+### Optional Requirements
+- Docker and Docker Compose (for containerized deployment)
 
 ## Installation
 
