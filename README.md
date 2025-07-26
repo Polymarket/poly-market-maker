@@ -26,6 +26,19 @@ Places and cancels orders to keep open orders near the midpoint price according 
 
 - Modify the corresponding strategy config in `./config`, if desired.
 
+### Environment variables
+
+Create a `.env` file with your wallet's private key and the RPC/CLOB endpoints.
+Defaults from `.env.example`:
+
+```
+PRIVATE_KEY=
+RPC_URL=https://polygon-rpc.com/
+CLOB_API_URL=https://clob.polymarket.com/
+```
+
+Set `PRIVATE_KEY` before running the keeper.
+
 ## Usage
 
 - Start the keeper with `./run-local.sh`.
