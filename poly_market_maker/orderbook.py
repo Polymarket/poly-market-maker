@@ -384,12 +384,13 @@ class OrderBookManager:
 
                 self._report_order_book_updated()
 
-                self.logger.debug(
-                    f"Fetched the order book"
-                    f" (orders: {[order.id for order in orders]}, "
-                    f" buys: {len([order for order in orders if order.side == Side.BUY])}, "
-                    f" sells: {len([order for order in orders if order.side == Side.SELL])})"
-                )
+                if orders is not None:
+                    self.logger.debug(
+                        f"Fetched the order book"
+                        f" (orders: {[order.id for order in orders]}, "
+                        f" buys: {len([order for order in orders if order.side == Side.BUY])}, "
+                        f" sells: {len([order for order in orders if order.side == Side.SELL])})"
+                    )
             except ValueError as e:
                 self.logger.error(f"Failed to fetch the order book or balances ({e})!")
 
