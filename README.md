@@ -13,6 +13,8 @@ The keeper is an automated market maker for CLOB markets.
 Places and cancels orders to keep open orders near the midpoint price according to one of two strategies.
 
 ## Requirements
+> **Note:** This market maker trades directly with an EOA (Externally Owned Account) private key. Proxy wallet / deposit wallet accounts (those created via the Polymarket web UI, Magic.link, or Privy) are **not supported**. You must use a standard EOA private key. See [#79](https://github.com/Polymarket/poly-market-maker/issues/79) for context.
+
 
 - Python 3.10
 
