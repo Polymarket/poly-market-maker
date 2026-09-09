@@ -175,6 +175,10 @@ class ClobApi:
         private_key,
     ) -> ClobClient:
         clob_client = ClobClient(host, chain_id, private_key)
+        # `except Exception` rather than a bare `except:`, so Ctrl-C during the
+        # health check is not reported as "unable to connect" and is not converted
+        # into sys.exit(1) by the handler. The cause is logged: without it, a bad
+        # private key and an unreachable host produced the same message.
         try:
             if clob_client.get_ok() == OK:
                 self.logger.info("Connected to CLOB API!")
@@ -182,14 +186,26 @@ class ClobApi:
                     "CLOB Keeper address: {}".format(clob_client.get_address())
                 )
                 return clob_client
-        except:
-            self.logger.error("Unable to connect to CLOB API, shutting down!")
+        except Exception as e:
+            self.logger.error(f"Unable to connect to CLOB API, shutting down!: {e}")
             sys.exit(1)
+
+        # Reached when get_ok() returns something other than OK without raising.
+        # The function previously fell off the end here and returned None, so the
+        # keeper started up with `self.client = None` and every later call failed
+        # with an AttributeError far from the actual cause. A failed health check
+        # is the same fatal condition as an exception during it.
+        self.logger.error(
+            "CLOB API health check did not return OK, shutting down!"
+        )
+        sys.exit(1)
 
     def _init_client_L2(
         self, host, chain_id, private_key, creds: ApiCreds
     ) -> ClobClient:
         clob_client = ClobClient(host, chain_id, private_key, creds)
+        # See _init_client_L1 for why this is `except Exception` and why the
+        # non-OK path exits rather than returning None.
         try:
             if clob_client.get_ok() == OK:
                 self.logger.info("Connected to CLOB API!")
@@ -197,9 +213,14 @@ class ClobApi:
                     "CLOB Keeper address: {}".format(clob_client.get_address())
                 )
                 return clob_client
-        except:
-            self.logger.error("Unable to connect to CLOB API, shutting down!")
+        except Exception as e:
+            self.logger.error(f"Unable to connect to CLOB API, shutting down!: {e}")
             sys.exit(1)
+
+        self.logger.error(
+            "CLOB API health check did not return OK, shutting down!"
+        )
+        sys.exit(1)
 
     def _get_order(self, order_dict: dict) -> dict:
         size = float(order_dict.get("original_size")) - float(
