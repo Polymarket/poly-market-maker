@@ -50,9 +50,9 @@ class GasStation:
         failed transaction instead of a transaction at the fallback price -- which
         is the entire purpose of having a configured fixed price.
 
-        Falling back to `self.fixed` is the same decision the two private helpers
-        already make internally; this makes it hold for the WEB3 branch and for
-        any future strategy value as well.
+        Falling back to `self.fixed` occurs whenever an exception is caught or
+        no gas price resolved, ensuring `status="error"` is appropriately
+        recorded in metrics instead of being swallowed.
         """
         self.logger.info(f"Using gas price strategy: {self.strat.value.upper()}...")
         gas = None
@@ -62,18 +62,13 @@ class GasStation:
             if self.strat == GasStrategy.FIXED:
                 gas = self.fixed
 
-            if self.strat == GasStrategy.WEB3:
-                # Delegate to the helper rather than calling
-                # `self.w3.eth.generate_gas_price()` inline. The inline call left
-                # `_get_rpc_gas_price` unreachable, so this branch silently lost
-                # both of that helper's behaviours: rounding up to the next gwei
-                # (which avoids "transaction underpriced" rejections) and the
-                # fallback to the fixed price when the RPC call fails.
+            elif self.strat == GasStrategy.WEB3:
+                # Delegate to helper; exceptions propagate so status="error"
+                # is correctly observed in metrics before falling back to fixed.
                 gas = self._get_rpc_gas_price()
 
-            if self.strat == GasStrategy.STATION:
-                gas_station_gas_price = self._get_gas_station_gas()
-                gas = gas_station_gas_price
+            elif self.strat == GasStrategy.STATION:
+                gas = self._get_gas_station_gas()
 
             gas_station_latency.labels(strategy=self.strat.value, status="ok").observe(
                 (time.time() - start_time)
@@ -87,6 +82,8 @@ class GasStation:
             gas_station_latency.labels(
                 strategy=self.strat.value, status="error"
             ).observe((time.time() - start_time))
+            # Fall back to the configured fixed gas price on failure
+            gas = self.fixed
 
         if gas is None:
             self.logger.warning(
@@ -118,13 +115,10 @@ class GasStation:
         # `except Exception` rather than a bare `except:`. A bare except also
         # catches KeyboardInterrupt and SystemExit, so Ctrl-C during an RPC call
         # was swallowed and reported as a gas-fetch error while the keeper kept
-        # trading. The exception is now logged too: `%s` of the cause is what
-        # distinguishes a misconfigured RPC endpoint from a transient timeout.
+        # trading. Re-raise so the caller records the error metric.
         except Exception as e:
-            self.logger.error(
-                f"Error fetching gas from web3, returning configured fixed gas price: {self.fixed}: {e}"
-            )
-            return self.fixed
+            self.logger.error(f"Error generating gas price from web3 RPC: {e}")
+            raise
 
     def _get_gas_station_gas(self):
         try:
@@ -147,10 +141,7 @@ class GasStation:
                 )
 
             return math.ceil(gas) * (10**9)
-        # See _get_rpc_gas_price for why this is `except Exception` and not a
-        # bare `except:`.
+        # See _get_rpc_gas_price for why this is `except Exception` and re-raised.
         except Exception as e:
-            self.logger.error(
-                f"Error fetching gas from gasstation, returning configured fixed gas price: {self.fixed}: {e}"
-            )
-            return self.fixed
+            self.logger.error(f"Error requesting gas price from gas station endpoint: {e}")
+            raise
